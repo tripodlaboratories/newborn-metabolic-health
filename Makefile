@@ -39,20 +39,17 @@ performance_curves:
 	Rscript ./scripts/plotting/deep_mtl_results/plot_deep_mtl_rocpr_curves.R \
 		-i ./results/deep_mtl/neonatal/validation/ensemble/ \
 		-o ./results/deep_mtl/neonatal/validation/plots/ensemble_test.pdf \
-		--summary_tables \
 		--compare_prc_vs_random
 	Rscript ./scripts/plotting/deep_mtl_results/plot_deep_mtl_rocpr_curves.R \
 		-i ./results/deep_mtl/neonatal/validation/ensemble/ \
 		--preds_filename valid_preds.csv \
 		--true_vals_file ./data/processed/neonatal_conditions.csv \
 		-o ./results/deep_mtl/neonatal/validation/plots/ensemble_valid.pdf \
-		--summary_tables \
 		--compare_prc_vs_random
 	Rscript ./scripts/plotting/deep_mtl_results/plot_deep_mtl_rocpr_curves.R \
 		-i ./results/deep_mtl/neonatal_bottleneck_validation/ensemble_bottle_1/ \
 		--preds_filename bottleneck.csv \
 		-o ./results/deep_mtl/neonatal_bottleneck_validation/ensemble_1unit_bottleaspreds_test.pdf \
-		--summary_tables \
 		--controls_as_positive \
 		--compare_prc_vs_random
 	Rscript ./scripts/plotting/deep_mtl_results/plot_deep_mtl_rocpr_curves.R \
@@ -60,12 +57,13 @@ performance_curves:
 		--preds_filename valid_bottleneck.csv \
 		--true_vals_file ./data/processed/neonatal_conditions.csv \
 		-o ./results/deep_mtl/neonatal_bottleneck_validation/ensemble_1unit_bottleaspreds_valid.pdf \
-		--summary_tables \
 		--controls_as_positive \
 		--compare_prc_vs_random
 
 ## Subgroup discovery results
-#subgroup_discovery:
+subgroup_discovery:
+	Rscript ./scripts/subgroup_discovery/prediction_vis.R
+	Rscript ./scripts/subgroup_discovery/bottleneck_vis.R
 
 ## Iterative feature removal experiments
 feature_removal_results:

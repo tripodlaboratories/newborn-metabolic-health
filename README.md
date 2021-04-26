@@ -15,7 +15,7 @@ For the manuscript, model implementation was done using Python 3.7.6 and
 `pytorch` 1.6.0. Model training handlers used `pandas` 1.0.1 and `scikit-learn` 0.22.1.  
 Subgroup discovery results depend on `pysubgroup`.
 For data visualization and plotting in the manuscript, R 3.6.1 was used along
-with the `dplyr`, `tidyr`, `yardstick`, `pROC`, `ggthemes`, `ggplot2`,
+with the `dplyr`, `tidyr`, `yardstick`, `pROC`, `ggthemes`, `ggplot2`, `readxl`,
 `tidygraph`, and `ggraph` packages.
 
 ## Installation
