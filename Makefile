@@ -32,7 +32,7 @@ test:
 correlation_networks:
 	Rscript ./scripts/plotting/correlation_networks/plot_metabolites_only_corrnet.R
 	Rscript ./scripts/plotting/correlation_networks/metabolite_correlation_differences.R
-	Rscript ./scripts/plotting/correlation_networks/plots_metabolite_only_corrnet_bottleneck_unit.R
+	Rscript ./scripts/plotting/correlation_networks/plot_metabolite_only_corrnet_bottleneck_unit.R
 
 ## Create plots for AUROC/AUPR curves
 performance_curves:
