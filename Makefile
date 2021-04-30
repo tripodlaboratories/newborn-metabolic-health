@@ -38,27 +38,23 @@ correlation_networks:
 performance_curves:
 	Rscript ./scripts/plotting/deep_mtl_results/plot_deep_mtl_rocpr_curves.R \
 		-i ./results/deep_mtl/neonatal/validation/ensemble/ \
-		-o ./results/deep_mtl/neonatal/validation/plots/ensemble_test.pdf \
-		--compare_prc_vs_random
+		-o ./results/deep_mtl/neonatal/validation/plots/ensemble_test.pdf
 	Rscript ./scripts/plotting/deep_mtl_results/plot_deep_mtl_rocpr_curves.R \
 		-i ./results/deep_mtl/neonatal/validation/ensemble/ \
 		--preds_filename valid_preds.csv \
 		--true_vals_file ./data/processed/neonatal_conditions.csv \
-		-o ./results/deep_mtl/neonatal/validation/plots/ensemble_valid.pdf \
-		--compare_prc_vs_random
+		-o ./results/deep_mtl/neonatal/validation/plots/ensemble_valid.pdf
 	Rscript ./scripts/plotting/deep_mtl_results/plot_deep_mtl_rocpr_curves.R \
 		-i ./results/deep_mtl/neonatal_bottleneck_validation/ensemble_bottle_1/ \
 		--preds_filename bottleneck.csv \
 		-o ./results/deep_mtl/neonatal_bottleneck_validation/ensemble_1unit_bottleaspreds_test.pdf \
-		--controls_as_positive \
-		--compare_prc_vs_random
+		--controls_as_positive
 	Rscript ./scripts/plotting/deep_mtl_results/plot_deep_mtl_rocpr_curves.R \
 		-i ./results/deep_mtl/neonatal_bottleneck_validation/ensemble_bottle_1/ \
 		--preds_filename valid_bottleneck.csv \
 		--true_vals_file ./data/processed/neonatal_conditions.csv \
 		-o ./results/deep_mtl/neonatal_bottleneck_validation/ensemble_1unit_bottleaspreds_valid.pdf \
-		--controls_as_positive \
-		--compare_prc_vs_random
+		--controls_as_positive
 
 ## Subgroup discovery results
 subgroup_discovery:
