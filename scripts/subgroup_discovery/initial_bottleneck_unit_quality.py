@@ -51,6 +51,7 @@ def getInitResults():
     bottleneck_val_output = bottleneck_val_output.groupby(["row_id"])["bottleneck_unit_0"].mean()
     true_val_preds = true_val_preds.groupby(["row_id"])["nec_any","rop_any","bpd_any", "ivh_any"].mean()
 
+    true_val_preds = true_val_preds.loc[bottleneck_val_output.index,:]
     ########################################################################
     ## manipulate predicted probs into class labels via different cutoffs ##
     ########################################################################
