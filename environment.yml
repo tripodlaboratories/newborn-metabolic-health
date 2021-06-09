@@ -17,4 +17,5 @@ dependencies:
   - torchvision
   - pip:
     - pytest==5.3.2
-    - pysubgroup=0.0.2
+    - pysubgroup
+    - xgboost
