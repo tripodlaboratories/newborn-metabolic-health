@@ -16,7 +16,7 @@ import torch.optim as optim
 from torch.utils.data import DataLoader, TensorDataset
 
 
-class RegressionModelTraining:
+class ModelTraining:
     """Class for running model training.
     """
     def __init__(self, model):
@@ -85,3 +85,4 @@ class RegressionModelTraining:
         if hasattr(self, 'X_valid'):
             training_output['valid_preds'] = valid_preds
         return training_output
+

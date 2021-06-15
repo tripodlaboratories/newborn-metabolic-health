@@ -15,6 +15,7 @@ class RepeatedKFold:
     def __init__(
         self,
         n_folds: int,
+        n_iter: int,
         data_X: pd.DataFrame,
         data_Y: pd.DataFrame,
         training_handler,
@@ -25,6 +26,7 @@ class RepeatedKFold:
         """
         args:
             n_folds: number of folds to split data
+            n_folds: number of iterations to perform repeated KFold training
             data_X: DataFrame containing features for training
             data_Y: DataFrame containing outcomes of interest
             training_handler: object which controls model training
@@ -34,6 +36,7 @@ class RepeatedKFold:
             output_type: 'classification' or 'regression'
         """
         self.n_folds = n_folds
+        self.n_iter = n_iter
         self.data_X = data_X
         self.data_Y = data_Y
         self.training_handler = training_handler
@@ -57,7 +60,6 @@ class RepeatedKFold:
 
     def repeated_kfold(self,
         training_args: dict,
-        n_iter: int=5,
         resampler=None,
         splitting_cols: list=None):
         """args:
@@ -67,7 +69,7 @@ class RepeatedKFold:
             splitting_cols: columns to use in defining KFold splits
         """
         results_over_iters = {'scores': []}
-        for i in range(n_iter):
+        for i in range(self.n_iter):
             self.training_handler.reset_model()
             kfold_results = self.kfold(
                 training_args=training_args, resampler=resampler,
