@@ -1,4 +1,4 @@
-# TODO: Set up model comparison script
+# Machine learning model comparison script
 import argparse
 import logging
 import os
