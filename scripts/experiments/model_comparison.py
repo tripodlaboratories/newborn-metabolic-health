@@ -130,8 +130,7 @@ def main(args):
     # choices.
     utils.seed_torch(101)
 
-    # TODO: Setup model training for widespread model comparison
-    # TODO: Implement RandomForest, XGBoost, CatBoost?
+    # Setup model training for widespread model comparison
     # Model specific hyperparameters for logistic regression models
     l1_ratio_range = [0.1, 0.5, 0.7, 0.8, 0.9, 0.95, 0.99, 1.0]
     num_C_vals = 20
@@ -140,7 +139,6 @@ def main(args):
     classification_scoring_metric='roc_auc'
 
     # Model specific hyperparameters for ensemble methods
-    # TODO: Include deep learning model for comparison?
     models = {
         'en': LogisticRegressionCV(
             penalty='elasticnet', cv=n_cv_folds,
@@ -157,12 +155,10 @@ def main(args):
         'xgboost': XGBClassifier(n_jobs=n_jobs)
     }
 
-    # TODO: Set up model training
+    # Set up model training
     n_folds = 5
     resampler = MajorityDownsampler(random_state=101)
 
-    # TODO: Experimental: Which models are inherently multitask, and which need
-    # the help of the MultiOutputClassifier?
     multi_task_output_dir = output_dir.joinpath('multi_task/')
     logger.info('Training multitask models for all outcomes.')
     train_args = {'colnames': data_Y.columns}
@@ -195,33 +191,6 @@ def main(args):
         os.makedirs(model_output_dir, exist_ok=True)
         write_results(model_results, model_output_dir)
 
-
-    # TODO: Experimental: Single Task Training
-    #single_task_output_dir = output_dir.joinpath('single_task/')
-    #for outcome in outcomes:
-    #    logger.info('Training single task models for: ' + outcome)
-    #    data_Y_outcome = data_Y[[outcome]]
-    #    train_args = {'colnames': data_Y_outcome.columns}
-
-    #    for model_name, model in models.items():
-    #        # TODO: Include deep learning model for comparison?
-    #        # If this is implemented, we need a different handler than the
-    #        # sklearn interface one
-    #        training_handler = handlers.ModelTraining(model)
-    #        kfold_handler = kfold.RepeatedKFold(
-    #            n_folds=n_folds,
-    #            training_handler=training_handler,
-    #            data_X=data_X, data_Y=data_Y_outcome,
-    #            output_type='classification')
-    #        model_results = kfold_handler.repeated_kfold(
-    #            training_args=train_args, n_iter=n_iter,
-    #            resampler=resampler)
-    #        logger.info('Finished training for: ' + model_name)
-
-    #        model_output_dir = single_task_output_dir.joinpath(
-    #            model_name, outcome + '/')
-    #        os.makedirs(model_output_dir, exist_ok=True)
-    #        write_results(model_results, model_output_dir)
 
 if __name__ == '__main__':
     parser = get_argparser()

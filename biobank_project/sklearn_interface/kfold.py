@@ -46,7 +46,7 @@ class RepeatedKFold:
         if splitter is None:
             self.splitter = StratifiedKFold(
                 n_splits=self.n_folds, shuffle=True,
-                random_state=np.random.randint(0, 500))
+                random_state=np.random.RandomState(np.random.randint(0, 500)))
         else:
             self.splitter = splitter
 
