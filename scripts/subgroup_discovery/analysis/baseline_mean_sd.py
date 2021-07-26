@@ -110,16 +110,15 @@ for outcome in outcome_order:
 ###############################################################################
 ## Code snippet to calc mean AUPRC from iter preds for bottleneck Prediction ##
 ###############################################################################
+results_dir = "./results/deep_mtl/neonatal/validation/"
 
+# read in previous predictions
+preds = pd.read_csv(results_dir + "preds.csv")
+val_preds = pd.read_csv(results_dir + "valid_preds.csv")
+true_preds = pd.read_csv(results_dir + "true_vals.csv")
 
-exp = "no_unit_bottleneck"
+true_val_preds= pd.read_csv("./data/processed/neonatal_conditions.csv", low_memory=False)
 
-# read in alans predicted values
-preds = pd.read_csv("/home/tculos/projects/subgroup/data/"+exp+"/preds.csv")
-val_preds = pd.read_csv("/home/tculos/projects/subgroup/data/"+exp+"/valid_preds.csv")
-true_preds = pd.read_csv("/home/tculos/projects/subgroup/data/"+exp+"/true_vals.csv")
-
-true_val_preds= pd.read_csv("/home/tculos/projects/subgroup/data/processed/neonatal_conditions.csv", low_memory=False)
 
 #remane pred columns to be consistent
 val_preds = val_preds.rename(columns={"Unnamed: 0":"row_id"})
@@ -127,11 +126,9 @@ preds = preds.rename(columns={"Unnamed: 0":"row_id"})
 
 #maintain predictions across individual model runs so that SD can be calculated
 #also re-organizing so it is a row_id X run matrix
-many_preds = {x:preds.copy().pivot_table(index="row_id",columns="iter", values=x+"_any") for x in outcome_order}
-many_val_preds = {x:val_preds.copy().pivot_table(index="row_id",columns="iter", values=x+"_any") for x in outcome_order}
+many_preds = {x: preds.copy().pivot_table(index="row_id",columns="iter", values=x+"_any") for x in outcome_order}
+many_val_preds = {x: val_preds.copy().pivot_table(index="row_id",columns="iter", values=x+"_any") for x in outcome_order}
 
-
-#average over all iteration runs, previously was only taking one
 preds = preds.groupby(["row_id"])["nec_any","rop_any","bpd_any", "ivh_any"].mean()
 val_preds = val_preds.groupby(["row_id"])["nec_any","rop_any","bpd_any", "ivh_any"].mean()
 true_preds = true_preds.groupby(["row_id"])["nec_any","rop_any","bpd_any", "ivh_any"].mean()
@@ -198,4 +195,3 @@ for outcome in outcome_order:
     print("val mean AUPRC: "+str(np.round(val_AUPRC_mean,3)))
     print("val sd AUPRC: "+str(np.round(val_AUPRC_sd,3)))
     print("-----------------------------------------------")
-
