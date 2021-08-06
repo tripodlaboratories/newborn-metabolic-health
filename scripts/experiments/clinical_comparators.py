@@ -35,12 +35,6 @@ def get_argparser():
         '-n', '--n_iter', type=int, help='number of cross validation iterations to perform',
         default=10)
     parser.add_argument(
-        '--cases_only', action='store_true',
-        help='perform model training on cases only, ignoring controls.')
-    parser.add_argument(
-        '--single_condition', action='store_true',
-        help='perform model training on cases with only one condition')
-    parser.add_argument(
         '-v', '--validate', action='store_true',
         help='split data in train/test/validate.')
     parser.add_argument(
@@ -80,8 +74,6 @@ def main(args):
     output_dir = PurePath(args.output_dir)
     tasks = args.tasks
     n_iter = args.n_iter
-    cases_only = args.cases_only
-    single_condition = args.single_condition
     validate = args.validate
     n_jobs = args.n_jobs
     as_health_index = args.as_health_index
@@ -117,25 +109,6 @@ def main(args):
 
     # Drop sparse columns
     input_data.dropna(thresh=len(input_data) / 2, axis=1, inplace=True)
-
-    # Handling for cases only
-    if cases_only is True:
-        input_data['total_conditions'] = input_data[outcomes].sum(axis=1)
-        data_subset = input_data[input_data['total_conditions'] >= 1].drop(
-            columns=['total_conditions'])
-        if data_subset.shape[0] >= input_data.shape[0]:
-            logger.warn('--cases_only flag did not reduce rows of data.')
-        input_data = data_subset
-        assert 'total_conditions' not in input_data
-
-    if single_condition is True:
-        input_data['total_conditions'] = input_data[outcomes].sum(axis=1)
-        data_subset = input_data[input_data['total_conditions'] == 1].drop(
-            column=['total_conditions'])
-        if data_subset.shape[0] >= input_data.shape[0]:
-            logger.warn('--single_condition flag did not reduce rows of data.')
-        input_data = data_subset
-        assert 'total_conditions' not in input_data
 
     # Recode clinical variables for modeling
     # Recode infant sex encoding to {0,1} (in original data it is {1,2}
@@ -221,9 +194,10 @@ def main(args):
         logger.info('Training models using feature subset: ' + feat_set_name)
         feature_set_output_dir = output_dir.joinpath(feat_set_name)
         for model_name, model in models.items():
-            if model_name in ['en', 'lasso', 'lr']:
+            if (as_health_index is False) and (model_name in ['en', 'lasso', 'lr']):
                 # Use multitarget classification helper if the model is not
-                # inherently multioutput
+                # inherently multioutput (health index is single output by
+                # nature)
                 model = MultiOutputClassifier(model)
             training_handler = handlers.ModelTraining(model)
 
