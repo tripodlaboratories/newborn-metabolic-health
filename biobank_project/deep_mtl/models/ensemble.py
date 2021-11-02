@@ -35,14 +35,16 @@ class EnsembleNetwork(nn.Module):
     """Ensemble network where each layer consists of independent models for each task.
     Models in each layer receive concatenated inputs from all other models of the previous layer.
     """
-    def __init__(self, n_features, n_tasks, n_hidden: int=150):
+    def __init__(self, n_features, n_tasks, n_hidden: int=150, n_output_hidden: int=150):
         super().__init__()
         self.layers = nn.Sequential(
             nn.Linear(n_features, n_hidden),
             MultiModelHidden(n_combined_input=n_hidden, n_models=n_tasks, n_hidden=n_hidden, n_outputs=n_hidden),
             MultiModelHidden(n_combined_input=n_hidden * n_tasks, n_models=n_tasks, n_hidden=n_hidden, n_outputs=n_hidden),
             # Final layer has one output per model, corresponding to all tasks.
-            MultiModelHidden(n_combined_input=n_hidden * n_tasks, n_models=n_tasks, n_hidden=n_hidden, n_outputs=1),
+            MultiModelHidden(
+                n_combined_input=n_hidden * n_tasks, n_models=n_tasks,
+                n_hidden=n_output_hidden, n_outputs=1)
         )
 
     def forward(self, xb):

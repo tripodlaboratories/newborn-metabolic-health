@@ -127,7 +127,7 @@ def main(args):
                 'hidden_2': 400,
                 'hidden_3': 400}),
         'ensemble': ensemble.EnsembleNetwork(
-            n_features=n_features, n_hidden=100, n_tasks=n_tasks),
+            n_features=n_features, n_hidden=100, n_output_hidden=25, n_tasks=n_tasks),
         'parallel_ensemble': ensemble.ParallelEnsembleNetwork(
             n_features=n_features, n_hidden=100, n_tasks=n_tasks),
     }
@@ -135,9 +135,9 @@ def main(args):
     # Set up model training
     batch_size = 3000
     shuffle_batch = True
-    n_epochs = 150
+    n_epochs = 75
     #pos_weight = Tensor(data_Y.apply(utils.get_pos_weight))
-    early_stopping_patience = 15
+    early_stopping_patience = 5
     #early_stopping_handler = handlers.EarlyStopping(
     #    patience=early_stopping_patience)
     early_stopping_handler = None
