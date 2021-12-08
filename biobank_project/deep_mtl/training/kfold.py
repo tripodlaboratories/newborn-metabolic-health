@@ -30,7 +30,7 @@ def get_lowest_loss_preds(preds: pd.DataFrame, losses: pd.DataFrame):
         columns=['train_loss', 'test_loss', 'valid_loss'],
         errors='ignore')
 
-    # To resolve the case of tied losses, take the highest epoch in each fold
+    # To resolve the case of tied losses, take the lowest epoch in each fold
     highest_epoch_indices = (preds
         .groupby('fold')['epoch']
         .transform(min) == preds['epoch'])

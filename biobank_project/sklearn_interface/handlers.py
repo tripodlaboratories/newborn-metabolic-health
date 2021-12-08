@@ -16,16 +16,19 @@ import torch.optim as optim
 from torch.utils.data import DataLoader, TensorDataset
 
 
-class RegressionModelTraining:
+class ModelTraining:
     """Class for running model training.
     """
-    def __init__(self, model):
+    def __init__(self, model, pos_label=1):
         """
         args:
             model: scikit-learn model
+            pos_label: expected encoding of the positive label in y
+                (usually 1 in {0, 1} encoded data)
         """
         self.model = model
         self.init_model = clone(model)
+        self.pos_label = pos_label
 
     def reset_model(self):
         self.model = clone(self.init_model)
@@ -45,8 +48,21 @@ class RegressionModelTraining:
         self.validation = True
 
     def predict(self, input_data, colnames, index):
-        preds = self.model.predict(input_data)
-        return pd.DataFrame(preds, columns=colnames, index=index)
+        preds = self.model.predict_proba(input_data)
+
+        # Extract prediction probabilities corresponding to the positive label
+        # MultiOutputClassifier helper returns predictions as a list, one
+        # element per class
+        if isinstance(preds, list):
+            pred_probs = []
+            for p in preds:
+                pred_probs.append(p[:, self.pos_label])
+            pred_probs = np.column_stack(pred_probs)
+            return pd.DataFrame(pred_probs, columns=colnames, index=index)
+        else:
+            # Single array of prediction probabilities expected
+            pred_probs = preds[:, self.pos_label]
+            return pd.DataFrame(pred_probs, columns=colnames, index=index)
 
     def train(self,
         colnames: list=None,
@@ -66,7 +82,13 @@ class RegressionModelTraining:
             raise AttributeError('Data structures have not been set.')
 
         # Train
-        self.model.fit(self.X_train, self.Y_train)
+        # Handle case of single prediction, use ravel() to avoid
+        # DataConversionWarning
+        if len(self.Y_train.columns) == 1:
+            self.model.fit(self.X_train, self.Y_train.values.ravel())
+        else:
+            self.model.fit(self.X_train, self.Y_train)
+
         if output_training_preds is True:
             train_preds = self.predict(
                 self.X_train, colnames=colnames, index=self.X_train.index)
@@ -85,3 +107,4 @@ class RegressionModelTraining:
         if hasattr(self, 'X_valid'):
             training_output['valid_preds'] = valid_preds
         return training_output
+

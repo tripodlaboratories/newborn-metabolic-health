@@ -179,6 +179,4 @@ dmypy.json
 
 # Data Directories and deep NN predictions which can get large
 data/*
-*preds.csv.gz
 *train_preds.csv
-*bottleneck.csv

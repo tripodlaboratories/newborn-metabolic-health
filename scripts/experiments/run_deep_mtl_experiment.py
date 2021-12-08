@@ -8,6 +8,7 @@ import pandas as pd
 from sklearn.model_selection import train_test_split
 from torch import optim, Tensor
 from torch.nn import BCEWithLogitsLoss
+import wandb
 
 from biobank_project.deep_mtl.training import handlers, kfold, utils
 from biobank_project.deep_mtl.models import base, ensemble
@@ -36,6 +37,8 @@ def get_argparser():
     parser.add_argument(
         '-v', '--validate', action='store_true',
         help='split data in train/test/validate.')
+    parser.add_argument(
+        '-w', '--wandb_login', type=str, help="weights and biases login")
     return parser
 
 
@@ -63,6 +66,7 @@ def main(args):
         )
     logger = logging.getLogger('deep_mtl_experiment')
 
+    wandb_login = args.wandb_login
     input_file = args.input_file
     output_dir = PurePath(args.output_dir)
     tasks = args.tasks
@@ -123,7 +127,7 @@ def main(args):
                 'hidden_2': 400,
                 'hidden_3': 400}),
         'ensemble': ensemble.EnsembleNetwork(
-            n_features=n_features, n_hidden=100, n_tasks=n_tasks),
+            n_features=n_features, n_hidden=100, n_output_hidden=25, n_tasks=n_tasks),
         'parallel_ensemble': ensemble.ParallelEnsembleNetwork(
             n_features=n_features, n_hidden=100, n_tasks=n_tasks),
     }
@@ -131,24 +135,37 @@ def main(args):
     # Set up model training
     batch_size = 3000
     shuffle_batch = True
-    n_epochs = 50
-    pos_weight = Tensor(data_Y.apply(utils.get_pos_weight))
+    n_epochs = 75
+    #pos_weight = Tensor(data_Y.apply(utils.get_pos_weight))
     early_stopping_patience = 5
-    early_stopping_handler = handlers.EarlyStopping(
-        patience=early_stopping_patience)
-    # resampler = MajorityDownsampler(random_state=101)
-    resampler = None
+    #early_stopping_handler = handlers.EarlyStopping(
+    #    patience=early_stopping_patience)
+    early_stopping_handler = None
+    resampler = MajorityDownsampler(random_state=101)
     results = {k: None for k in all_models.keys()}
 
     os.makedirs(output_dir, exist_ok=True)
     for model_name, model in all_models.items():
+        # Weights and biases setup
+        if wandb_login is not None:
+            run = wandb.init(
+                project='deep-metabolic-health-index',
+                entity=wandb_login,
+                group='model_predictions',
+                job_type=model_name,
+                reinit=True)
+        else:
+            wandb.init(mode='disabled')
+        wandb.watch(model, log="all", log_freq=25)
+
+        # Begin Training
         training_handler = handlers.ModelTraining(
             model=model, batch_size=batch_size, shuffle_batch=shuffle_batch,
             optimizer_class=optim.Adam)
 
         train_args = {
             'n_epochs': n_epochs,
-            'criterion': BCEWithLogitsLoss(reduction='mean', pos_weight=pos_weight),
+            'criterion': BCEWithLogitsLoss(reduction='mean'),
             'colnames': data_Y.columns,
             'early_stopping_handler': early_stopping_handler,
             'output_training_preds': True
@@ -175,6 +192,7 @@ def main(args):
         os.makedirs(model_output_dir, exist_ok=True)
         write_results(model_results, model_output_dir)
         logger.info('Model results written to: ' + str(model_output_dir) + '/')
+        run.finish()
 
 
 if __name__ == '__main__':
