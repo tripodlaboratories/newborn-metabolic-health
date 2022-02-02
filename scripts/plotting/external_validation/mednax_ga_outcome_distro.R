@@ -47,7 +47,7 @@ for (outcome in outcomes_cols) {
 		ggtitle(paste("Mednax", outcome, "distribution"))
 	print(plt)
 
-	# TODO: Can we do a positive vs. negative PPV for the outcome of interest
+	# Idea: A positive vs. negative PPV for the outcome of interest
 	# Where the classification is based on the majority class
 	pv_df <- meta_outcomes %>%
 		group_by(EGAbest) %>%
