@@ -128,9 +128,20 @@ def main():
     outcomes_from_merge = merged[id_cols + new_outcome_cols]
     demo_from_merge = merged[id_cols + list(demo_columns)]
 
+    # Create a version of the Mednax metabolite data with California Biobank Labels
+    features_cal_names = features_from_merge.copy()
+    features_cal_names.rename(
+        columns={k: v for k, v in zip(
+            matching_df.mednax.fillna(matching_df.derived_ratio_name),
+            matching_df.cal_biobank)
+        }, inplace=True)
+
     # Write out processed data
     features_from_merge.to_csv(
         mednax_dir.joinpath('processed', 'mednax_metabolites.csv'),
+        index=False)
+    features_cal_names.to_csv(
+        mednax_dir.joinpath('processed', 'mednax_metabolites_cal_names.csv'),
         index=False)
     outcomes_from_merge.to_csv(
         mednax_dir.joinpath('processed', 'mednax_outcomes.csv'),
