@@ -3,6 +3,7 @@
 ##########################################################################
 # general imports
 import argparse
+import logging
 import pandas as pd
 import numpy as np
 
@@ -35,6 +36,17 @@ def get_args():
         '-i', '--input_directory', default='./results/deep_mtl/neonatal_bottleneck_validation/ensemble_bottle_1/',
         help='Input experiment directory, should contain bottleneck.csv, valid_bottleneck.csv, and true_vals.csv')
     parser.add_argument(
+        '--validation_metabolites_file',
+        default='./external_validation/mednax/processed/mednax_metabolites.csv',
+        help='Metabolites file corresponding to validation data, metabolites must match.')
+    parser.add_argument(
+        '--validation_predictions_file',
+        default="./results/external_validation/mednax/health_index_output.csv",
+        help='Filename for the predictions file on the validation dataset')
+    parser.add_argument(
+        '--validation_id', default=None,
+        help='ID column for the validation predictions')
+    parser.add_argument(
         '-o', '--output_directory',
         help='output directory to save results files')
     return parser.parse_args()
@@ -44,16 +56,27 @@ def get_args():
 ###################################################################################
 
 def main(args):
+    # TODO: Match up arguments
     results_dir = args.input_directory
+    valid_metab_file = args.validation_metabolites_file
+    valid_preds_file = args.validation_predictions_file
     output_dir = args.output_directory
+
+    # Set up logger
+    logger = logging.getLogger('SubgroupDiscovery')
 
     # read in previous outputs from the bottleneck layer
     preds = pd.read_csv(results_dir + "bottleneck.csv")
+
+    # TODO: Read in Mednax true values files
+    # TODO: Might need to set an ID column, or specify which column are the metabolites
+    # TODO: Or do we need to import the metabolite values and then calculate quantiles this way
+    # TODO: Change the validation predictions to a specific Mednax predictions file
     val_preds = pd.read_csv(results_dir + "valid_bottleneck.csv")
     true_vals = pd.read_csv(results_dir + "true_vals.csv")
 
     #read in raw data to get actual response for validation data, not currently included in prediction .csv's
-    external_true_vals = pd.read_csv("./data/processed/neonatal_conditions.csv", low_memory=False)
+    cal_biobank_data = pd.read_csv("./data/processed/neonatal_conditions.csv", low_memory=False)
 
     #rename predictions columns to be consistent
     val_preds = val_preds.rename(columns={"Unnamed: 0":"row_id"})
@@ -69,21 +92,28 @@ def main(args):
     true_vals = true_vals.groupby(["row_id"])[["nec_any","rop_any","bpd_any", "ivh_any"]].mean() #smart way (it is, double checked against stupid for loop method)
 
     #collapse all outcomes to patients x outcomes dataframe
-    external_true_vals = external_true_vals[["nec_any","rop_any","bpd_any", "ivh_any"]]
+    external_true_vals = cal_biobank_data[["nec_any","rop_any","bpd_any", "ivh_any"]]
     metabolite_labels = pd.read_csv("./config/metabolite_labels.csv")
-    data = pd.read_csv("./data/processed/metadata.csv", low_memory=False)
+
+    # TODO: Read in the California metabolite labels
+    with open('./config/expected_metabolite_order.txt') as f:
+        cal_metabolites = [l.strip() for l in f.readlines()]
+
+    # Read in metadata
+    metadata = pd.read_csv("./data/processed/metadata.csv", low_memory=False)
 
     #######################################################
     ## reduce *_data and *_values to only predicted data ##
     #######################################################
 
+    # TODO: Improve the ID setting, should be able to use the row_id instead of gdspid
     #subset by observations
-    subset_data = data[data["row_id"].isin(pd.unique(preds.index))]
+    subset_data = metadata[metadata["row_id"].isin(pd.unique(preds.index))]
     subset_data = subset_data.set_index("row_id")
     subset_data = subset_data.drop("gdspid", axis=1)
 
     #subset by observations
-    subset_val_data = data[data["row_id"].isin(pd.unique(val_preds.index))]
+    subset_val_data = metadata[metadata["row_id"].isin(pd.unique(val_preds.index))]
     subset_val_data = subset_val_data.set_index("row_id")
     subset_val_data = subset_val_data.drop("gdspid", axis=1)
 
@@ -130,7 +160,7 @@ def main(args):
     top_k_subgroup_preds_iters = []
 
     for metric in evaluation_order:
-        print("starting analysis using - " + metric)
+        logger.info(f'starting subgroup discovery with metric: {metric}')
         #
         subgroup_alphas = subgroup_alphas_list[metric]
         subgroup_sizes = subgroup_sizes_list[metric]
@@ -141,12 +171,12 @@ def main(args):
         #
         #start of loop to collect all data
         for outcome in outcome_order:
-            print("starting analysis of - " + outcome)
+            logger.info(f'Beginning subgroup discovery procedure for: {outcome}')
             #
-            #
-            #this will create the target matrix, possible targets include true classification, true positivies, ect (based on a CUTOFF value)
             targ = outcome+"_any"
-            pred_type = "_tp"
+            # Extra string appended to columns to differeniate
+            # TODO: Testing: Does this mangle any of the columns
+            col_annotation = "_sgdisc"
             #
             # NOTE: limiting to TRUE healthy controls (removing controls with positive co-outcomes)
             keep = (true_vals[np.setdiff1d(["nec_any","rop_any","bpd_any","ivh_any"], [targ])].sum(axis=1) == 3) | (true_vals[targ] == 0)
@@ -178,7 +208,8 @@ def main(args):
             temp_data = outcome_subset_data[outcome_subset_data.columns.values[outcome_subset_data.isna().sum() == 0]].copy()
             #
             #constructing list of demographic and metabolomic features to keep
-            keep_features = temp_data.columns.to_series().apply(lambda z: True if ("rc" in z) or (z in [targ+pred_type]) else False)
+            # TODO: Change the logic for defining the columns to be clearer and more consistent with selected columns
+            keep_features = temp_data.columns.to_series().apply(lambda z: True if ("rc" in z) or (z in [targ+col_annotation]) else False)
             temp_data = temp_data[temp_data.columns[keep_features]]
             #
             #compile list of features which need to be transformed into quantiles
@@ -198,8 +229,12 @@ def main(args):
             #
             searchspace_data = pd.DataFrame(searchspace_data)
             #
+            # TODO: Should change the logic for finding out which columsn are metabolites
+            # (don't have to do the string matching with '_rc')
             # create indicator vector for metabolite columns by matching rc string, used for metabolite only analyses if necessary
-            is_metabolite = searchspace_data.columns.to_series().apply(lambda z: True if "rc" in z else False)
+            # TODO: Remove the old metabolite data which is currently commented out
+            # is_metabolite = searchspace_data.columns.to_series().apply(lambda z: True if "rc" in z else False)
+            is_metabolite = searchspace_data.columns.isin(cal_metabolites)
             #
             #########################################
             ## Massaging validation data similarly ##
@@ -208,7 +243,9 @@ def main(args):
             temp_val_data = subset_val_data_outcome[subset_val_data_outcome.columns.values[subset_val_data_outcome.isna().sum() == 0]].copy()
             #
             #constructing list of demographic and metabolomic features to keep
-            keep_val_features = temp_val_data.columns.to_series().apply(lambda z: True if ("rc" in z) or (z in [targ+pred_type]) else False)
+            # FIXME: TODO: Fix the metabolite data selection logic
+            # keep_val_features = temp_val_data.columns.isin(cal_metabolites)
+            keep_val_features = temp_val_data.columns.to_series().apply(lambda z: True if ("rc" in z) or (z in [targ+col_annotation]) else False)
             temp_val_data = temp_val_data[temp_val_data.columns[keep_val_features]]
             #
             #compile list of features which need to be transformed into quantiles
@@ -227,6 +264,7 @@ def main(args):
             #
             searchspace_val_data = pd.DataFrame(searchspace_val_data)
             #
+            # TODO: Replace searching logic from '_rc' string. 
             # create indicator vector for metabolite columns by matching rc string, used for metabolite only analyses if necessary
             is_val_metabolite = searchspace_val_data.columns.to_series().apply(lambda z: True if "rc" in z else False)
             #
@@ -244,21 +282,23 @@ def main(args):
                 depth=4,
                 qf=ps.PredictionQFNumeric(a=subgroup_alphas[outcome])
             )
+
             results= ps.BeamSearch(beam_width=subgroup_sizes[outcome]).execute(task)
- 
+            # TODO: Extract the subgroup discovery logic and apply to the Mednax dataset
+            # TODO: Remove commented examples from the final script
             # EXAMPLES
             # pickle after removing data, if you had to.
-            # (otherwise the pickled file would be quite large)
             # results.task.data = None
             # pickle.dump(...)
             # results to dataframe (hard to add custom statistics)
             results.to_dataframe()
-
+            
             results.results # all the subgroups
             # get first subgroup
             sg_quality, sg_description, qf = results.results[0]
             # get subgroup mask / selection array
             sg_msk, sg_size = ps.get_cover_array_and_size(sg_description, data=searchspace_data)
+
             # NOTE: This is where the original logic resumes.
             #
             subgroup_desc = results.to_dataframe()["subgroup"]
@@ -282,7 +322,8 @@ def main(args):
                         bool_vec_inner = bool_vec_inner & (searchspace_data[splt[0]] <= (int(splt[1]) if "'" not in splt[1] and "." not in splt[1] else float(splt[1]) if "." in splt[1] else splt[1].replace("'","") ))
                 bool_vec = np.logical_or(bool_vec,  bool_vec_inner)
                 #collect same general data for top 1:index(elem) subgroups
-                # NOTE: This part exists because it's difficult to add custom stats to the dataframe original output
+
+                # NOTE: The next logic exists because it's difficult to add custom stats to the dataframe original output
                 precision, recall, thresholds = precision_recall_curve(outcome_true_vals[targ][bool_vec], outcome_preds[bool_vec])
                 AUPRC = auc(recall, precision)
                 precision, recall, thresholds = precision_recall_curve(outcome_true_vals[targ][bool_vec_inner], outcome_preds[bool_vec_inner])
@@ -638,10 +679,10 @@ def main(args):
                     top_k_subgroup_preds_iters.append(top_subgroups_iters_df)
 
             #
-            iter_results[targ+pred_type] = [kfold_AUROC_mean, kfold_AUROC_sd, val_AUROC_mean, val_AUROC_sd, kfold_AUROC_20_mean, kfold_AUROC_20_sd, val_AUROC_20_mean, val_AUROC_20_sd,
+            iter_results[targ+col_annotation] = [kfold_AUROC_mean, kfold_AUROC_sd, val_AUROC_mean, val_AUROC_sd, kfold_AUROC_20_mean, kfold_AUROC_20_sd, val_AUROC_20_mean, val_AUROC_20_sd,
             kfold_AUPRC_mean, kfold_AUPRC_sd, val_AUPRC_mean, val_AUPRC_sd, kfold_AUPRC_20_mean, kfold_AUPRC_20_sd, val_AUPRC_20_mean, val_AUPRC_20_sd]
             #
-            all_results[targ+pred_type] = [subgroup_results_df, subgroup_val_results_df, kfold_AUROC, kfold_AUPRC, val_AUROC, val_AUPRC, PR_tuple_20, PR_tuple_20_val, kfold_AUPRC_20, val_AUPRC_20, ROC_tuple_20, ROC_tuple_20_val, kfold_AUROC_20, val_AUROC_20, rand_AUROC, rand_AUPRC, rand_val_AUROC, rand_val_AUPRC, rand_AUROC_20, rand_AUPRC_20, rand_val_AUROC_20, rand_val_AUPRC_20]
+            all_results[targ+col_annotation] = [subgroup_results_df, subgroup_val_results_df, kfold_AUROC, kfold_AUPRC, val_AUROC, val_AUPRC, PR_tuple_20, PR_tuple_20_val, kfold_AUPRC_20, val_AUPRC_20, ROC_tuple_20, ROC_tuple_20_val, kfold_AUROC_20, val_AUROC_20, rand_AUROC, rand_AUPRC, rand_val_AUROC, rand_val_AUPRC, rand_AUROC_20, rand_AUPRC_20, rand_val_AUROC_20, rand_val_AUPRC_20]
         #
         #
         #save to file
@@ -649,7 +690,7 @@ def main(args):
             pickle.dump(all_results, f, protocol=pickle.HIGHEST_PROTOCOL)
             f.close()
         #
-        print("saving results to .pkl")
+        logger.info(f'saved .pkl results: to {output_dir}')
         #
         #
         ####################################################################
@@ -667,7 +708,7 @@ def main(args):
         #
         for outcome in outcome_order:
             targ=outcome+"_any"
-            pred_type = "_tp"
+            col_annotation = "_sgdisc"
             #
             worksheet_train = workbook.add_worksheet(outcome+"-train")
             worksheet_val = workbook.add_worksheet(outcome+"-val")
@@ -676,26 +717,26 @@ def main(args):
             worksheet_pr_val = workbook.add_worksheet(outcome+"-Val PR @ 20%")
             worksheet_roc_val = workbook.add_worksheet(outcome+"-Val ROC @ 20%")
             #
-            subgroup_results = all_results[targ+pred_type][0]
-            subgroup_val_results = all_results[targ+pred_type][1]
+            subgroup_results = all_results[targ+col_annotation][0]
+            subgroup_val_results = all_results[targ+col_annotation][1]
             #
-            kfold_AUROC = all_results[targ+pred_type][2]
-            kfold_AUPRC = all_results[targ+pred_type][3]
+            kfold_AUROC = all_results[targ+col_annotation][2]
+            kfold_AUPRC = all_results[targ+col_annotation][3]
             #
-            val_AUROC = all_results[targ+pred_type][4]
-            val_AUPRC = all_results[targ+pred_type][5]
+            val_AUROC = all_results[targ+col_annotation][4]
+            val_AUPRC = all_results[targ+col_annotation][5]
             #
-            (precision_20, recall_20, thresholds_20) = all_results[targ+pred_type][6]
-            (precision_val_20, recall_val_20, thresholds_val_20) = all_results[targ+pred_type][7]
+            (precision_20, recall_20, thresholds_20) = all_results[targ+col_annotation][6]
+            (precision_val_20, recall_val_20, thresholds_val_20) = all_results[targ+col_annotation][7]
             #
-            kfold_20_AUPRC = all_results[targ+pred_type][8]
-            val_20_AUPRC = all_results[targ+pred_type][9]
+            kfold_20_AUPRC = all_results[targ+col_annotation][8]
+            val_20_AUPRC = all_results[targ+col_annotation][9]
             #
-            (fpr_20, tpr_20, thresholds_20) = all_results[targ+pred_type][10]
-            (fpr_val_20, tpr_val_20, thresholds_val_20) = all_results[targ+pred_type][11]
+            (fpr_20, tpr_20, thresholds_20) = all_results[targ+col_annotation][10]
+            (fpr_val_20, tpr_val_20, thresholds_val_20) = all_results[targ+col_annotation][11]
             #
-            kfold_20_AUROC = all_results[targ+pred_type][12]
-            val_20_AUROC = all_results[targ+pred_type][13]
+            kfold_20_AUROC = all_results[targ+col_annotation][12]
+            val_20_AUROC = all_results[targ+col_annotation][13]
             #
             #
             worksheet_baseline.write(0,0, "outcome")
@@ -724,25 +765,25 @@ def main(args):
             worksheet_20.write(outcome_order.index(outcome)+1, 4, val_20_AUROC)
             #
             #
-            kfold_AUROC_mean = iter_results[targ+pred_type][0]
-            kfold_AUROC_sd = iter_results[targ+pred_type][1]
-            val_AUROC_mean = iter_results[targ+pred_type][2]
-            val_AUROC_sd = iter_results[targ+pred_type][3]
+            kfold_AUROC_mean = iter_results[targ+col_annotation][0]
+            kfold_AUROC_sd = iter_results[targ+col_annotation][1]
+            val_AUROC_mean = iter_results[targ+col_annotation][2]
+            val_AUROC_sd = iter_results[targ+col_annotation][3]
             #
-            kfold_AUROC_mean_20 = iter_results[targ+pred_type][4]
-            kfold_AUROC_sd_20 = iter_results[targ+pred_type][5]
-            val_AUROC_mean_20 = iter_results[targ+pred_type][6]
-            val_AUROC_sd_20 = iter_results[targ+pred_type][7]
+            kfold_AUROC_mean_20 = iter_results[targ+col_annotation][4]
+            kfold_AUROC_sd_20 = iter_results[targ+col_annotation][5]
+            val_AUROC_mean_20 = iter_results[targ+col_annotation][6]
+            val_AUROC_sd_20 = iter_results[targ+col_annotation][7]
             #
-            kfold_AUPRC_mean = iter_results[targ+pred_type][8]
-            kfold_AUPRC_sd = iter_results[targ+pred_type][9]
-            val_AUPRC_mean = iter_results[targ+pred_type][10]
-            val_AUPRC_sd = iter_results[targ+pred_type][11]
+            kfold_AUPRC_mean = iter_results[targ+col_annotation][8]
+            kfold_AUPRC_sd = iter_results[targ+col_annotation][9]
+            val_AUPRC_mean = iter_results[targ+col_annotation][10]
+            val_AUPRC_sd = iter_results[targ+col_annotation][11]
             #
-            kfold_AUPRC_mean_20 = iter_results[targ+pred_type][12]
-            kfold_AUPRC_sd_20 = iter_results[targ+pred_type][13]
-            val_AUPRC_mean_20 = iter_results[targ+pred_type][14]
-            val_AUPRC_sd_20 = iter_results[targ+pred_type][15]
+            kfold_AUPRC_mean_20 = iter_results[targ+col_annotation][12]
+            kfold_AUPRC_sd_20 = iter_results[targ+col_annotation][13]
+            val_AUPRC_mean_20 = iter_results[targ+col_annotation][14]
+            val_AUPRC_sd_20 = iter_results[targ+col_annotation][15]
             #
             worksheet_20_mean.write(0,0, "outcome")
             worksheet_20_mean.write(0,1, "kfold AUPRC")
@@ -790,18 +831,18 @@ def main(args):
             worksheet_baseline_mean.write(outcome_order.index(outcome)+1, 9, val_AUROC_sd)
             #
             #
-            rand_AUROC = all_results[targ+pred_type][14]
-            rand_AUPRC = all_results[targ+pred_type][15]
+            rand_AUROC = all_results[targ+col_annotation][14]
+            rand_AUPRC = all_results[targ+col_annotation][15]
             #
-            rand_val_AUROC = all_results[targ+pred_type][16]
-            rand_val_AUPRC = all_results[targ+pred_type][17]
+            rand_val_AUROC = all_results[targ+col_annotation][16]
+            rand_val_AUPRC = all_results[targ+col_annotation][17]
             #
             #
-            rand_AUROC_20 = all_results[targ+pred_type][18]
-            rand_AUPRC_20 = all_results[targ+pred_type][19]
+            rand_AUROC_20 = all_results[targ+col_annotation][18]
+            rand_AUPRC_20 = all_results[targ+col_annotation][19]
             #
-            rand_val_AUROC_20 = all_results[targ+pred_type][20]
-            rand_val_AUPRC_20 = all_results[targ+pred_type][21]
+            rand_val_AUROC_20 = all_results[targ+col_annotation][20]
+            rand_val_AUPRC_20 = all_results[targ+col_annotation][21]
             #
             worksheet_20_rand.write(0,0, "outcome")
             worksheet_20_rand.write(0,1, "kfold AUPRC")
@@ -890,7 +931,7 @@ def main(args):
                 temp = worksheet_roc_val.write(row_num+1,1,fpr_val_20[row_num])
         #
         workbook.close()
-        print("writing results to .csv")
+        logger.info(f'Writing .csv to {output_dir}')
 
     # Save top K subgroup predictions
     top_k_subgroup_predictions = pd.concat(top_k_subgroup_predictions)
