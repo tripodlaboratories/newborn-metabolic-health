@@ -75,7 +75,7 @@ def main(args):
     # TODO: Read in Mednax metabolites
     val_preds = pd.read_csv(valid_preds_file).set_index(val_index_col)
     valid_true_vals = pd.read_csv(valid_true_vals_file).set_index(val_index_col)
-    valid_metab = pd.read_csv(valid_metab_file)
+    valid_metab = pd.read_csv(valid_metab_file).set_index(val_index_col)
 
     #read in raw data to get actual response for validation data, not currently included in prediction .csv's
     cal_biobank_data = pd.read_csv("./data/processed/neonatal_conditions.csv", low_memory=False)
@@ -150,10 +150,11 @@ def main(args):
 
             # NOTE: limit to True healthy controls (removing controls with positive co-outcomes)
             outcome_labels = ["nec_any","rop_any","bpd_any","ivh_any"]
+            other_outcomes = np.setdiff1d(outcome_labels, targ)
             in_analysis_set = (
-                true_vals[np.setdiff1d(outcome_labels, [targ])].sum(axis=1) == 0) | (true_vals[targ] == 1)
+                true_vals[other_outcomes].sum(axis=1) == 0) | (true_vals[targ] == 1)
             in_analysis_set_val = (
-                validation_true_vals[np.setdiff1d(outcome_labels, [targ])].sum(axis=1) == 0) | (validation_true_vals[targ] == 1)
+                validation_true_vals[other_outcomes].sum(axis=1) == 0) | (validation_true_vals[targ] == 1)
 
             # NOTE: Since we are interested in identifying HEALTHY individuals
             # The target for prediction will be switched to healthy obs
@@ -176,10 +177,10 @@ def main(args):
             assert (preds.index == true_vals.index).all()
             assert (val_preds.index == validation_true_vals.index).all()
 
-            # TODO: Fix how the temp data is used here:
             metab_data = cal_biobank_data[cal_metabolites]
             metab_data = metab_data.loc[preds.index]
             searchspace_input = metab_data[metab_data.columns.values[metab_data.isna().sum() == 0]].copy()
+            searchspace_input = searchspace_input.loc[outcome_preds.index]
             #temp_data = outcome_subset_data[outcome_subset_data.columns.values[outcome_subset_data.isna().sum() == 0]].copy()
 
             #constructing list of demographic and metabolomic features to keep
@@ -209,6 +210,7 @@ def main(args):
             is_metabolite = searchspace_data.columns.str.replace(
                 r'_q.*$', '').isin(cal_metabolites)
             searchspace_input_val = valid_metab[valid_metab.columns.values[valid_metab.isna().sum() == 0]].copy()
+            searchspace_input_val = searchspace_input_val.loc[val_outcome_preds.index]
 
             #constructing list of demographic and metabolomic features to in_analysis_set
             in_analysis_set_val_features = (searchspace_input_val.columns.isin(cal_metabolites))
@@ -255,9 +257,9 @@ def main(args):
             # results to dataframe (hard to add custom statistics)
             results.to_dataframe()
             results.results # all the subgroups
-            # get first subgroup
+            # get information from THE FIRST subgroup
             sg_quality, sg_description, qf = results.results[0]
-            # get subgroup mask / selection array
+            # get subgroup mask / selection array for ONE subgroup
             sg_msk, sg_size = ps.get_cover_array_and_size(sg_description, data=searchspace_data)
 
             # NOTE: This is where the original logic resumes.
