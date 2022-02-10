@@ -104,10 +104,8 @@ def main(args):
         cal_metabolites = [l.strip() for l in f.readlines()]
 
     # Read in metadata
-    # TODO: Metadata is probably not necessary, testing removal phase
     metadata = pd.read_csv("./data/processed/metadata.csv", low_memory=False)
 
-    # validation_true_vals = external_true_vals.loc[subset_val_data.index]
     validation_true_vals = valid_true_vals.loc[val_preds.index]
 
     #check that all indices are the same
@@ -115,7 +113,6 @@ def main(args):
     assert (preds.index == preds_over_iters.index).all()
     assert (val_preds.index == validation_true_vals.index).all()
 
-    
     #order is bpd -> rop -> ivh -> nec
     outcome_order = ["bpd", "rop", "ivh", "nec"]
     evaluation_order = ["AUROC", "AVG Precision"]
@@ -194,7 +191,18 @@ def main(args):
             # to other demographics would require different logic
             # e.g., condition | searchspace_input.columns.isin(demographics_features)
             in_analysis_set_features = (searchspace_input.columns.isin(cal_metabolites))
+            
+            # TODO: Determine common feature set between the test data and validation data
+            searchspace_input_val = valid_metab[valid_metab.columns.values[valid_metab.isna().sum() == 0]].copy()
+            searchspace_input_val = searchspace_input_val.loc[val_outcome_preds.index]
+            in_analysis_set_val_features = (searchspace_input_val.columns.isin(cal_metabolites))
+
             searchspace_input = searchspace_input[searchspace_input.columns[in_analysis_set_features]]
+            searchspace_input_val = searchspace_input_val[searchspace_input_val.columns[in_analysis_set_val_features]]
+            common_cols = np.intersect1d(
+                searchspace_input.columns, searchspace_input_val.columns)
+            searchspace_input = searchspace_input[common_cols]
+            searchspace_input_val = searchspace_input_val[common_cols]
 
             #compile list of features which need to be transformed into quantiles
             # NOTE: Categorical features need to be protected from quantile transformation
@@ -215,12 +223,6 @@ def main(args):
 
             is_metabolite = searchspace_data.columns.str.replace(
                 r'_q.*$', '').isin(cal_metabolites)
-            searchspace_input_val = valid_metab[valid_metab.columns.values[valid_metab.isna().sum() == 0]].copy()
-            searchspace_input_val = searchspace_input_val.loc[val_outcome_preds.index]
-
-            #constructing list of demographic and metabolomic features to in_analysis_set
-            in_analysis_set_val_features = (searchspace_input_val.columns.isin(cal_metabolites))
-            searchspace_input_val = searchspace_input_val[searchspace_input_val.columns[in_analysis_set_val_features]]
 
             #compile list of features which need to be transformed into quantiles
             # NOTE: If you have categorical features - they need to be protected before.
@@ -334,6 +336,7 @@ def main(args):
                     subgroup_AUROC_mean = np.nan
 
                     temp_auprc = []
+                    # Collects statistics across each iteration. Each column represented one iteration of repeated K-Fold
                     for i in range(len(preds_over_iters.columns)):
                         precision, recall, thresholds = precision_recall_curve(outcome_true_vals[targ][bool_vec_inner], many_outcome_preds.iloc[:,i][bool_vec_inner])
                         temp_auprc.append(auc(recall, precision))
@@ -497,9 +500,6 @@ def main(args):
             rand_val_AUROC = roc_auc_score(validation_outcome_true_vals[targ], rand_val_pred)
             rand_precision, rand_recall, rand_thresholds = precision_recall_curve(validation_outcome_true_vals[targ], rand_val_pred)
             rand_val_AUPRC = auc(rand_recall, rand_precision)
-
-
-
 
             # Usually the top 20 percentile of data
             select =  (subgroup_results_df["% data"]* 100)
