@@ -51,6 +51,8 @@ def get_args():
     parser.add_argument(
         '-o', '--output_directory',
         help='output directory to save results files')
+    parser.add_argument(
+        '-l', '--log_level', default='INFO', help='logger level')
     return parser.parse_args()
 
 
@@ -61,9 +63,13 @@ def main(args):
     valid_true_vals_file = args.validation_true_vals
     output_dir = args.output_directory
     val_index_col = args.validation_id
+    log_level = args.log_level
 
     # Set up logger
-    # TODO: Set up loglevel
+    numeric_level = getattr(logging, log_level.upper(), None)
+    if not isinstance(numeric_level, int):
+        raise ValueError(f'Invalid log level: {log_level}')
+    logging.basicConfig(level=numeric_level)
     logger = logging.getLogger('SubgroupDiscovery')
 
     # read in previous outputs from the bottleneck layer
@@ -72,7 +78,7 @@ def main(args):
     true_vals = pd.read_csv(results_dir + "true_vals.csv").set_index('row_id')
 
     # Read in Mednax predictions and true values
-    # TODO: Read in Mednax metabolites
+    # Read in Mednax metabolites
     val_preds = pd.read_csv(valid_preds_file).set_index(val_index_col)
     valid_true_vals = pd.read_csv(valid_true_vals_file).set_index(val_index_col)
     valid_metab = pd.read_csv(valid_metab_file).set_index(val_index_col)
@@ -639,18 +645,12 @@ def main(args):
 
             all_results[targ+col_annotation] = [subgroup_results_df, subgroup_val_results_df, kfold_AUROC, kfold_AUPRC, val_AUROC, val_AUPRC, PR_tuple_20, PR_tuple_20_val, kfold_AUPRC_20, val_AUPRC_20, ROC_tuple_20, ROC_tuple_20_val, kfold_AUROC_20, val_AUROC_20, rand_AUROC, rand_AUPRC, rand_val_AUROC, rand_val_AUPRC, rand_AUROC_20, rand_AUPRC_20, rand_val_AUROC_20, rand_val_AUPRC_20]
 
-
         #save to file
         with open(output_dir + metric + "_bottleneck_results.pkl", "wb") as f:
             pickle.dump(all_results, f, protocol=pickle.HIGHEST_PROTOCOL)
             f.close()
 
         logger.info(f'saved .pkl results: to {output_dir}')
-
-
-
-
-
 
         #initialize writer
         workbook = xlsxwriter.Workbook(output_dir + metric + "_bottleneck_results.xlsx")
