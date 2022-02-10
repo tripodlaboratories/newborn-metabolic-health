@@ -65,6 +65,9 @@ def main(args):
     val_index_col = args.validation_id
     log_level = args.log_level
 
+    # TODO: Debugging Numpy Errors
+    np.seterr(all='raise')
+
     # Set up logger
     numeric_level = getattr(logging, log_level.upper(), None)
     if not isinstance(numeric_level, int):
@@ -94,6 +97,21 @@ def main(args):
         true_vals = true_vals[true_vals.iter == 0].drop(
             columns=['fold', 'iter'])
     true_vals = true_vals.loc[preds.index, :]
+
+    # Handling for validation predictions, which may not be over the same iters
+    val_prediction_col = val_preds.drop(
+            columns=['fold', 'iter', val_index_col],
+            errors='ignore').columns[0]
+    if 'iter' not in val_preds.columns:
+        val_preds_over_iters = val_preds.copy()
+        val_preds_over_iters['iter'] = 0
+        val_preds_over_iters = val_preds_over_iters.pivot_table(
+            index=val_index_col, columns="iter",
+            values=val_prediction_col)
+    else:
+        val_preds_over_iters = val_preds_over_iters.pivot_table(
+            index=val_index_col, columns="iter",
+            values=val_prediction_col)
 
     #collapse all outcomes to patients x outcomes dataframe
     external_true_vals = cal_biobank_data[["nec_any","rop_any","bpd_any", "ivh_any"]]
@@ -173,8 +191,8 @@ def main(args):
             validation_outcome_true_vals = validation_true_vals.loc[in_analysis_set_val,:]
 
             #iter predictions to calculate SD
-            many_outcome_preds = preds_over_iters.loc[in_analysis_set]
-            many_val_outcome_preds = val_preds.loc[in_analysis_set_val]
+            outcome_preds_over_iters = preds_over_iters.loc[in_analysis_set]
+            val_outcome_preds_over_iters = val_preds_over_iters.loc[in_analysis_set_val]
 
             #double check that all indices are the same
             assert (preds.index == true_vals.index).all()
@@ -191,8 +209,8 @@ def main(args):
             # to other demographics would require different logic
             # e.g., condition | searchspace_input.columns.isin(demographics_features)
             in_analysis_set_features = (searchspace_input.columns.isin(cal_metabolites))
-            
-            # TODO: Determine common feature set between the test data and validation data
+
+            # Determine common feature set between the test data and validation data
             searchspace_input_val = valid_metab[valid_metab.columns.values[valid_metab.isna().sum() == 0]].copy()
             searchspace_input_val = searchspace_input_val.loc[val_outcome_preds.index]
             in_analysis_set_val_features = (searchspace_input_val.columns.isin(cal_metabolites))
@@ -300,6 +318,7 @@ def main(args):
                 subgroup_AUPRC = auc(recall, precision)
                 #append all data to array
                 #compile metrics of performancpe
+                n_prediction_iters = len(outcome_preds_over_iters.columns)
                 if(len(outcome_true_vals[targ][bool_vec]) == outcome_true_vals[targ][bool_vec].sum()):
                     AUROC = np.nan
                     AUROC_sd = np.nan
@@ -307,8 +326,8 @@ def main(args):
 
                     # Loops like this collect performance of individual model iterations
                     temp_auprc = []
-                    for i in range(len(preds_over_iters.columns)):
-                        precision, recall, thresholds = precision_recall_curve(outcome_true_vals[targ][bool_vec], many_outcome_preds.iloc[:,i][bool_vec])
+                    for i in range(n_prediction_iters):
+                        precision, recall, thresholds = precision_recall_curve(outcome_true_vals[targ][bool_vec], outcome_preds_over_iters.iloc[:,i][bool_vec])
                         temp_auprc.append(auc(recall, precision))
 
                     AUPRC_sd = np.std(temp_auprc, ddof=1) #used to make std consistent with R
@@ -319,16 +338,19 @@ def main(args):
 
                     temp_auroc = []
                     temp_auprc = []
-                    for i in range(len(preds_over_iters.columns)):
-                        precision, recall, thresholds = precision_recall_curve(outcome_true_vals[targ][bool_vec], many_outcome_preds.iloc[:,i][bool_vec])
+                    for i in range(n_prediction_iters):
+                        precision, recall, thresholds = precision_recall_curve(outcome_true_vals[targ][bool_vec], outcome_preds_over_iters.iloc[:,i][bool_vec])
                         temp_auprc.append(auc(recall, precision))
+                        temp_auroc.append(roc_auc_score(outcome_true_vals[targ][bool_vec], outcome_preds_over_iters.iloc[:,i][bool_vec]))
 
-
-                    AUROC_sd = np.std(temp_auroc, ddof=1)
+                    if len(temp_auroc) == 1 or len(temp_auprc) == 1:
+                        AUROC_sd = 0
+                        AUPRC_sd = 0
+                    else:
+                        AUROC_sd = np.std(temp_auroc, ddof=1)
+                        AUPRC_sd = np.std(temp_auprc, ddof=1)
                     AUROC_mean = np.mean(temp_auroc)
-                    AUPRC_sd = np.std(temp_auprc, ddof=1)
                     AUPRC_mean = np.mean(temp_auprc)
-
 
                 if(len(outcome_true_vals[targ][bool_vec_inner]) == outcome_true_vals[targ][bool_vec_inner].sum()):
                     subgroup_AUROC = np.nan
@@ -337,8 +359,8 @@ def main(args):
 
                     temp_auprc = []
                     # Collects statistics across each iteration. Each column represented one iteration of repeated K-Fold
-                    for i in range(len(preds_over_iters.columns)):
-                        precision, recall, thresholds = precision_recall_curve(outcome_true_vals[targ][bool_vec_inner], many_outcome_preds.iloc[:,i][bool_vec_inner])
+                    for i in range(n_prediction_iters):
+                        precision, recall, thresholds = precision_recall_curve(outcome_true_vals[targ][bool_vec_inner], outcome_preds_over_iters.iloc[:,i][bool_vec_inner])
                         temp_auprc.append(auc(recall, precision))
 
                     subgroup_AUPRC_sd = np.std(temp_auprc, ddof=1)
@@ -350,10 +372,10 @@ def main(args):
 
                     temp_auroc = []
                     temp_auprc = []
-                    for i in range(len(preds_over_iters.columns)):
-                        precision, recall, thresholds = precision_recall_curve(outcome_true_vals[targ][bool_vec_inner], many_outcome_preds.iloc[:,i][bool_vec_inner])
+                    for i in range(n_prediction_iters):
+                        precision, recall, thresholds = precision_recall_curve(outcome_true_vals[targ][bool_vec_inner], outcome_preds_over_iters.iloc[:,i][bool_vec_inner])
                         temp_auprc.append(auc(recall, precision))
-                        temp_auroc.append(roc_auc_score(outcome_true_vals[targ][bool_vec_inner], many_outcome_preds.iloc[:,i][bool_vec_inner]))
+                        temp_auroc.append(roc_auc_score(outcome_true_vals[targ][bool_vec_inner], outcome_preds_over_iters.iloc[:,i][bool_vec_inner]))
 
                     subgroup_AUROC_sd = np.std(temp_auroc, ddof=1)
                     subgroup_AUROC_mean = np.mean(temp_auroc)
@@ -372,10 +394,10 @@ def main(args):
 
             temp_auroc = []
             temp_auprc = []
-            for i in range(len(preds_over_iters.columns)):
-                precision, recall, thresholds = precision_recall_curve(outcome_true_vals[targ], many_outcome_preds.iloc[:,i])
+            for i in range(n_prediction_iters):
+                precision, recall, thresholds = precision_recall_curve(outcome_true_vals[targ], outcome_preds_over_iters.iloc[:,i])
                 temp_auprc.append(auc(recall, precision))
-                temp_auroc.append(roc_auc_score(outcome_true_vals[targ], many_outcome_preds.iloc[:,i]))
+                temp_auroc.append(roc_auc_score(outcome_true_vals[targ], outcome_preds_over_iters.iloc[:,i]))
 
             kfold_AUROC_sd = np.std(temp_auroc, ddof=1)
             kfold_AUROC_mean = np.mean(temp_auroc)
@@ -406,15 +428,15 @@ def main(args):
                 precision, recall, thresholds = precision_recall_curve(validation_outcome_true_vals[targ][bool_vec_inner], val_outcome_preds[bool_vec_inner])
                 subgroup_AUPRC = auc(recall, precision)
 
-
+                n_validation_prediction_iters = len(val_outcome_preds_over_iters.columns)
                 if(len(validation_outcome_true_vals[targ][bool_vec]) == validation_outcome_true_vals[targ][bool_vec].sum()):
                     AUROC = np.nan
                     AUROC_sd = np.nan
                     AUROC_mean = np.nan
 
                     temp_auprc = []
-                    for i in range(len(preds_over_iters.columns)):
-                        precision, recall, thresholds = precision_recall_curve(validation_outcome_true_vals[targ][bool_vec], many_val_outcome_preds.iloc[:,i][bool_vec])
+                    for i in range(n_validation_prediction_iters):
+                        precision, recall, thresholds = precision_recall_curve(validation_outcome_true_vals[targ][bool_vec], val_outcome_preds_over_iters.iloc[:,i][bool_vec])
                         temp_auprc.append(auc(recall, precision))
 
                     AUPRC_sd = np.std(temp_auprc, ddof=1)
@@ -425,17 +447,20 @@ def main(args):
 
                     temp_auroc = []
                     temp_auprc = []
-                    for i in range(len(preds_over_iters.columns)):
-                        precision, recall, thresholds = precision_recall_curve(validation_outcome_true_vals[targ][bool_vec], many_val_outcome_preds.iloc[:,i][bool_vec])
+
+                    for i in range(n_validation_prediction_iters):
+                        precision, recall, thresholds = precision_recall_curve(validation_outcome_true_vals[targ][bool_vec], val_outcome_preds_over_iters.iloc[:,i][bool_vec])
                         temp_auprc.append(auc(recall, precision))
-                        temp_auroc.append(roc_auc_score(validation_outcome_true_vals[targ][bool_vec], many_val_outcome_preds.iloc[:,i][bool_vec]))
+                        temp_auroc.append(roc_auc_score(validation_outcome_true_vals[targ][bool_vec], val_outcome_preds_over_iters.iloc[:,i][bool_vec]))
 
-                    AUROC_sd = np.std(temp_auroc, ddof=1)
+                    if len(temp_auroc) == 1 or len(temp_auprc) == 1:
+                        AUROC_sd = 0
+                        AUPRC_sd = 0
+                    else:
+                        AUROC_sd = np.std(temp_auroc, ddof=1)
+                        AUPRC_sd = np.std(temp_auprc, ddof=1)
                     AUROC_mean = np.mean(temp_auroc)
-                    AUPRC_sd = np.std(temp_auprc, ddof=1)
                     AUPRC_mean = np.mean(temp_auprc)
-
-
 
                 if(len(validation_outcome_true_vals[targ][bool_vec_inner]) == validation_outcome_true_vals[targ][bool_vec_inner].sum()):
                     subgroup_AUROC = np.nan
@@ -443,8 +468,8 @@ def main(args):
                     subgroup_AUROC_mean = np.nan
 
                     temp_auprc = []
-                    for i in range(len(preds_over_iters.columns)):
-                        precision, recall, thresholds = precision_recall_curve(validation_outcome_true_vals[targ][bool_vec_inner], many_val_outcome_preds.iloc[:,i][bool_vec_inner])
+                    for i in range(n_validation_prediction_iters):
+                        precision, recall, thresholds = precision_recall_curve(validation_outcome_true_vals[targ][bool_vec_inner], val_outcome_preds_over_iters.iloc[:,i][bool_vec_inner])
                         temp_auprc.append(auc(recall, precision))
 
                     subgroup_AUPRC_sd = np.std(temp_auprc, ddof=1)
@@ -456,10 +481,10 @@ def main(args):
                     #calculate sd metrics
                     temp_auroc = []
                     temp_auprc = []
-                    for i in range(len(preds_over_iters.columns)):
-                        precision, recall, thresholds = precision_recall_curve(validation_outcome_true_vals[targ][bool_vec_inner], many_val_outcome_preds.iloc[:,i][bool_vec_inner])
+                    for i in range(n_validation_prediction_iters):
+                        precision, recall, thresholds = precision_recall_curve(validation_outcome_true_vals[targ][bool_vec_inner], val_outcome_preds_over_iters.iloc[:,i][bool_vec_inner])
                         temp_auprc.append(auc(recall, precision))
-                        temp_auroc.append(roc_auc_score(validation_outcome_true_vals[targ][bool_vec_inner], many_val_outcome_preds.iloc[:,i][bool_vec_inner]))
+                        temp_auroc.append(roc_auc_score(validation_outcome_true_vals[targ][bool_vec_inner], val_outcome_preds_over_iters.iloc[:,i][bool_vec_inner]))
 
                     subgroup_AUROC_sd = np.std(temp_auroc, ddof=1)
                     subgroup_AUROC_mean = np.mean(temp_auroc)
@@ -478,10 +503,10 @@ def main(args):
 
             temp_auroc = []
             temp_auprc = []
-            for i in range(len(preds_over_iters.columns)):
-                precision1, recall1, thresholds = precision_recall_curve(validation_outcome_true_vals[targ], many_val_outcome_preds.iloc[:,i])
+            for i in range(n_validation_prediction_iters):
+                precision1, recall1, thresholds = precision_recall_curve(validation_outcome_true_vals[targ], val_outcome_preds_over_iters.iloc[:,i])
                 temp_auprc.append(auc(recall1, precision1))
-                temp_auroc.append(roc_auc_score(validation_outcome_true_vals[targ], many_val_outcome_preds.iloc[:,i]))
+                temp_auroc.append(roc_auc_score(validation_outcome_true_vals[targ], val_outcome_preds_over_iters.iloc[:,i]))
 
             val_AUROC_sd = np.std(temp_auroc, ddof=1)
             val_AUROC_mean = np.mean(temp_auroc)
@@ -546,10 +571,10 @@ def main(args):
 
                     temp_auroc = []
                     temp_auprc = []
-                    for i in range(len(preds_over_iters.columns)):
-                        precision, recall, thresholds = precision_recall_curve(outcome_true_vals[targ][bool_vec], many_outcome_preds.iloc[:,i][bool_vec])
+                    for i in range(n_prediction_iters):
+                        precision, recall, thresholds = precision_recall_curve(outcome_true_vals[targ][bool_vec], outcome_preds_over_iters.iloc[:,i][bool_vec])
                         temp_auprc.append(auc(recall, precision))
-                        temp_auroc.append(roc_auc_score(outcome_true_vals[targ][bool_vec], many_outcome_preds.iloc[:,i][bool_vec]))
+                        temp_auroc.append(roc_auc_score(outcome_true_vals[targ][bool_vec], outcome_preds_over_iters.iloc[:,i][bool_vec]))
 
                     kfold_AUROC_20_sd = np.std(temp_auroc, ddof=1)
                     kfold_AUROC_20_mean = np.mean(temp_auroc)
@@ -557,7 +582,7 @@ def main(args):
                     kfold_AUPRC_20_mean = np.mean(temp_auprc)
 
                     # Save predictions in top subgroups over iters
-                    preds_iters_top_subgroups = (many_outcome_preds[bool_vec]
+                    preds_iters_top_subgroups = (outcome_preds_over_iters[bool_vec]
                         .reset_index()
                         .melt(id_vars='row_id', value_name='preds')
                         .set_index('row_id'))
@@ -615,10 +640,10 @@ def main(args):
 
                     temp_auroc = []
                     temp_auprc = []
-                    for i in range(len(preds_over_iters.columns)):
-                        precision, recall, thresholds = precision_recall_curve(validation_outcome_true_vals[targ][bool_vec], many_val_outcome_preds.iloc[:,i][bool_vec])
+                    for i in range(n_validation_prediction_iters):
+                        precision, recall, thresholds = precision_recall_curve(validation_outcome_true_vals[targ][bool_vec], val_outcome_preds_over_iters.iloc[:,i][bool_vec])
                         temp_auprc.append(auc(recall, precision))
-                        temp_auroc.append(roc_auc_score(validation_outcome_true_vals[targ][bool_vec], many_val_outcome_preds.iloc[:,i][bool_vec]))
+                        temp_auroc.append(roc_auc_score(validation_outcome_true_vals[targ][bool_vec], val_outcome_preds_over_iters.iloc[:,i][bool_vec]))
 
                     val_AUROC_20_sd = np.std(temp_auroc, ddof=1)
                     val_AUROC_20_mean = np.mean(temp_auroc)
@@ -626,7 +651,7 @@ def main(args):
                     val_AUPRC_20_mean = np.mean(temp_auprc)
 
                     # Save results over iters
-                    preds_iters_top_subgroups = (many_val_outcome_preds[bool_vec]
+                    preds_iters_top_subgroups = (val_outcome_preds_over_iters[bool_vec]
                         .reset_index()
                         .melt(id_vars='row_id', value_name='preds')
                         .set_index('row_id'))
