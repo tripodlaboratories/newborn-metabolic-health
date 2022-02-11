@@ -289,12 +289,22 @@ def main(args):
             sg_msk, sg_size = ps.get_cover_array_and_size(sg_description, data=searchspace_data)
 
             # NOTE: This is where the original logic resumes.
+            subgroup_desc_df = results.to_dataframe()
+            all_subgroups = results.results
             subgroup_desc = results.to_dataframe()["subgroup"]
 
             data = []
             total_elem = ""
             bool_vec = np.full((len(searchspace_data.index)), False)
             count = 0
+            # TODO: Refactoring the Subgroup Discovery Iteration
+            # TODO: Need to add in logic for iteratively growing the subgroup slice.
+            # TODO: Which is probably what the elementwise_or thing is doing.
+            # for sg in all_subgroups:
+            #     sg_quality, sg_description, qf = sg
+            #     sg_msk, sg_size = ps.get_cover_array_and_size(sg_description, data=searchspace_data)
+            # END TODO:
+
             for elem in subgroup_desc:
                 count = count + 1
                 bool_vec_inner = np.full((len(searchspace_data.index)), True)
@@ -425,8 +435,17 @@ def main(args):
 
                 precision, recall, thresholds = precision_recall_curve(validation_outcome_true_vals[targ][bool_vec], val_outcome_preds[bool_vec])
                 AUPRC = auc(recall, precision)
-                precision, recall, thresholds = precision_recall_curve(validation_outcome_true_vals[targ][bool_vec_inner], val_outcome_preds[bool_vec_inner])
-                subgroup_AUPRC = auc(recall, precision)
+
+                # TODO: Debugging for line 428
+                try:
+                    precision, recall, thresholds = precision_recall_curve(validation_outcome_true_vals[targ][bool_vec_inner], val_outcome_preds[bool_vec_inner])
+                    subgroup_AUPRC = auc(recall, precision)
+                except ValueError as e:
+                    logger.warn(f'No individuals found in subgroup {count-1}, {subgroup_desc}')
+                    subgroup_AUPRC = np.nan
+
+                #precision, recall, thresholds = precision_recall_curve(validation_outcome_true_vals[targ][bool_vec_inner], val_outcome_preds[bool_vec_inner])
+                #subgroup_AUPRC = auc(recall, precision)
 
                 n_validation_prediction_iters = len(val_outcome_preds_over_iters.columns)
                 if(len(validation_outcome_true_vals[targ][bool_vec]) == validation_outcome_true_vals[targ][bool_vec].sum()):
@@ -472,7 +491,10 @@ def main(args):
                         precision, recall, thresholds = precision_recall_curve(validation_outcome_true_vals[targ][bool_vec_inner], val_outcome_preds_over_iters.iloc[:,i][bool_vec_inner])
                         temp_auprc.append(auc(recall, precision))
 
-                    subgroup_AUPRC_sd = np.std(temp_auprc, ddof=1)
+                    if len(temp_auprc) == 1:
+                        subgroup_AUPRC_sd = 0
+                    else:
+                        subgroup_AUPRC_sd = np.std(temp_auprc, ddof=1)
                     subgroup_AUPRC_mean = np.mean(temp_auprc)
 
                 else:
@@ -486,9 +508,13 @@ def main(args):
                         temp_auprc.append(auc(recall, precision))
                         temp_auroc.append(roc_auc_score(validation_outcome_true_vals[targ][bool_vec_inner], val_outcome_preds_over_iters.iloc[:,i][bool_vec_inner]))
 
-                    subgroup_AUROC_sd = np.std(temp_auroc, ddof=1)
+                    if len(temp_auroc) == 1 or len(temp_auprc) == 1:
+                        subgroup_AUROC_sd = 0
+                        subgroup_AUPRC_sd = 0
+                    else:
+                        subgroup_AUROC_sd = np.std(temp_auroc, ddof=1)
+                        subgroup_AUPRC_sd = np.std(temp_auprc, ddof=1)
                     subgroup_AUROC_mean = np.mean(temp_auroc)
-                    subgroup_AUPRC_sd = np.std(temp_auprc, ddof=1)
                     subgroup_AUPRC_mean = np.mean(temp_auprc)
 
 
@@ -508,9 +534,13 @@ def main(args):
                 temp_auprc.append(auc(recall1, precision1))
                 temp_auroc.append(roc_auc_score(validation_outcome_true_vals[targ], val_outcome_preds_over_iters.iloc[:,i]))
 
-            val_AUROC_sd = np.std(temp_auroc, ddof=1)
+            if len(temp_auroc) == 1 or len(temp_auprc) == 1:
+                val_AUROC_sd = 0
+                val_AUPRC_sd = 0
+            else:
+                val_AUROC_sd = np.std(temp_auroc, ddof=1)
+                val_AUPRC_sd = np.std(temp_auprc, ddof=1)
             val_AUROC_mean = np.mean(temp_auroc)
-            val_AUPRC_sd = np.std(temp_auprc, ddof=1)
             val_AUPRC_mean = np.mean(temp_auprc)
 
             #create random vector
@@ -530,6 +560,8 @@ def main(args):
             select =  (subgroup_results_df["% data"]* 100)
             select_index = select.index[select == min(select, key=lambda x:abs(x-20))][0]
             bool_vec = np.full((len(searchspace_data.index)), False)
+
+            # TODO: Maybe use direct slicing of the subgroups, and iterate over that?
 
             count = 0
             for elem in subgroup_desc:
@@ -645,9 +677,13 @@ def main(args):
                         temp_auprc.append(auc(recall, precision))
                         temp_auroc.append(roc_auc_score(validation_outcome_true_vals[targ][bool_vec], val_outcome_preds_over_iters.iloc[:,i][bool_vec]))
 
-                    val_AUROC_20_sd = np.std(temp_auroc, ddof=1)
+                    if len(temp_auroc) == 1 or len(temp_auprc) == 1:
+                        val_AUROC_20_sd = 0
+                        val_AUPRC_20_sd = 0
+                    else:
+                        val_AUROC_20_sd = np.std(temp_auroc, ddof=1)
+                        val_AUPRC_20_sd = np.std(temp_auprc, ddof=1)
                     val_AUROC_20_mean = np.mean(temp_auroc)
-                    val_AUPRC_20_sd = np.std(temp_auprc, ddof=1)
                     val_AUPRC_20_mean = np.mean(temp_auprc)
 
                     # Save results over iters
