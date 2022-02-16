@@ -178,9 +178,6 @@ def main(args):
     val_index_col = args.validation_id
     log_level = args.log_level
 
-    # TODO: Debugging Numpy Errors
-    np.seterr(all='raise')
-
     # Set up logger
     numeric_level = getattr(logging, log_level.upper(), None)
     if not isinstance(numeric_level, int):
@@ -204,8 +201,7 @@ def main(args):
 
     #maintain predictions across individual model runs to calculate Mean + SD
     preds_over_iters = preds.copy().pivot_table(index="row_id",columns="iter",values="bottleneck_unit_0")
-    preds = preds.groupby(["row_id"])["bottleneck_unit_0"].mean() #smart way (it is, double checked against stupid for loop method)
-
+    preds = preds.groupby(["row_id"])["bottleneck_unit_0"].mean()
     if 'iter' in true_vals.columns:
         true_vals = true_vals[true_vals.iter == 0].drop(
             columns=['fold', 'iter'])
@@ -215,6 +211,7 @@ def main(args):
     val_prediction_col = val_preds.drop(
             columns=['fold', 'iter', val_index_col],
             errors='ignore').columns[0]
+    val_preds = val_preds.groupby(val_index_col)[val_prediction_col].mean()
     if 'iter' not in val_preds.columns:
         val_preds_over_iters = val_preds.copy()
         val_preds_over_iters['iter'] = 0
@@ -315,7 +312,6 @@ def main(args):
             metab_data = metab_data.loc[preds.index]
             searchspace_input = metab_data[metab_data.columns.values[metab_data.isna().sum() == 0]].copy()
             searchspace_input = searchspace_input.loc[outcome_preds.index]
-            #temp_data = outcome_subset_data[outcome_subset_data.columns.values[outcome_subset_data.isna().sum() == 0]].copy()
 
             #constructing list of demographic and metabolomic features to keep
             # NOTE: Currently only filters on metabolite columns, but extension
@@ -387,19 +383,6 @@ def main(args):
             )
 
             results = ps.BeamSearch(beam_width=subgroup_sizes[outcome]).execute(task)
-            # TODO: Remove commented examples from the final script
-            # EXAMPLES
-            # pickle after removing data, if you had to.
-            # results.task.data = None
-            # pickle.dump(...)
-            # results to dataframe (hard to add custom statistics)
-            # results.to_dataframe()
-            # results.results # all the subgroups
-            # get information from THE FIRST subgroup
-            # sg_quality, sg_description, qf = results.results[0]
-            # get subgroup mask / selection array for ONE subgroup
-            # sg_mask, sg_size = ps.get_cover_array_and_size(sg_description, data=searchspace_data)
-            # End TODO
 
             # Iterate over subgroups, collecting performance metrics
             subgroup_desc_df = results.to_dataframe()
@@ -613,8 +596,11 @@ def main(args):
                     top_subgroups_iters_df['evaluation_metric'] = metric
                     top_subgroups_iters_df['dataset'] = 'kfold_test'
                     top_k_subgroup_preds_iters.append(top_subgroups_iters_df)
+                    break
 
-            select = (subgroup_val_results_df[r"%data"] * 100)
+            # TODO: Try using the top 20% of data on the train data, don't worry about evaluating at each step
+            #select = (subgroup_val_results_df[r"%data"] * 100)
+            select = (subgroup_results_df[r'%data'] * 100)
             select_index = select.index[select == min(select, key=lambda x:abs(x-20))][0]
             total_merge_mask = np.full((len(searchspace_val_data.index)), False)
 
@@ -669,8 +655,8 @@ def main(args):
                     top_subgroups_iters_df['evaluation_metric'] = metric
                     top_subgroups_iters_df['dataset'] = 'external_validation'
                     top_k_subgroup_preds_iters.append(top_subgroups_iters_df)
+                    break
 
-            # TODO: QUESTION: Does the column annotation still makes with this dict structure?
             iter_results[targ+col_annotation] = [kfold_AUROC_mean, kfold_AUROC_sd, val_AUROC_mean, val_AUROC_sd, kfold_AUROC_20_mean, kfold_AUROC_20_sd, val_AUROC_20_mean, val_AUROC_20_sd,
             kfold_AUPRC_mean, kfold_AUPRC_sd, val_AUPRC_mean, val_AUPRC_sd, kfold_AUPRC_20_mean, kfold_AUPRC_20_sd, val_AUPRC_20_mean, val_AUPRC_20_sd]
             all_results[targ+col_annotation] = [subgroup_results_df, subgroup_val_results_df, kfold_AUROC, kfold_AUPRC, val_AUROC, val_AUPRC, PR_tuple_20, PR_tuple_20_val, kfold_AUPRC_20, val_AUPRC_20, ROC_tuple_20, ROC_tuple_20_val, kfold_AUROC_20, val_AUROC_20, rand_AUROC, rand_AUPRC, rand_val_AUROC, rand_val_AUPRC, rand_AUROC_20, rand_AUPRC_20, rand_val_AUROC_20, rand_val_AUPRC_20]
