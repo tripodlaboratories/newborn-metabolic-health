@@ -103,7 +103,7 @@ class SubgroupScorer():
             if return_tuple is False:
                 return auc(recall, precision)
             else:
-                return (recall, precision, thresholds)
+                return (precision, recall, thresholds)
         else:
             if return_tuple is False:
                 return np.nan
