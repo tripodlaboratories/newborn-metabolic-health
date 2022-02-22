@@ -138,9 +138,7 @@ def main(args):
     subgroup_sizes_avg_prec = {"bpd":100, "rop":300, "ivh":100, "nec":100}
 
     subgroup_alphas_auroc = {"bpd":0.0575, "rop":0.073, "ivh":0.0585, "nec":0.085}
-    # TODO: Are the subgroup sizes too small in this setting?
-    #subgroup_sizes_auroc = {"bpd":200, "rop":300, "ivh":100, "nec":100}
-    subgroup_sizes_auroc = {"bpd":300, "rop":400, "ivh":250, "nec":250}
+    subgroup_sizes_auroc = {"bpd":200, "rop":300, "ivh":100, "nec":100}
 
     subgroup_alphas_list = {"AVG Precision":subgroup_alphas_avg_prec, "AUROC":subgroup_alphas_auroc}
     subgroup_sizes_list = {"AVG Precision":subgroup_sizes_avg_prec, "AUROC":subgroup_sizes_auroc}
@@ -175,7 +173,7 @@ def main(args):
             other_outcomes = np.setdiff1d(outcome_labels, targ)
             in_true_controls = (true_vals[other_outcomes].sum(axis=1) == 0) & (true_vals[targ] == 0)
             in_analysis_set = (in_true_controls) | (true_vals[targ] == 1)
-            in_true_controls_val = (validation_true_vals[other_outcomes].sum(axis=1) == 0) & (true_vals[targ] == 0)
+            in_true_controls_val = (validation_true_vals[other_outcomes].sum(axis=1) == 0) & (validation_true_vals[targ] == 0)
             in_analysis_set_val = (in_true_controls_val) | (validation_true_vals[targ] == 1)
 
             # NOTE: Since we are interested in identifying HEALTHY individuals
