@@ -554,9 +554,18 @@ def main(args):
                     top_k_subgroup_preds_iters.append(top_subgroups_iters_df)
                     break
 
-            iter_results[targ+col_annotation] = [kfold_AUROC_mean, kfold_AUROC_sd, val_AUROC_mean, val_AUROC_sd, kfold_AUROC_20_mean, kfold_AUROC_20_sd, val_AUROC_20_mean, val_AUROC_20_sd,
-            kfold_AUPRC_mean, kfold_AUPRC_sd, val_AUPRC_mean, val_AUPRC_sd, kfold_AUPRC_20_mean, kfold_AUPRC_20_sd, val_AUPRC_20_mean, val_AUPRC_20_sd]
-            all_results[targ+col_annotation] = [subgroup_results_df, subgroup_val_results_df, kfold_AUROC, kfold_AUPRC, val_AUROC, val_AUPRC, PR_tuple_20, PR_tuple_20_val, kfold_AUPRC_20, val_AUPRC_20, ROC_tuple_20, ROC_tuple_20_val, kfold_AUROC_20, val_AUROC_20, rand_AUROC, rand_AUPRC, rand_val_AUROC, rand_val_AUPRC, rand_AUROC_20, rand_AUPRC_20, rand_val_AUROC_20, rand_val_AUPRC_20]
+            iter_results[targ+col_annotation] = [
+                kfold_AUROC_mean, kfold_AUROC_sd, val_AUROC_mean, val_AUROC_sd,
+                kfold_AUROC_20_mean, kfold_AUROC_20_sd, val_AUROC_20_mean, val_AUROC_20_sd,
+                kfold_AUPRC_mean, kfold_AUPRC_sd, val_AUPRC_mean, val_AUPRC_sd,
+                kfold_AUPRC_20_mean, kfold_AUPRC_20_sd, val_AUPRC_20_mean, val_AUPRC_20_sd]
+            all_results[targ+col_annotation] = [
+                subgroup_results_df, subgroup_val_results_df,
+                kfold_AUROC, kfold_AUPRC, val_AUROC, val_AUPRC,
+                PR_tuple_20, PR_tuple_20_val, kfold_AUPRC_20, val_AUPRC_20,
+                ROC_tuple_20, ROC_tuple_20_val, kfold_AUROC_20, val_AUROC_20,
+                rand_AUROC, rand_AUPRC, rand_val_AUROC, rand_val_AUPRC,
+                rand_AUROC_20, rand_AUPRC_20, rand_val_AUROC_20, rand_val_AUPRC_20]
 
         ###################
         # Writing outputs #
@@ -627,16 +636,16 @@ def main(args):
 
 
             worksheet_20.write(0,0, "outcome")
-            worksheet_20.write(0,1, "kfold AUPRC")
-            worksheet_20.write(0,2, "val AUPRC")
-            worksheet_20.write(0,3, "kfold AUROC")
-            worksheet_20.write(0,4, "val AUROC")
+            worksheet_20.write(0,1, "kfold AUROC")
+            worksheet_20.write(0,2, "kfold AUPRC")
+            worksheet_20.write(0,3, "val AUROC")
+            worksheet_20.write(0,4, "val AUPRC")
 
             worksheet_20.write(outcome_order.index(outcome)+1, 0, outcome)
-            worksheet_20.write(outcome_order.index(outcome)+1, 1, kfold_20_AUPRC)
-            worksheet_20.write(outcome_order.index(outcome)+1, 2, val_20_AUPRC)
-            worksheet_20.write(outcome_order.index(outcome)+1, 3, kfold_20_AUROC)
-            worksheet_20.write(outcome_order.index(outcome)+1, 4, val_20_AUROC)
+            worksheet_20.write(outcome_order.index(outcome)+1, 1, kfold_20_AUROC)
+            worksheet_20.write(outcome_order.index(outcome)+1, 2, kfold_20_AUPRC)
+            worksheet_20.write(outcome_order.index(outcome)+1, 3, val_20_AUROC)
+            worksheet_20.write(outcome_order.index(outcome)+1, 4, val_20_AUPRC)
 
 
             kfold_AUROC_mean = iter_results[targ+col_annotation][0]
@@ -660,27 +669,27 @@ def main(args):
             val_AUPRC_sd_20 = iter_results[targ+col_annotation][15]
 
             worksheet_20_mean.write(0,0, "outcome")
-            worksheet_20_mean.write(0,1, "kfold AUPRC")
-            worksheet_20_mean.write(0,2, "val AUPRC")
-            worksheet_20_mean.write(0,3, "kfold AUROC")
-            worksheet_20_mean.write(0,4, "val AUROC")
+            worksheet_20_mean.write(0,1, "kfold AUROC")
+            worksheet_20_mean.write(0,2, "kfold AUPRC")
+            worksheet_20_mean.write(0,3, "val AUROC")
+            worksheet_20_mean.write(0,4, "val AUPRC")
 
-            worksheet_20_mean.write(0,6, "kfold AUPRC SD")
-            worksheet_20_mean.write(0,7, "val AUPRC SD")
-            worksheet_20_mean.write(0,8, "kfold AUROC SD")
-            worksheet_20_mean.write(0,9, "val AUROC SD")
+            worksheet_20_mean.write(0,6, "kfold AUROC SD")
+            worksheet_20_mean.write(0,7, "kfold AUPRC SD")
+            worksheet_20_mean.write(0,8, "val AUROC SD")
+            worksheet_20_mean.write(0,9, "val AUPRC SD")
 
 
             worksheet_20_mean.write(outcome_order.index(outcome)+1, 0, outcome)
-            worksheet_20_mean.write(outcome_order.index(outcome)+1, 1, kfold_AUPRC_mean_20)
-            worksheet_20_mean.write(outcome_order.index(outcome)+1, 2, val_AUPRC_mean_20)
-            worksheet_20_mean.write(outcome_order.index(outcome)+1, 3, kfold_AUROC_mean_20)
-            worksheet_20_mean.write(outcome_order.index(outcome)+1, 4, val_AUROC_mean_20)
+            worksheet_20_mean.write(outcome_order.index(outcome)+1, 1, kfold_AUROC_mean_20)
+            worksheet_20_mean.write(outcome_order.index(outcome)+1, 2, kfold_AUPRC_mean_20)
+            worksheet_20_mean.write(outcome_order.index(outcome)+1, 3, val_AUROC_mean_20)
+            worksheet_20_mean.write(outcome_order.index(outcome)+1, 4, val_AUPRC_mean_20)
 
-            worksheet_20_mean.write(outcome_order.index(outcome)+1, 6, kfold_AUPRC_sd_20)
-            worksheet_20_mean.write(outcome_order.index(outcome)+1, 7, val_AUPRC_sd_20)
-            worksheet_20_mean.write(outcome_order.index(outcome)+1, 8, kfold_AUROC_sd_20)
-            worksheet_20_mean.write(outcome_order.index(outcome)+1, 9, val_AUROC_sd_20)
+            worksheet_20_mean.write(outcome_order.index(outcome)+1, 6, kfold_AUROC_sd_20)
+            worksheet_20_mean.write(outcome_order.index(outcome)+1, 7, kfold_AUPRC_sd_20)
+            worksheet_20_mean.write(outcome_order.index(outcome)+1, 8, val_AUROC_sd_20)
+            worksheet_20_mean.write(outcome_order.index(outcome)+1, 9, val_AUPRC_sd_20)
 
             worksheet_baseline_mean.write(0,0, "outcome")
             worksheet_baseline_mean.write(0,1, "kfold AUROC")
@@ -688,10 +697,10 @@ def main(args):
             worksheet_baseline_mean.write(0,3, "val AUROC")
             worksheet_baseline_mean.write(0,4, "val AUPRC")
 
-            worksheet_baseline_mean.write(0,6, "kfold AUPRC SD")
-            worksheet_baseline_mean.write(0,7, "val AUPRC SD")
-            worksheet_baseline_mean.write(0,8, "kfold AUROC SD")
-            worksheet_baseline_mean.write(0,9, "val AUROC SD")
+            worksheet_baseline_mean.write(0,6, "kfold AUROC SD")
+            worksheet_baseline_mean.write(0,7, "kfold AUPRC SD")
+            worksheet_baseline_mean.write(0,8, "val AUROC SD")
+            worksheet_baseline_mean.write(0,9, "val AUPRC SD")
 
             worksheet_baseline_mean.write(outcome_order.index(outcome)+1, 0, outcome)
             worksheet_baseline_mean.write(outcome_order.index(outcome)+1, 1, kfold_AUROC_mean)
@@ -699,10 +708,10 @@ def main(args):
             worksheet_baseline_mean.write(outcome_order.index(outcome)+1, 3, val_AUROC_mean)
             worksheet_baseline_mean.write(outcome_order.index(outcome)+1, 4, val_AUPRC_mean)
 
-            worksheet_baseline_mean.write(outcome_order.index(outcome)+1, 6, kfold_AUPRC_sd)
-            worksheet_baseline_mean.write(outcome_order.index(outcome)+1, 7, val_AUPRC_sd)
-            worksheet_baseline_mean.write(outcome_order.index(outcome)+1, 8, kfold_AUROC_sd)
-            worksheet_baseline_mean.write(outcome_order.index(outcome)+1, 9, val_AUROC_sd)
+            worksheet_baseline_mean.write(outcome_order.index(outcome)+1, 6, kfold_AUROC_sd)
+            worksheet_baseline_mean.write(outcome_order.index(outcome)+1, 7, kfold_AUPRC_sd)
+            worksheet_baseline_mean.write(outcome_order.index(outcome)+1, 8, val_AUROC_sd)
+            worksheet_baseline_mean.write(outcome_order.index(outcome)+1, 9, val_AUPRC_sd)
 
 
             rand_AUROC = all_results[targ+col_annotation][14]
@@ -719,16 +728,16 @@ def main(args):
             rand_val_AUPRC_20 = all_results[targ+col_annotation][21]
 
             worksheet_20_rand.write(0,0, "outcome")
-            worksheet_20_rand.write(0,1, "kfold AUPRC")
-            worksheet_20_rand.write(0,2, "val AUPRC")
-            worksheet_20_rand.write(0,3, "kfold AUROC")
-            worksheet_20_rand.write(0,4, "val AUROC")
+            worksheet_20_rand.write(0,1, "kfold AUROC")
+            worksheet_20_rand.write(0,2, "kfold AUPRC")
+            worksheet_20_rand.write(0,3, "val AUROC")
+            worksheet_20_rand.write(0,4, "val AUPRC")
 
             worksheet_20_rand.write(outcome_order.index(outcome)+1, 0, outcome)
-            worksheet_20_rand.write(outcome_order.index(outcome)+1, 1, rand_AUPRC_20)
-            worksheet_20_rand.write(outcome_order.index(outcome)+1, 2, rand_val_AUPRC_20)
-            worksheet_20_rand.write(outcome_order.index(outcome)+1, 3, rand_AUROC_20)
-            worksheet_20_rand.write(outcome_order.index(outcome)+1, 4, rand_val_AUROC_20)
+            worksheet_20_rand.write(outcome_order.index(outcome)+1, 1, rand_AUROC_20)
+            worksheet_20_rand.write(outcome_order.index(outcome)+1, 2, rand_AUPRC_20)
+            worksheet_20_rand.write(outcome_order.index(outcome)+1, 3, rand_val_AUROC_20)
+            worksheet_20_rand.write(outcome_order.index(outcome)+1, 4, rand_val_AUPRC_20)
 
             worksheet_baseline_rand.write(0,0, "outcome")
             worksheet_baseline_rand.write(0,1, "kfold AUROC")
