@@ -54,6 +54,9 @@ def get_args():
         '-o', '--output_directory',
         help='output directory to save results files')
     parser.add_argument(
+        '--metabolites_for_subgroups', default=None,
+        help='Metabolite list to use in subgroup definitions.')
+    parser.add_argument(
         '-l', '--log_level', default='INFO', help='logger level')
     return parser.parse_args()
 
@@ -65,6 +68,7 @@ def main(args):
     valid_true_vals_file = args.validation_true_vals
     output_dir = args.output_directory
     val_index_col = args.validation_id
+    subgroup_metab_list = args.metabolites_for_subgroups
     log_level = args.log_level
 
     # Set up logger
@@ -119,6 +123,10 @@ def main(args):
     # Read in the California metabolite labels
     with open('./config/expected_metabolite_order.txt') as f:
         cal_metabolites = [l.strip() for l in f.readlines()]
+    if subgroup_metab_list is not None:
+        with open(subgroup_metab_list) as f:
+            cal_subgroup_metabs = [l.strip() for l in f.readlines()]
+        cal_metabolites = [l for l in cal_metabolites if l in cal_subgroup_metabs]
 
     # Read in metadata
     metadata = pd.read_csv("./data/processed/metadata.csv", low_memory=False)
