@@ -1,5 +1,6 @@
 """Script for creating a bottlenecked model checkpoint."""
 import argparse
+import json
 import logging
 import os
 from pathlib import PurePath
@@ -23,7 +24,11 @@ def get_argparser():
         description='Create a checkpointed model for the 1-unit bottleneck.',
         conflict_handler='resolve')
     parser.add_argument(
-        '-i', '--input_data', type=str, help='input data for model training.')
+        '-i', '--input_data', type=str, default=None,
+        help='input data for model training.')
+    parser.add_argument(
+        '-c', '--config', type=str, default=None,
+        help='Config file for generating external validation artifacts')
     parser.add_argument(
         '--outcomes_file', type=str, default=None,
         help='provide separate outcomes data for model training')
@@ -67,36 +72,59 @@ def main(args):
     logger = logging.getLogger('Model Training')
 
     input_data = args.input_data
+    config_file = args.config
     outcomes_file = args.outcomes_file
     drop_sparse_cols = args.drop_sparse_cols
     output_dir = PurePath(args.output_dir)
     tasks = './config/neonatal_covariates.txt'
     gestational_age_file = args.gestational_age_file
 
-    # Read in data
-    input_data = pd.read_csv(input_data, low_memory=False)
-    input_data.set_index('row_id', inplace=True)
-    outcomes = read_lines(tasks)
+    if config_file is not None:
+        with open(config_file) as f:
+            config = json.load(f)
+        input_data_file = config.get('input')
+        input_data = pd.read_csv(input_data_file, low_memory=False)
+        input_data.set_index('row_id', inplace=True)
+        metadata_file = config.get('metadata')
+        included_ga_range = config.get('gestational_age_range')
+        outcomes = config.get('outcomes')
+        metabolite_subset = config.get('metabolites')
 
-    # Subset data based on gestational ages used
-    if gestational_age_file is not None:
-        metadata = pd.read_csv(args.metadata, low_memory=False)
+        metadata = pd.read_csv(metadata_file, low_memory=False)
         metadata.set_index('row_id', inplace=True)
-        included_ga_range = read_lines(gestational_age_file)
         included_metadata = metadata[metadata['gacat'].isin(included_ga_range)]
         input_data = input_data.loc[included_metadata.index, :]
         assert sorted(input_data.index) == sorted(included_metadata.index)
 
-    # Drop sparse columns
-    if drop_sparse_cols is True:
-        input_data.dropna(thresh=len(input_data) / 2, axis=1, inplace=True)
-        input_data.dropna(inplace=True)
+    else:
+        # Read in data
+        input_data = pd.read_csv(input_data, low_memory=False)
+        input_data.set_index('row_id', inplace=True)
+        outcomes = read_lines(tasks)
+        metabolite_subset = None
+
+        # Subset data based on gestational ages used
+        if gestational_age_file is not None:
+            metadata = pd.read_csv(args.metadata, low_memory=False)
+            metadata.set_index('row_id', inplace=True)
+            included_ga_range = read_lines(gestational_age_file)
+            included_metadata = metadata[metadata['gacat'].isin(included_ga_range)]
+            input_data = input_data.loc[included_metadata.index, :]
+            assert sorted(input_data.index) == sorted(included_metadata.index)
+
 
     # Split data into X and Y
     scaler = StandardScaler()
 
     if outcomes_file is None:
-        data_X = input_data.drop(outcomes, axis=1)
+        if metabolite_subset is not None:
+            data_X = input_data[metabolite_subset]
+        # Drop sparse columns
+        if drop_sparse_cols is True:
+            data_X.dropna(thresh=len(input_data) / 2, axis=1, inplace=True)
+            data_X.dropna(inplace=True)
+
+        data_X = data_X.drop(outcomes, axis=1, errors='ignore')
         data_Y = input_data[outcomes]
     else:
         data_Y = pd.read_csv(args.outcomes_file).set_index('row_id')
@@ -104,9 +132,18 @@ def main(args):
         merged = pd.merge(
             input_data, data_Y, left_index=True, right_index=True, how='inner')
         data_X = merged.drop(outcomes, axis=1)
+
+        if metabolite_subset is not None:
+            data_X = input_data[metabolite_subset]
+        # Drop sparse columns
+        if drop_sparse_cols is True:
+            data_X.dropna(thresh=len(input_data) / 2, axis=1, inplace=True)
+            data_X.dropna(inplace=True)
+
         data_Y = merged[outcomes]
         assert sorted(data_X.index) == sorted(data_Y.index)
 
+    # Preprocess before training
     data_X = pd.DataFrame(
         scaler.fit_transform(data_X),
         columns=data_X.columns,
