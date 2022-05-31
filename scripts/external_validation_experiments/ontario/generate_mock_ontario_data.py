@@ -59,9 +59,11 @@ def main(args):
     mock_features = pd.DataFrame(
         mock_X, columns=data_headers.columns,
         index=index)
+    mock_features.index.name = id_col
     mock_outcomes = pd.DataFrame(
         mock_Y, columns=outcome_cols_only.columns,
         index=index)
+    mock_outcomes.index.name = id_col
 
     # Add back extra columns
     for col in outcome_headers:
