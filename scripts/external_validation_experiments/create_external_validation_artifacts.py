@@ -122,7 +122,6 @@ def main(args):
         # Drop sparse columns
         if drop_sparse_cols is True:
             data_X.dropna(thresh=len(input_data) / 2, axis=1, inplace=True)
-            data_X.dropna(inplace=True)
 
         data_X = data_X.drop(outcomes, axis=1, errors='ignore')
         data_Y = input_data[outcomes]
@@ -138,7 +137,6 @@ def main(args):
         # Drop sparse columns
         if drop_sparse_cols is True:
             data_X.dropna(thresh=len(input_data) / 2, axis=1, inplace=True)
-            data_X.dropna(inplace=True)
 
         data_Y = merged[outcomes]
         assert sorted(data_X.index) == sorted(data_Y.index)
@@ -148,6 +146,15 @@ def main(args):
         scaler.fit_transform(data_X),
         columns=data_X.columns,
         index=data_X.index)
+
+    data_X_cols, data_Y_cols = data_X.columns, data_Y.columns
+    temp_merge = pd.merge(data_X, data_Y, left_index=True, right_index=True)
+    orig_shape = temp_merge.shape
+    temp_merge.dropna(inplace=True)
+    n_dropped = orig_shape[0] - temp_merge.shape[0]
+    logger.info(
+        f'Final NA drop before model training: {n_dropped} samples.')
+    data_X, data_Y = temp_merge[data_X_cols], temp_merge[data_Y_cols]
 
     # Train
     utils.seed_torch(101)
@@ -181,12 +188,15 @@ def main(args):
         shuffle_batch=shuffle_batch,
         optimizer_class=optim.Adam)
 
-    # Set up data for training and dummy sample for test - we don't really care
-    # about the evaluations on the test data, the handler just requires it.
-    training_handler.set_training_data(data_X, data_Y)
+    # Set up data for training and sample for test, evaluating when model
+    # stopping should happen
+    test_index = data_X.sample(1000, random_state=10).index
+    training_handler.set_training_data(
+        data_X.loc[~data_X.index.isin(test_index)],
+        data_Y.loc[~data_X.index.isin(test_index)])
     training_handler.set_test_data(
-        data_X.sample(10, random_state=10),
-        data_Y.sample(10, random_state=10))
+        data_X.loc[data_X.index.isin(test_index)],
+        data_Y.loc[data_Y.index.isin(test_index)])
 
     train_args = {
         'n_epochs': n_epochs,

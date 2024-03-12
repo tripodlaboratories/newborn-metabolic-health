@@ -28,7 +28,7 @@ def get_args():
         conflict_handler='resolve')
     parser.add_argument(
         '-i', '--input_predictions_directory', default='./results/deep_mtl/neonatal_bottleneck_validation/ensemble_bottle_1/',
-        help='Input predictions directory, should contain bottleneck.csv, valid_bottleneck.csv, and true_vals.csv')
+        help='Input predictions directory, should contain bottleneck.csv and true_vals.csv')
     parser.add_argument(
         '-m', '--metabolite_data', default='./data/processed/neonatal_conditions.csv',
         help='Input metabolite profile data for defining subgroup quantiles.')
