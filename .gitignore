@@ -178,7 +178,7 @@ dmypy.json
 .idea
 
 # Data Directories and deep NN predictions which can get large
-archive/*
+archive*/*
 data/*
 *train_preds.csv
 *.gz
