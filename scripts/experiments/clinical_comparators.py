@@ -100,10 +100,6 @@ def main(args):
         input_data, included_metadata,
         left_index=True, right_index=True, how='inner')
 
-    # Recode infant sex encoding to {0,1} (in original data it is {1,2}
-    # 0: males, 1: females
-    input_data['infant_sex'] = input_data['sex3'] - 1
-
     # Organize variables into feature sets for specific types of model input
     feature_sets = {
         'bwtga': ['gacat', 'bwtcat'],
@@ -137,6 +133,10 @@ def main(args):
         input_data = data_subset
         assert 'total_conditions' not in input_data
 
+    # Recode clinical variables for modeling
+    # Recode infant sex encoding to {0,1} (in original data it is {1,2}
+    # 0: males, 1: females
+    input_data['infant_sex'] = input_data['sex3'] - 1
     # Convert categorical labels of birthweight and gestational age to numeric
     input_data['gacat'] = input_data['gacat'].apply(
         lambda x: float(re.sub(r'^[0-9]*_', '', x)) - 0.5)
