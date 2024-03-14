@@ -1,0 +1,56 @@
+raw_feature_name,feature_label,description,category
+ALA,ALA,Alanine,amino acid
+ARG,ARG,Arginine,amino acid
+C02,C-2,C-2,short-chain acylcarnitine
+C03,C-3,C-3,short-chain acylcarnitine
+C03DC,C-3DC,C-3DC,short-chain acylcarnitine
+C04,C-4,C-4,short-chain acylcarnitine
+C04DC,C-4DC,C-4DC,short-chain acylcarnitine
+C05,C-5,C-5,short-chain acylcarnitine
+C051,C-5:1,C-5:1,short-chain acylcarnitine
+C05DC,C-5DC,C-5DC,short-chain acylcarnitine
+C05OH,C-5OH,C-5OH,short-chain acylcarnitine
+C06,C-6,C-6,short-chain acylcarnitine
+C08,C-8,C-8,long-chain acylcarnitine
+C081,C-8:1,C-8:1,long-chain acylcarnitine
+C10,C-10,C-10,long-chain acylcarnitine
+C101,C-10:1,C-10:1,long-chain acylcarnitine
+C12,C-12,C-12,long-chain acylcarnitine
+C121,C-12:1,C-12:1,long-chain acylcarnitine
+C14,C-14,C-14,long-chain acylcarnitine
+C141,C14:1,C14:1,long-chain acylcarnitine
+C142,C14:2,C14:2,long-chain acylcarnitine
+C14OH,C-14OH,C-14OH,3-hydroxy long-chain acylcarnitine
+C16,C-16,C-16,long-chain acylcarnitine
+C16OH,C-16OH,C-16OH,3-hydroxy long-chain acylcarnitine
+C18,C-18,C-18,long-chain acylcarnitine
+C181,C-18:1,C-18:1,long-chain acylcarnitine
+C181OH,C-18:1OH,C-18:1OH,3-hydroxy long-chain acylcarnitine
+C182,C-18:2,C-18:2,long-chain acylcarnitine
+C18OH,C-18OH,C-18OH,3-hydroxy long-chain acylcarnitine
+CIT,CIT,Citrulline,amino acid
+FC,FC,Free Carnitine,free carnitine
+GLY,GLY,Glycine,amino acid
+MET,MET,Methionine,amino acid
+ORN,ORN,Ornithine,amino acid
+OXP,OXP,5-Oxoproline,amino acid
+PHE,PHE,Phenylalanine,amino acid
+PRO,PRO,Proline,amino acid
+R03D10,C-3DC/C-10,C03DC / C10 Ratio,short-chain acylcarnitine
+R05D03D,C-5DC/C-3DC,C05DC / C03DC Ratio,short-chain acylcarnitine
+R14_12,C-14:1/C-12:1,C14:1 / C12:1 Ratio,long-chain acylcarnitine
+R16O16,C-16OH/C-16,C16OH / C16 Ratio,long-chain acylcarnitine
+R3_2,C-3/C-2,C03 / C02 Ratio,short-chain acylcarnitine
+R5_3,C-5/C-3,C05 / C03 Ratio,short-chain acylcarnitine
+R8_10,C-8/C-10,C08 / C10 Ratio,short-chain acylcarnitine
+RA_O,ARG/ORN,Arginine/Ornithine Ratio,amino acid
+RC_A,CIT/ARG,Citrulline/Arginine Ratio,amino acid
+RF_C,FC/(C-16 + C-18:1),FC / ( C16 + C18:1 ) Ratio,free carnitine
+RF_Y,PHE/TYR,Phenylalanine/Tyrosine Ratio,amino acid
+RL_A,LEU/ALA,Leucine/Alanine Ratio,amino acid
+RO_C,ORN/CIT,Ornithine/Citrulline Ratio,amino acid
+RV_F,VAL/PHE,Valine / Phenylalanine Ratio,amino acid
+SA,SA,Succinylacetone,succinylacetone
+TYR,TYR,Tyrosine,amino acid
+VAL,VAL,Valine,amino acid
+XLE,XLE,Leucine/Isoleucine,amino acid
