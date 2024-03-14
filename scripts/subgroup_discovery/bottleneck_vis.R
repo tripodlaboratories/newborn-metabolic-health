@@ -6,6 +6,16 @@ library(ggplot2)
 library(ggthemes)
 library(readxl)
 library(yardstick)
+library(optparse)
+
+# parse arguments
+option_list <- list(
+make_option(
+		c("--compare_prc_vs_random"), action="store_true", default=FALSE,
+		help="Add random classifier performance to precision recall curves.")
+)
+opts <- parse_args(OptionParser(option_list=option_list))
+add_random_to_prc <- opts$compare_prc_vs_random
 
 #some utility objects used for vis loop
 outcome_order <- c("bpd", "ivh", "nec", "rop")
@@ -62,29 +72,56 @@ colnames(PR_val_df) <- c("precision", "recall", "outcome")
 colnames(ROC_df) <- c("TPR", "FPR", "outcome")
 colnames(ROC_val_df) <- c("TPR", "FPR", "outcome")
 
+# Code that adds baseline prediction
+if (add_random_to_prc) {
+		PR_combined_plot <- ggplot(PR_df, aes(x=recall, y=precision, color=outcome))+geom_path()+
+								scale_color_tableau() + ylim(0, 1) +xlab("Recall")+ylab("Precision")+ggtitle("K-Fold CV Test Set")+
+		annotate("text", x=0.05, y=0.31, size=6, color=outcomes_colors[["bpd"]],
+						label=paste0("BPD AUC: ",  baseline_list[baseline_list$outcome == "bpd", "kfold AUPRC"], " (Baseline: ", baseline_rand_list[baseline_rand_list$outcome == "bpd", "kfold AUPRC"] , ")"), hjust=0) +
+		annotate("text", x=0.05, y=0.24, size=6, color=outcomes_colors[["ivh"]],
+						label=paste0("IVH AUC: ", baseline_list[baseline_list$outcome == "ivh", "kfold AUPRC"], " (Baseline: ", baseline_rand_list[baseline_rand_list$outcome == "ivh", "kfold AUPRC"] , ")"), hjust=0) +
+		annotate("text", x=0.05, y=0.17, size=6, color=outcomes_colors[["nec"]],
+						label=paste0("NEC AUC: ", baseline_list[baseline_list$outcome == "nec", "kfold AUPRC"], " (Baseline: ", baseline_rand_list[baseline_rand_list$outcome == "nec", "kfold AUPRC"] , ")"), hjust=0) +
+		annotate("text", x=0.05, y=0.10, size=6, color=outcomes_colors[["rop"]],
+						label=paste0("ROP AUC: ", baseline_list[baseline_list$outcome == "rop", "kfold AUPRC"], " (Baseline: ", baseline_rand_list[baseline_rand_list$outcome == "rop", "kfold AUPRC"] , ")"), hjust=0) +
+		labs(color="outcome") + theme(aspect.ratio=1)
+
+		PR_combined_val_plot <- ggplot(PR_val_df, aes(x=recall, y=precision, color=outcome))+geom_path()+
+								scale_color_tableau() +ylim(0, 1) + xlab("Recall") + ylab("Precision") +ggtitle("Holdout Validation Set") +
+		annotate("text", x=0.05, y=0.31, size=6, color=outcomes_colors[["bpd"]],
+						label=paste0("BPD AUC: ",  baseline_list[baseline_list$outcome == "bpd", "val AUPRC"], " (Baseline: ", baseline_rand_list[baseline_rand_list$outcome == "bpd", "val AUPRC"] , ")"), hjust=0) +
+		annotate("text", x=0.05, y=0.24, size=6, color=outcomes_colors[["ivh"]],
+						label=paste0("IVH AUC: ", baseline_list[baseline_list$outcome == "ivh", "val AUPRC"], " (Baseline: ", baseline_rand_list[baseline_rand_list$outcome == "ivh", "val AUPRC"] , ")"), hjust=0) +
+		annotate("text", x=0.05, y=0.17, size=6, color=outcomes_colors[["nec"]],
+						label=paste0("NEC AUC: ", baseline_list[baseline_list$outcome == "nec", "val AUPRC"], " (Baseline: ", baseline_rand_list[baseline_rand_list$outcome == "nec", "val AUPRC"] , ")"), hjust=0) +
+		annotate("text", x=0.05, y=0.10, size=6, color=outcomes_colors[["rop"]],
+						label=paste0("ROP AUC: ", baseline_list[baseline_list$outcome == "rop", "val AUPRC"], " (Baseline: ", baseline_rand_list[baseline_rand_list$outcome == "rop", "val AUPRC"] , ")"), hjust=0) +
+		labs(color="outcome") + theme(aspect.ratio=1)
+} else {
 PR_combined_plot <- ggplot(PR_df, aes(x=recall, y=precision, color=outcome))+geom_path()+
               scale_color_tableau() + ylim(0, 1) +xlab("Recall")+ylab("Precision")+ggtitle("K-Fold CV Test Set")+
-	annotate("text", x=0.05, y=0.31, size=6, color=outcomes_colors[["bpd"]],
-					 label=paste0("BPD AUC: ",  baseline_list[baseline_list$outcome == "bpd", "kfold AUPRC"], " (Baseline: ", baseline_rand_list[baseline_rand_list$outcome == "bpd", "kfold AUPRC"] , ")"), hjust=0) +
-	annotate("text", x=0.05, y=0.24, size=6, color=outcomes_colors[["ivh"]],
-					 label=paste0("IVH AUC: ", baseline_list[baseline_list$outcome == "ivh", "kfold AUPRC"], " (Baseline: ", baseline_rand_list[baseline_rand_list$outcome == "ivh", "kfold AUPRC"] , ")"), hjust=0) +
-	annotate("text", x=0.05, y=0.17, size=6, color=outcomes_colors[["nec"]],
-					 label=paste0("NEC AUC: ", baseline_list[baseline_list$outcome == "nec", "kfold AUPRC"], " (Baseline: ", baseline_rand_list[baseline_rand_list$outcome == "nec", "kfold AUPRC"] , ")"), hjust=0) +
-	annotate("text", x=0.05, y=0.10, size=6, color=outcomes_colors[["rop"]],
-					 label=paste0("ROP AUC: ", baseline_list[baseline_list$outcome == "rop", "kfold AUPRC"], " (Baseline: ", baseline_rand_list[baseline_rand_list$outcome == "rop", "kfold AUPRC"] , ")"), hjust=0) +
+	annotate("text", x=0.5, y=0.31, size=6, color=outcomes_colors[["bpd"]],
+					 label=paste0("BPD AUC: ",  baseline_list[baseline_list$outcome == "bpd", "kfold AUPRC"]), hjust=0) +
+	annotate("text", x=0.5, y=0.24, size=6, color=outcomes_colors[["ivh"]],
+					 label=paste0("IVH AUC: ", baseline_list[baseline_list$outcome == "ivh", "kfold AUPRC"]), hjust=0) +
+	annotate("text", x=0.5, y=0.17, size=6, color=outcomes_colors[["nec"]],
+					 label=paste0("NEC AUC: ", baseline_list[baseline_list$outcome == "nec", "kfold AUPRC"]), hjust=0) +
+	annotate("text", x=0.5, y=0.10, size=6, color=outcomes_colors[["rop"]],
+					 label=paste0("ROP AUC: ", baseline_list[baseline_list$outcome == "rop", "kfold AUPRC"]), hjust=0) +
 	labs(color="outcome") + theme(aspect.ratio=1)
 
 PR_combined_val_plot <- ggplot(PR_val_df, aes(x=recall, y=precision, color=outcome))+geom_path()+
               scale_color_tableau() +ylim(0, 1) + xlab("Recall") + ylab("Precision") +ggtitle("Holdout Validation Set") +
-	annotate("text", x=0.05, y=0.31, size=6, color=outcomes_colors[["bpd"]],
-					 label=paste0("BPD AUC: ",  baseline_list[baseline_list$outcome == "bpd", "val AUPRC"], " (Baseline: ", baseline_rand_list[baseline_rand_list$outcome == "bpd", "val AUPRC"] , ")"), hjust=0) +
-	annotate("text", x=0.05, y=0.24, size=6, color=outcomes_colors[["ivh"]],
-					 label=paste0("IVH AUC: ", baseline_list[baseline_list$outcome == "ivh", "val AUPRC"], " (Baseline: ", baseline_rand_list[baseline_rand_list$outcome == "ivh", "val AUPRC"] , ")"), hjust=0) +
-	annotate("text", x=0.05, y=0.17, size=6, color=outcomes_colors[["nec"]],
-					 label=paste0("NEC AUC: ", baseline_list[baseline_list$outcome == "nec", "val AUPRC"], " (Baseline: ", baseline_rand_list[baseline_rand_list$outcome == "nec", "val AUPRC"] , ")"), hjust=0) +
-	annotate("text", x=0.05, y=0.10, size=6, color=outcomes_colors[["rop"]],
-					 label=paste0("ROP AUC: ", baseline_list[baseline_list$outcome == "rop", "val AUPRC"], " (Baseline: ", baseline_rand_list[baseline_rand_list$outcome == "rop", "val AUPRC"] , ")"), hjust=0) +
+	annotate("text", x=0.5, y=0.31, size=6, color=outcomes_colors[["bpd"]],
+					 label=paste0("BPD AUC: ",  baseline_list[baseline_list$outcome == "bpd", "val AUPRC"]), hjust=0) +
+	annotate("text", x=0.5, y=0.24, size=6, color=outcomes_colors[["ivh"]],
+					 label=paste0("IVH AUC: ", baseline_list[baseline_list$outcome == "ivh", "val AUPRC"]), hjust=0) +
+	annotate("text", x=0.5, y=0.17, size=6, color=outcomes_colors[["nec"]],
+					 label=paste0("NEC AUC: ", baseline_list[baseline_list$outcome == "nec", "val AUPRC"]), hjust=0) +
+	annotate("text", x=0.5, y=0.10, size=6, color=outcomes_colors[["rop"]],
+					 label=paste0("ROP AUC: ", baseline_list[baseline_list$outcome == "rop", "val AUPRC"]), hjust=0) +
 	labs(color="outcome") + theme(aspect.ratio=1)
+}
 
 pdf("./results/subgroup_discovery/bottleneck_kfold_PR_curves.pdf", height=7, width=7, useDingbats=FALSE)
 print(PR_combined_plot)

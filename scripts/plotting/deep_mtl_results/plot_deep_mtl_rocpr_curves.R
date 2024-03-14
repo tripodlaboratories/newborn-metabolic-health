@@ -19,8 +19,6 @@ library(ggplot2)
 
 theme_set(theme_base(base_size=24))
 
-source("./biobank_project/plotting/variable_correlations.R")
-
 # args
 option_list <- list(
   make_option(
@@ -58,7 +56,7 @@ option_list <- list(
 		help="Test against any outcome"
 	),
 	make_option(
-		c("--interactive_debug"), type="logical", default=TRUE,
+		c("--interactive_debug"), type="logical", default=FALSE,
 		help="adds default options for debugging interactively"
 	)
 )
@@ -401,13 +399,13 @@ combined_plt <- ggplot(bind_rows(prcurve_list), aes(x=Recall, y=Precision, color
 	geom_path() +
 	scale_color_tableau() +
 	ylim(0, 1) +
-	annotate("text", x=0.5, y=0.3, size=6, color=outcomes_colors[["bpd_any"]],
+	annotate("text", x=0.5, y=0.22, size=6, color=outcomes_colors[["bpd_any"]],
 					 label=paste("BPD", aupr_list[["bpd_any"]]), hjust=0) +
-	annotate("text", x=0.5, y=0.25, size=6, color=outcomes_colors[["ivh_any"]],
+	annotate("text", x=0.5, y=0.15, size=6, color=outcomes_colors[["ivh_any"]],
 					 label=paste("IVH", aupr_list[["ivh_any"]]), hjust=0) +
-	annotate("text", x=0.5, y=0.2, size=6, color=outcomes_colors[["nec_any"]],
+	annotate("text", x=0.5, y=0.08, size=6, color=outcomes_colors[["nec_any"]],
 					 label=paste("NEC", aupr_list[["nec_any"]]), hjust=0) +
-	annotate("text", x=0.5, y=0.15, size=6, color=outcomes_colors[["rop_any"]],
+	annotate("text", x=0.5, y=0.01, size=6, color=outcomes_colors[["rop_any"]],
 					 label=paste("ROP", aupr_list[["rop_any"]]), hjust=0) +
 	ggtitle("Precision-Recall Curve") +
 	labs(color="Neonatal\nOutcome") +
