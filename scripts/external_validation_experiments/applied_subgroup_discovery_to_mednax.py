@@ -103,9 +103,15 @@ class SubgroupScorer():
             if return_tuple is False:
                 return auc(recall, precision)
             else:
-                return (recall, precision)
+                return (recall, precision, thresholds)
         else:
-            return np.nan
+            if return_tuple is False:
+                return np.nan
+            else:
+                # null tuple in place of (recall, precision, thresholds)
+                # in list form since usually arrays of recall, precision, and
+                # thresholds are returned
+                return ([np.nan], [np.nan], [np.nan])
 
     def _score_multiple_iters_auprc(self):
         auprc_over_iters = []
@@ -135,7 +141,12 @@ class SubgroupScorer():
             else:
                 return roc_curve(self.true_vals, preds)
         else:
-            return np.nan
+            if return_tuple is False:
+                return np.nan
+            else:
+                # A null tuple instead of (fpr, tpr, thresholds)
+                # in list form to match usually array return types
+                return ([np.nan], [np.nan], [np.nan])
 
     def _score_multiple_iters_auroc(self):
         auroc_over_iters = []
@@ -675,7 +686,10 @@ def main(args):
         logger.info(f'saved .pkl results: to {output_dir}')
 
         #initialize writer
-        workbook = xlsxwriter.Workbook(output_dir + metric + "_bottleneck_results.xlsx")
+        # nan_inf_to_errors option allows nan to appear as #NUM! and inf as #DIV/0!
+        workbook = xlsxwriter.Workbook(
+            output_dir + metric + "_bottleneck_results.xlsx",
+            {'nan_inf_to_errors': True})
         worksheet_baseline = workbook.add_worksheet("baseline")
         worksheet_baseline_mean = workbook.add_worksheet("Mean+SD Across Preds")
         worksheet_baseline_rand = workbook.add_worksheet("rand baseline")
@@ -888,24 +902,28 @@ def main(args):
             worksheet_pr.write(0,1, "Recall KFold")
             worksheet_pr_val.write(0,0, "Precision Val")
             worksheet_pr_val.write(0,1, "Recall Val")
-            for row_num in range(len(precision_20)):
-                temp = worksheet_pr.write(row_num+1,0,precision_20[row_num])
-                temp = worksheet_pr.write(row_num+1,1,recall_20[row_num])
-            for row_num in range(len(precision_val_20)):
-                temp = worksheet_pr_val.write(row_num+1,0,precision_val_20[row_num])
-                temp = worksheet_pr_val.write(row_num+1,1,recall_val_20[row_num])
+            if not pd.isna(precision_20).all() and not pd.isna(recall_20).all():
+                for row_num, (prec, rec) in enumerate(zip(precision_20, recall_20)):
+                    worksheet_pr.write(row_num+1,0,prec)
+                    worksheet_pr.write(row_num+1,1,rec)
+            if not pd.isna(precision_val_20).all() and not pd.isna(recall_val_20).all():
+                for row_num, (prec, rec) in enumerate(zip(precision_val_20, recall_val_20)):
+                    worksheet_pr_val.write(row_num+1,0,prec)
+                    worksheet_pr_val.write(row_num+1,1,rec)
 
             # adding ROC tpr and fpr axes
             worksheet_roc.write(0,0, "TPR KFold")
             worksheet_roc.write(0,1, "FPR KFold")
             worksheet_roc_val.write(0,0, "TPR Val")
             worksheet_roc_val.write(0,1, "FPR Val")
-            for row_num in range(len(tpr_20)):
-                temp = worksheet_roc.write(row_num+1,0,tpr_20[row_num])
-                temp = worksheet_roc.write(row_num+1,1,fpr_20[row_num])
-            for row_num in range(len(tpr_val_20)):
-                temp = worksheet_roc_val.write(row_num+1,0,tpr_val_20[row_num])
-                temp = worksheet_roc_val.write(row_num+1,1,fpr_val_20[row_num])
+            if not pd.isna(tpr_20).all() and not pd.isna(fpr_20).all():
+                for row_num, (tpr, fpr) in enumerate(zip(tpr_20, fpr_20)):
+                    worksheet_roc.write(row_num+1,0,tpr)
+                    worksheet_roc.write(row_num+1,1,fpr)
+            if not pd.isna(tpr_val_20).all() and not pd.isna(fpr_val_20).all():
+                for row_num, (tpr, fpr) in enumerate(zip(tpr_val_20, fpr_val_20)):
+                    worksheet_roc_val.write(row_num+1,0,tpr)
+                    worksheet_roc_val.write(row_num+1,1,fpr)
 
         workbook.close()
         logger.info(f'Writing .csv to {output_dir}')
