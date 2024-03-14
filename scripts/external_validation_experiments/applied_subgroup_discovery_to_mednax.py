@@ -211,7 +211,6 @@ def main(args):
     val_prediction_col = val_preds.drop(
             columns=['fold', 'iter', val_index_col],
             errors='ignore').columns[0]
-    val_preds = val_preds.groupby(val_index_col)[val_prediction_col].mean()
     if 'iter' not in val_preds.columns:
         val_preds_over_iters = val_preds.copy()
         val_preds_over_iters['iter'] = 0
@@ -222,6 +221,7 @@ def main(args):
         val_preds_over_iters = val_preds_over_iters.pivot_table(
             index=val_index_col, columns="iter",
             values=val_prediction_col)
+    val_preds = val_preds.groupby(val_index_col)[val_prediction_col].mean()
 
     #collapse all outcomes to patients x outcomes dataframe
     external_true_vals = cal_biobank_data[["nec_any","rop_any","bpd_any", "ivh_any"]]
