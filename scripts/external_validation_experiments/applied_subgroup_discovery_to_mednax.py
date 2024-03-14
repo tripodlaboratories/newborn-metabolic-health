@@ -58,6 +58,7 @@ def get_args():
 
 class SubgroupScorer():
     def __init__(
+        self,
         sg_num,
         sg_description,
         sg_mask: 'np.ndarray[np.bool]',
@@ -66,6 +67,7 @@ class SubgroupScorer():
         multiple_iters: bool=False):
         self.sg_num = sg_num
         self.sg_description = sg_description
+        self.sg_mask = sg_mask
         self.true_vals = true_vals[sg_mask]
         self.preds = preds[sg_mask]
         self.multiple_iters = multiple_iters
@@ -89,7 +91,7 @@ class SubgroupScorer():
         if self._no_subgroup_exceptions():
             precision, recall, thresholds = precision_recall_curve(
                 self.true_vals, self.preds)
-            return auc(recall_precision)
+            return auc(recall, precision)
         else:
             return np.nan
 
@@ -98,9 +100,9 @@ class SubgroupScorer():
 
     def score_auprc(self):
         if self.multiple_iters is False:
-            return _score_overall_auprc()
+            return self._score_overall_auprc()
         else:
-            return _score_multiple_iters_auprc()
+            return self._score_multiple_iters_auprc()
 
     def _score_overall_auroc(self):
         if self._no_subgroup_exceptions():
@@ -113,9 +115,9 @@ class SubgroupScorer():
 
     def score_auroc(self):
         if self.multiple_iters is False:
-            return _score_overall_auroc()
+            return self._score_overall_auroc()
         else:
-            return _score_multiple_iters_auroc()
+            return self._score_multiple_iters_auroc()
 
 
 def main(args):
@@ -509,7 +511,7 @@ def main(args):
                 # To be used to calculate statistics on a merged top 1:current_subgroup (as running total)
                 total_merge_mask = np.logical_or(total_merge_mask, sg_mask)
                 runtotal_scorer = SubgroupScorer(
-                    'Total Merged Subgroup', f'Merged from {subgroup_num} subgroups', total_merge_mask,
+                    'Total Merged Subgroup', f'Merged from {sg_num} subgroups', total_merge_mask,
                     true_vals=validation_outcome_true_vals[targ], preds=val_outcome_preds)
                 AUPRC = runtotal_scorer.score_auprc()
 
