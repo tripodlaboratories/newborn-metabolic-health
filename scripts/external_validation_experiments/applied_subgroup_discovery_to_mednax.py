@@ -315,7 +315,7 @@ def main(args):
                 n_prediction_iters = len(outcome_preds_over_iters.columns)
 
                 # TODO: Clarify what this condition is checking for...?
-                if(len(outcome_true_vals[targ][total_merge_mask]) == outcome_true_vals[targ][total_merge_mask].sum()):
+                if len(outcome_true_vals[targ][total_merge_mask]) == outcome_true_vals[targ][total_merge_mask].sum():
                     AUROC = np.nan
                     AUROC_sd = np.nan
                     AUROC_mean = np.nan
@@ -357,7 +357,7 @@ def main(args):
                     AUROC_mean = np.mean(temp_auroc)
                     AUPRC_mean = np.mean(temp_auprc)
 
-                if(len(outcome_true_vals[targ][sg_mask]) == outcome_true_vals[targ][sg_mask].sum()):
+                if len(outcome_true_vals[targ][sg_mask]) == outcome_true_vals[targ][sg_mask].sum():
                     subgroup_AUROC = np.nan
                     subgroup_AUROC_sd = np.nan
                     subgroup_AUROC_mean = np.nan
@@ -449,10 +449,13 @@ def main(args):
                     val_outcome_preds[total_merge_mask])
                 AUPRC = auc(recall, precision)
 
-                # In the validation data, need to handle the case where a subgroup is NOT
-                # FOUND in the validation dataset
+                # In the validation data, need to handle the case where a subgroup is
+                # NOT FOUND in the validation dataset OR there are no true positives
                 if sg_mask.sum() == 0:
-                    logger.warn(f'No individuals found in subgroup {sg_num}, {sg_description}')
+                    logger.warning(f'No individuals found in subgroup {sg_num}: {sg_description}')
+                    subgroup_AUPRC = np.nan
+                elif len(validation_outcome_true_vals[targ][sg_mask].unique())== 1:
+                    logger.warning(f'Only one case type present in subgroup {sg_num}: {sg_description}')
                     subgroup_AUPRC = np.nan
                 else:
                     precision, recall, thresholds = precision_recall_curve(
@@ -461,7 +464,7 @@ def main(args):
                     subgroup_AUPRC = auc(recall, precision)
 
                 n_validation_prediction_iters = len(val_outcome_preds_over_iters.columns)
-                if(len(validation_outcome_true_vals[targ][total_merge_mask]) == validation_outcome_true_vals[targ][total_merge_mask].sum()):
+                if len(validation_outcome_true_vals[targ][total_merge_mask]) == validation_outcome_true_vals[targ][total_merge_mask].sum():
                     AUROC = np.nan
                     AUROC_sd = np.nan
                     AUROC_mean = np.nan
@@ -502,17 +505,20 @@ def main(args):
                     AUROC_mean = np.mean(temp_auroc)
                     AUPRC_mean = np.mean(temp_auprc)
 
-                if(len(validation_outcome_true_vals[targ][sg_mask]) == validation_outcome_true_vals[targ][sg_mask].sum()):
+                if len(validation_outcome_true_vals[targ][sg_mask]) == validation_outcome_true_vals[targ][sg_mask].sum():
                     subgroup_AUROC = np.nan
                     subgroup_AUROC_sd = np.nan
                     subgroup_AUROC_mean = np.nan
 
                     temp_auprc = []
-                    for i in range(n_validation_prediction_iters):
-                        precision, recall, thresholds = precision_recall_curve(
-                            validation_outcome_true_vals[targ][sg_mask],
-                            val_outcome_preds_over_iters.iloc[:,i][sg_mask])
-                        temp_auprc.append(auc(recall, precision))
+                    if sg_mask.sum() == 0:
+                        temp_auprc.append(np.nan)
+                    else:
+                        for i in range(n_validation_prediction_iters):
+                            precision, recall, thresholds = precision_recall_curve(
+                                validation_outcome_true_vals[targ][sg_mask],
+                                val_outcome_preds_over_iters.iloc[:,i][sg_mask])
+                            temp_auprc.append(auc(recall, precision))
 
                     if len(temp_auprc) == 1:
                         subgroup_AUPRC_sd = 0
@@ -522,8 +528,12 @@ def main(args):
 
                 else:
                     # Handle cases of no individuals in subgroup in validation data
+                    # Or no positive cases in the outcome
                     if sg_mask.sum() == 0:
-                        logger.warn(f'No individuals found in subgroup {sg_num}, {sg_description}')
+                        logger.warning(f'No individuals found in subgroup {sg_num}: {sg_description}')
+                        subgroup_AUROC = np.nan
+                    elif len(validation_outcome_true_vals[targ][sg_mask].unique()) == 1:
+                        logger.warning(f'Only one class found in subgroup {sg_num}: {sg_description}')
                         subgroup_AUROC = np.nan
                     else:
                         subgroup_AUROC = roc_auc_score(
@@ -534,13 +544,17 @@ def main(args):
                     temp_auroc = []
                     temp_auprc = []
                     for i in range(n_validation_prediction_iters):
-                        precision, recall, thresholds = precision_recall_curve(
-                            validation_outcome_true_vals[targ][sg_mask],
-                            val_outcome_preds_over_iters.iloc[:,i][sg_mask])
-                        temp_auprc.append(auc(recall, precision))
-                        temp_auroc.append(roc_auc_score(
-                            validation_outcome_true_vals[targ][sg_mask],
-                            val_outcome_preds_over_iters.iloc[:,i][sg_mask]))
+                        if len(validation_outcome_true_vals[targ][sg_mask].unique()) == 1:
+                            temp_auprc.append(np.nan)
+                            temp_auroc.append(np.nan)
+                        else:
+                            precision, recall, thresholds = precision_recall_curve(
+                                validation_outcome_true_vals[targ][sg_mask],
+                                val_outcome_preds_over_iters.iloc[:,i][sg_mask])
+                            temp_auprc.append(auc(recall, precision))
+                            temp_auroc.append(roc_auc_score(
+                                validation_outcome_true_vals[targ][sg_mask],
+                                val_outcome_preds_over_iters.iloc[:,i][sg_mask]))
 
                     if len(temp_auroc) == 1 or len(temp_auprc) == 1:
                         subgroup_AUROC_sd = 0
@@ -556,6 +570,7 @@ def main(args):
                     total_merge_description = str(sg_description)
                 else:
                     total_merge_description = str(sg_description) + "-OR-" + total_merge_description
+
                 summary_stats.append({
                     'total_subgroup_merge': total_merge_description,
                     'subgroup': str(sg_description),
@@ -603,7 +618,7 @@ def main(args):
             rand_val_AUPRC = auc(rand_recall, rand_precision)
 
             # Usually the top 20 percentile of data
-            select = (subgroup_results_df["% data"]* 100)
+            select = (subgroup_results_df[r"%data"] * 100)
             select_index = select.index[select == min(select, key=lambda x:abs(x-20))][0]
 
             # Iterate over subgroups, collecting performance metrics ONLY in the top
@@ -619,7 +634,7 @@ def main(args):
                 sg_mask, sg_size = ps.get_cover_array_and_size(sg_description, data=searchspace_data)
                 total_merge_mask = np.logical_or(total_merge_mask, sg_mask)
 
-                if count == select_index:
+                if sg_num == select_index:
                     preds_top_subgroups = outcome_preds[total_merge_mask]
                     true_vals_top_subgroups = outcome_true_vals[targ][total_merge_mask]
                     random_preds_top_subgroups = rand_pred[total_merge_mask]
@@ -668,7 +683,7 @@ def main(args):
                     top_subgroups_iters_df['dataset'] = 'kfold_test'
                     top_k_subgroup_preds_iters.append(top_subgroups_iters_df)
 
-            select = (subgroup_val_results_df["% data"]* 100)
+            select = (subgroup_val_results_df[r"%data"] * 100)
             select_index = select.index[select == min(select, key=lambda x:abs(x-20))][0]
             total_merge_mask = np.full((len(searchspace_val_data.index)), False)
 
@@ -677,7 +692,7 @@ def main(args):
                 sg_quality, sg_description, qf = sg
                 sg_mask, sg_size = ps.get_cover_array_and_size(sg_description, data=searchspace_val_data)
                 total_merge_mask = np.logical_or(total_merge_mask, sg_mask)
-                if count == select_index:
+                if sg_num == select_index:
                     preds_top_subgroups = val_outcome_preds[total_merge_mask]
                     true_vals_top_subgroups = validation_outcome_true_vals[targ][total_merge_mask]
                     random_preds_top_subgroups = rand_val_pred[total_merge_mask]
@@ -720,21 +735,20 @@ def main(args):
                     # Save results over iters
                     preds_iters_top_subgroups = (val_outcome_preds_over_iters[total_merge_mask]
                         .reset_index()
-                        .melt(id_vars='row_id', value_name='preds')
-                        .set_index('row_id'))
+                        .melt(id_vars=val_index_col, value_name='preds')
+                        .set_index(val_index_col))
                     top_subgroups_iters_df = (pd.merge(
                         preds_iters_top_subgroups,
                         true_vals_top_subgroups.rename('true_vals'),
                         left_index=True, right_index=True))
                     top_subgroups_iters_df['outcome'] = targ
                     top_subgroups_iters_df['evaluation_metric'] = metric
-                    top_subgroups_iters_df['dataset'] = 'holdout_validation'
+                    top_subgroups_iters_df['dataset'] = 'external_validation'
                     top_k_subgroup_preds_iters.append(top_subgroups_iters_df)
 
-
+            # TODO: QUESTION: Does the column annotation still makes with this dict structure?
             iter_results[targ+col_annotation] = [kfold_AUROC_mean, kfold_AUROC_sd, val_AUROC_mean, val_AUROC_sd, kfold_AUROC_20_mean, kfold_AUROC_20_sd, val_AUROC_20_mean, val_AUROC_20_sd,
             kfold_AUPRC_mean, kfold_AUPRC_sd, val_AUPRC_mean, val_AUPRC_sd, kfold_AUPRC_20_mean, kfold_AUPRC_20_sd, val_AUPRC_20_mean, val_AUPRC_20_sd]
-
             all_results[targ+col_annotation] = [subgroup_results_df, subgroup_val_results_df, kfold_AUROC, kfold_AUPRC, val_AUROC, val_AUPRC, PR_tuple_20, PR_tuple_20_val, kfold_AUPRC_20, val_AUPRC_20, ROC_tuple_20, ROC_tuple_20_val, kfold_AUROC_20, val_AUROC_20, rand_AUROC, rand_AUPRC, rand_val_AUROC, rand_val_AUPRC, rand_AUROC_20, rand_AUPRC_20, rand_val_AUROC_20, rand_val_AUPRC_20]
 
         ###################
@@ -930,7 +944,7 @@ def main(args):
             for col in subgroup_results.columns:
                 row_num = 1
                 for val in subgroup_results[col]:
-                    if(val != val): #nan check
+                    if pd.isna(val): #nan check
                         temp = worksheet_train.write(row_num, col_num, "nan")
                     else:
                         temp = worksheet_train.write(row_num, col_num, val)
@@ -949,7 +963,7 @@ def main(args):
             for col in subgroup_results.columns:
                 row_num = 1
                 for val in subgroup_val_results[col]:
-                    if(val != val):
+                    if pd.isna(val):
                         temp = worksheet_val.write(row_num, col_num, "nan")
                     else:
                         temp = worksheet_val.write(row_num, col_num, val)
