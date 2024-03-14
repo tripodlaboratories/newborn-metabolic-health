@@ -1,4 +1,4 @@
-# TODO: Compare against regression models using clinical comparators
+# Compare against regression models using clinical comparators
 import argparse
 import logging
 import os
@@ -170,8 +170,7 @@ def main(args):
     # choices.
     utils.seed_torch(101)
 
-    # TODO: Setup model training for widespread model comparison
-    # TODO: Implement RandomForest, XGBoost, CatBoost?
+    # Setup model training for linear models using clinical variables
     # Model specific hyperparameters for logistic regression models
     l1_ratio_range = [0.1, 0.5, 0.7, 0.8, 0.9, 0.95, 0.99, 1.0]
     num_C_vals = 20
@@ -197,15 +196,12 @@ def main(args):
             penalty='none', max_iter=max_iter)
         }
 
-    # TODO: Set up model training
+    # Set up model training
     n_folds = 10
     resampler = MajorityDownsampler(random_state=101)
-
-    # TODO: Experimental: Which models are inherently multitask, and which need
-    # the help of the MultiOutputClassifier?
     train_args = {'colnames': data_Y.columns}
 
-    # TODO: Iterate over different feature sets and train models
+    # Iterate over different feature sets and train models
     for feat_set_name, feat_set in feature_sets.items():
         data_X_feature_set = data_X[feat_set]
         logger.info('Training models using feature subset: ' + feat_set_name)
