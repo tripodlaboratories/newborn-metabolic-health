@@ -89,6 +89,15 @@ def main(args):
     mednax_corrected.to_csv(output_dir.joinpath(
         'mednax_metabolites_corrected.csv'))
 
+    # Create a version that's joined with outcomes
+    # This is the expected format for some of the model training scripts
+    outcome_cols = ['nec_any', 'rop_any', 'bpd_any', 'ivh_any']
+    cal_corrected_with_outcomes = pd.merge(
+        cal_corrected, cal_biobank_data[outcome_cols],
+        left_index=True, right_index=True)
+    cal_corrected_with_outcomes.to_csv(output_dir.joinpath(
+        'cal_metabolites_outcomes_corrected.csv'))
+
 
 if __name__ == '__main__':
     args = get_argparser().parse_args()

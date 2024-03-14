@@ -174,7 +174,6 @@ def main(args):
 
             targ = outcome+"_any"
             # Extra string appended to columns to differentiate outcomes from subgroup discovery results
-            # TODO: Testing: Does this mangle any of the columns
             col_annotation = "_sgdisc"
 
             # NOTE: limit to True healthy controls (removing controls with positive co-outcomes)
@@ -236,8 +235,7 @@ def main(args):
             to_transform = searchspace_input.columns.isin(cal_metabolites) | searchspace_input.apply(is_numeric_dtype)
             cols_to_transform = searchspace_input.columns[to_transform]
 
-            # TODO: The refactoring logic begins here
-            searchspace_quantiles = [2,3,5]
+            searchspace_quantiles = [2,3,4]
             transform_input = searchspace_input[cols_to_transform]
             discretizers = {
                 q: KBinsDiscretizer(n_bins=q, encode='ordinal')
@@ -292,7 +290,7 @@ def main(args):
                 target,
                 searchspace,
                 result_set_size=subgroup_sizes[outcome],
-                depth=4,
+                depth=3,
                 qf=ps.PredictionQFNumeric(a=subgroup_alphas[outcome])
             )
 
