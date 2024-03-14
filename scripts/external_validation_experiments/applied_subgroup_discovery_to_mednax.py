@@ -11,6 +11,7 @@ from sklearn.metrics import roc_curve
 from sklearn.metrics import auc
 from sklearn.metrics import roc_auc_score
 from sklearn.metrics import average_precision_score
+from sklearn.preprocessing import KBinsDiscretizer
 
 #importing some utilities functions
 import xlsxwriter
@@ -232,20 +233,29 @@ def main(args):
 
             #compile list of features which need to be transformed into quantiles
             # NOTE: Categorical features need to be protected from quantile transformation
-            to_transform =  searchspace_input.columns.isin(cal_metabolites) | searchspace_input.apply(is_numeric_dtype)
-            searchspace_data = {}
+            to_transform = searchspace_input.columns.isin(cal_metabolites) | searchspace_input.apply(is_numeric_dtype)
+            cols_to_transform = searchspace_input.columns[to_transform]
 
-            #transform all data into various quantiles [2,3,5] as per martins experiment
-            for c in searchspace_input.columns:
-                if c in to_transform:
-                    for q in [2,3,5]:
-                        column = f"{c}_q-{q}"
-                        searchspace_data[column] = pd.qcut(
-                            searchspace_input[c], q, duplicates="drop").cat.codes
-                else:
-                    searchspace_data[c] = searchspace_input[c]
+            # TODO: The refactoring logic begins here
+            searchspace_quantiles = [2,3,5]
+            transform_input = searchspace_input[cols_to_transform]
+            discretizers = {
+                q: KBinsDiscretizer(n_bins=q, encode='ordinal')
+                for q in searchspace_quantiles}
 
-            searchspace_data = pd.DataFrame(searchspace_data)
+            quantile_dfs = []
+            for quantile, disc in discretizers.items():
+                quantile_output = disc.fit_transform(transform_input)
+                quantile_df = pd.DataFrame(
+                    quantile_output.astype(int),
+                    columns=[f'{c}_q-{quantile}' for c in transform_input.columns],
+                    index=transform_input.index)
+                quantile_dfs.append(quantile_df)
+
+            searchspace_data = pd.concat(quantile_dfs, axis=1)
+            unmod_cols = searchspace_input.loc[:, ~to_transform]
+            if len(unmod_cols.columns) != 0:
+                searchspace_data = pd.concat([searchspace_data, unmod_cols], axis=1)
 
             is_metabolite = searchspace_data.columns.str.replace(
                 r'_q.*$', '').isin(cal_metabolites)
@@ -253,19 +263,24 @@ def main(args):
             #compile list of features which need to be transformed into quantiles
             # NOTE: If you have categorical features - they need to be protected before.
             to_transform = searchspace_input_val.columns.isin(cal_metabolites) | searchspace_input_val.apply(is_numeric_dtype)
+            cols_to_transform = searchspace_input_val.columns[to_transform]
+            transform_input_val = searchspace_input_val[cols_to_transform]
 
-            searchspace_val_data = {}
-            #transform all data into various quantiles [2,3,5] as per martins experiment
-            for c in searchspace_input_val.columns:
-                if c in to_transform:
-                    for q in [2,3,5]:
-                        column = f"{c}_q-{q}"
-                        searchspace_val_data[column] = pd.qcut(
-                            searchspace_input_val[c], q, duplicates="drop").cat.codes
-                else:
-                    searchspace_val_data[c] = searchspace_input_val[c]
+            val_quantile_dfs = []
+            for quantile, disc in discretizers.items():
+                quantile_output = disc.transform(transform_input_val)
+                quantile_df = pd.DataFrame(
+                    quantile_output.astype(int),
+                    columns=[f'{c}_q-{quantile}' for c in transform_input_val.columns],
+                    index=transform_input_val.index)
+                val_quantile_dfs.append(quantile_df)
 
-            searchspace_val_data = pd.DataFrame(searchspace_val_data)
+            searchspace_val_data = pd.concat(val_quantile_dfs, axis=1)
+            unmod_cols = searchspace_input_val.loc[:, ~to_transform]
+            if len(unmod_cols.columns) != 0:
+                searchspace_val_data = pd.concat(
+                    [searchspace_val_data, unmod_cols], axis=1)
+
             is_val_metabolite = searchspace_val_data.columns.str.replace(
                 r'_q.*$', '').isin(cal_metabolites)
 
