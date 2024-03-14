@@ -10447,8 +10447,6 @@ CAMCAP000110994,0,0.0,1,bpd_any,AUROC,external_validation
 CAMCAP000111011,0,0.8178066999999999,1,bpd_any,AUROC,external_validation
 CAMCAP000111015,0,0.0,0,bpd_any,AUROC,external_validation
 CAMCAP000111020,0,0.6321914000000001,1,bpd_any,AUROC,external_validation
-CAMCAP000111032,0,0.56481725,1,bpd_any,AUROC,external_validation
-CAMCAP000111033,0,0.04459019,0,bpd_any,AUROC,external_validation
 CAMCAP000111035,0,0.0,0,bpd_any,AUROC,external_validation
 CBHLAP000110507,0,0.13133544,1,bpd_any,AUROC,external_validation
 CBHLAP000110509,0,0.0,1,bpd_any,AUROC,external_validation
@@ -10467,13 +10465,9 @@ CRILAP000110488,0,0.20226456,1,bpd_any,AUROC,external_validation
 CRILAP000110491,0,0.0,0,bpd_any,AUROC,external_validation
 CRILAP000110499,0,0.0,1,bpd_any,AUROC,external_validation
 CRILAP000111161,0,0.0484966,0,bpd_any,AUROC,external_validation
-CRILAP000111163,0,0.7213543,1,bpd_any,AUROC,external_validation
 CRILAP000111167,0,0.36254102,1,bpd_any,AUROC,external_validation
 CWESAP000110267,0,0.0,0,bpd_any,AUROC,external_validation
-CWESAP000110268,0,0.7650204,1,bpd_any,AUROC,external_validation
-CWESAP000110271,0,1.1503121,1,bpd_any,AUROC,external_validation
 CWESAP000110280,0,3.478,0,bpd_any,AUROC,external_validation
-CWESAP000110284,0,0.0,1,bpd_any,AUROC,external_validation
 CWESAP000110294,0,0.0,0,bpd_any,AUROC,external_validation
 CWESAP000110296,0,1.2907733000000001,1,bpd_any,AUROC,external_validation
 CWESAP000110313,0,0.37317735,1,bpd_any,AUROC,external_validation
@@ -10483,25 +10477,20 @@ CWESAP000111447,0,0.7911424,1,bpd_any,AUROC,external_validation
 CWESAP000111448,0,0.87675154,1,bpd_any,AUROC,external_validation
 ETCHAP000110807,0,0.41677338,0,bpd_any,AUROC,external_validation
 HARRAP000111452,0,0.86004394,0,bpd_any,AUROC,external_validation
-HARRAP000111457,0,0.0,0,bpd_any,AUROC,external_validation
-HARRAP000111459,0,1.4071538000000001,1,bpd_any,AUROC,external_validation
 HARRAP000111462,0,1.2515781000000001,1,bpd_any,AUROC,external_validation
 HARRAP000111463,0,1.7842339,1,bpd_any,AUROC,external_validation
-HARRAP000111468,0,1.208394,1,bpd_any,AUROC,external_validation
 HARRAP000111472,0,1.450243,1,bpd_any,AUROC,external_validation
 HARRAP000111478,0,0.48507568,1,bpd_any,AUROC,external_validation
 HARRAP000111480,0,0.0,1,bpd_any,AUROC,external_validation
 HARRAP000111482,0,0.19048232,1,bpd_any,AUROC,external_validation
 HARRAP000111484,0,0.0,1,bpd_any,AUROC,external_validation
 JOTXAP000111530,0,0.6780841999999999,1,bpd_any,AUROC,external_validation
-JOTXAP000111534,0,0.9778757,1,bpd_any,AUROC,external_validation
 MCSAAP000110328,0,0.03389392,1,bpd_any,AUROC,external_validation
 MCSAAP000110334,0,2.3924298,1,bpd_any,AUROC,external_validation
 MCSAAP000110336,0,1.1756678,0,bpd_any,AUROC,external_validation
 MCSAAP000110342,0,1.1701508,1,bpd_any,AUROC,external_validation
 MCSAAP000110351,0,0.0,1,bpd_any,AUROC,external_validation
 MCSAAP000110356,0,0.0,0,bpd_any,AUROC,external_validation
-MCSAAP000110375,0,0.0,0,bpd_any,AUROC,external_validation
 MHSBAP000110158,0,0.9957726,0,bpd_any,AUROC,external_validation
 MHSBAP000110159,0,0.0,1,bpd_any,AUROC,external_validation
 MHSBAP000110165,0,0.64063245,1,bpd_any,AUROC,external_validation
@@ -10510,7 +10499,6 @@ MHSBAP000110168,0,1.2079921999999998,0,bpd_any,AUROC,external_validation
 MHSBAP000110175,0,0.0,1,bpd_any,AUROC,external_validation
 MHSBAP000110178,0,1.4302176000000002,0,bpd_any,AUROC,external_validation
 MHSBAP000110192,0,0.0,0,bpd_any,AUROC,external_validation
-MHSBAP000110202,0,1.5187684,1,bpd_any,AUROC,external_validation
 MHSBAP000110203,0,0.45739496,1,bpd_any,AUROC,external_validation
 MHSBAP000110206,0,2.4267154,0,bpd_any,AUROC,external_validation
 MHSBAP000110208,0,0.46817788,0,bpd_any,AUROC,external_validation
@@ -10519,11 +10507,7 @@ MHUVAP000111752,0,0.08121447,1,bpd_any,AUROC,external_validation
 MHUVAP000111757,0,1.2449822,0,bpd_any,AUROC,external_validation
 MHUVAP000111761,0,1.7759825,1,bpd_any,AUROC,external_validation
 MHUVAP000111767,0,0.0,0,bpd_any,AUROC,external_validation
-MRMCAP000110103,0,0.24628788,0,bpd_any,AUROC,external_validation
 MRMCAP000110113,0,0.0,1,bpd_any,AUROC,external_validation
-MRMCAP000110120,0,0.0,0,bpd_any,AUROC,external_validation
-MRMCAP000110128,0,0.7751713000000001,0,bpd_any,AUROC,external_validation
-MRMCAP000110139,0,0.0,1,bpd_any,AUROC,external_validation
 MRMCAP000110143,0,0.0,0,bpd_any,AUROC,external_validation
 MRMCAP000110151,0,0.99974835,1,bpd_any,AUROC,external_validation
 MRMCAP000111254,0,1.4551516000000002,1,bpd_any,AUROC,external_validation
@@ -10532,7 +10516,6 @@ PSYDAP000110633,0,0.0,0,bpd_any,AUROC,external_validation
 PSYDAP000110635,0,0.39706597,0,bpd_any,AUROC,external_validation
 PSYDAP000110638,0,0.0,0,bpd_any,AUROC,external_validation
 PSYDAP000110643,0,1.3610983,1,bpd_any,AUROC,external_validation
-PSYDAP000110646,0,2.5032257999999996,0,bpd_any,AUROC,external_validation
 PSYDAP000110655,0,0.0,1,bpd_any,AUROC,external_validation
 PSYDAP000110656,0,0.32962912,0,bpd_any,AUROC,external_validation
 PSYDAP000110680,0,1.1918875,1,bpd_any,AUROC,external_validation
@@ -10567,13 +10550,11 @@ SAGIAP000110398,0,1.0342412,1,bpd_any,AUROC,external_validation
 SAGIAP000110401,0,0.0,1,bpd_any,AUROC,external_validation
 SAGIAP000110410,0,0.0,0,bpd_any,AUROC,external_validation
 SAGIAP000110414,0,2.2424176,1,bpd_any,AUROC,external_validation
-SAGIAP000110418,0,0.093185835,0,bpd_any,AUROC,external_validation
 SAGIAP000110422,0,0.74764246,1,bpd_any,AUROC,external_validation
 SAGIAP000110434,0,0.0,1,bpd_any,AUROC,external_validation
 SAGIAP000111205,0,0.13935351,1,bpd_any,AUROC,external_validation
 SAGIAP000111206,0,0.94790953,1,bpd_any,AUROC,external_validation
 SAGIAP000111207,0,0.0,1,bpd_any,AUROC,external_validation
-SAGIAP000111209,0,0.5499227,1,bpd_any,AUROC,external_validation
 SAGIAP000111214,0,3.2868407,1,bpd_any,AUROC,external_validation
 SRMCAP000110752,0,0.3114623,0,bpd_any,AUROC,external_validation
 SRMCAP000110753,0,1.1061132,0,bpd_any,AUROC,external_validation
@@ -10583,7 +10564,6 @@ SWEDAP000110689,0,0.12177555,1,bpd_any,AUROC,external_validation
 SWEDAP000110692,0,0.0,1,bpd_any,AUROC,external_validation
 SWEDAP000110705,0,0.11254158,0,bpd_any,AUROC,external_validation
 SWEDAP000110709,0,0.81520927,0,bpd_any,AUROC,external_validation
-SWEDAP000110713,0,0.48465222,0,bpd_any,AUROC,external_validation
 SWEDAP000110716,0,1.2674776,1,bpd_any,AUROC,external_validation
 TSONAP000110567,0,1.3115085,1,bpd_any,AUROC,external_validation
 TSONAP000110568,0,0.33003530000000003,1,bpd_any,AUROC,external_validation
@@ -10592,7 +10572,6 @@ TSONAP000110570,0,1.1783961,0,bpd_any,AUROC,external_validation
 TSONAP000110575,0,0.0,1,bpd_any,AUROC,external_validation
 TSONAP000110578,0,0.0,0,bpd_any,AUROC,external_validation
 TSONAP000110590,0,0.0,0,bpd_any,AUROC,external_validation
-TSONAP000110592,0,0.0,0,bpd_any,AUROC,external_validation
 TSONAP000110599,0,0.8302779,0,bpd_any,AUROC,external_validation
 TSONAP000110600,0,0.091636546,0,bpd_any,AUROC,external_validation
 TSONAP000110614,0,0.47431076,1,bpd_any,AUROC,external_validation
@@ -20271,21 +20250,12 @@ TSONAP000111431,0,0.0,1,bpd_any,AUROC,external_validation
 41338,7,0.29701957,0,rop_any,AUROC,kfold_test
 41338,8,0.68275684,0,rop_any,AUROC,kfold_test
 41338,9,0.22744462,0,rop_any,AUROC,kfold_test
-AKCHAP000111048,0,0.0,0,rop_any,AUROC,external_validation
-AKCHAP000111050,0,0.95048845,0,rop_any,AUROC,external_validation
 AKCHAP000111054,0,0.0,0,rop_any,AUROC,external_validation
 AKCHAP000111056,0,0.0,0,rop_any,AUROC,external_validation
 AKCHAP000111058,0,0.0,0,rop_any,AUROC,external_validation
-ALEXAP000110871,0,1.1453200000000001,0,rop_any,AUROC,external_validation
 ALEXAP000110876,0,0.39264372,0,rop_any,AUROC,external_validation
-CAMCAP000110988,0,0.0,0,rop_any,AUROC,external_validation
 CAMCAP000110989,0,0.029909847000000003,0,rop_any,AUROC,external_validation
-CAMCAP000110991,0,0.33639106,0,rop_any,AUROC,external_validation
-CAMCAP000110994,0,0.0,0,rop_any,AUROC,external_validation
 CAMCAP000110998,0,0.0,0,rop_any,AUROC,external_validation
-CAMCAP000111010,0,0.7886526,0,rop_any,AUROC,external_validation
-CAMCAP000111011,0,0.8178066999999999,0,rop_any,AUROC,external_validation
-CAMCAP000111012,0,0.0,0,rop_any,AUROC,external_validation
 CAMCAP000111019,0,1.7141074,0,rop_any,AUROC,external_validation
 CAMCAP000111024,0,0.6887081,0,rop_any,AUROC,external_validation
 CAMCAP000111025,0,1.244448,0,rop_any,AUROC,external_validation
@@ -20293,57 +20263,37 @@ CAMCAP000111026,0,0.0,0,rop_any,AUROC,external_validation
 CAMCAP000111028,0,0.0,0,rop_any,AUROC,external_validation
 CAMCAP000111032,0,0.56481725,0,rop_any,AUROC,external_validation
 CAMCAP000111038,0,0.0,0,rop_any,AUROC,external_validation
-CBHLAP000110507,0,0.13133544,0,rop_any,AUROC,external_validation
 CBHLAP000110531,0,0.0,0,rop_any,AUROC,external_validation
 COGSAP000110928,0,1.3149642,0,rop_any,AUROC,external_validation
 COGSAP000110929,0,1.0738051000000002,0,rop_any,AUROC,external_validation
 COGSAP000110931,0,0.50697845,0,rop_any,AUROC,external_validation
-COGSAP000110953,0,0.0,0,rop_any,AUROC,external_validation
-CRILAP000110447,0,0.0,0,rop_any,AUROC,external_validation
 CRILAP000110455,0,0.0,0,rop_any,AUROC,external_validation
-CRILAP000110456,0,0.0,0,rop_any,AUROC,external_validation
 CRILAP000110460,0,0.0,0,rop_any,AUROC,external_validation
 CRILAP000110461,0,0.0,0,rop_any,AUROC,external_validation
 CRILAP000110462,0,0.0,0,rop_any,AUROC,external_validation
 CRILAP000110464,0,0.578767,0,rop_any,AUROC,external_validation
-CRILAP000110467,0,0.0,0,rop_any,AUROC,external_validation
 CRILAP000110480,0,0.0,0,rop_any,AUROC,external_validation
 CRILAP000110484,0,0.0,0,rop_any,AUROC,external_validation
 CRILAP000110487,0,0.88382864,0,rop_any,AUROC,external_validation
-CRILAP000110489,0,0.028033419,0,rop_any,AUROC,external_validation
-CRILAP000110493,0,0.14903867,0,rop_any,AUROC,external_validation
 CRILAP000110497,0,0.0,0,rop_any,AUROC,external_validation
-CRILAP000110503,0,0.12939695,0,rop_any,AUROC,external_validation
 CRILAP000110504,0,1.1398576,0,rop_any,AUROC,external_validation
-CRILAP000111159,0,1.1757667,0,rop_any,AUROC,external_validation
 CRILAP000111161,0,0.0484966,0,rop_any,AUROC,external_validation
 CRILAP000111165,0,0.0,0,rop_any,AUROC,external_validation
-CRILAP000111166,0,0.008543262,0,rop_any,AUROC,external_validation
-CRILAP000111168,0,0.98168606,0,rop_any,AUROC,external_validation
 CRILAP000111170,0,0.98637414,0,rop_any,AUROC,external_validation
 CWESAP000110270,0,0.0,0,rop_any,AUROC,external_validation
 CWESAP000110271,0,1.1503121,0,rop_any,AUROC,external_validation
 CWESAP000110274,0,0.46280828,0,rop_any,AUROC,external_validation
 CWESAP000110275,0,1.1694559,0,rop_any,AUROC,external_validation
-CWESAP000110276,0,1.153697,0,rop_any,AUROC,external_validation
 CWESAP000110281,0,0.0,0,rop_any,AUROC,external_validation
-CWESAP000110285,0,0.0,0,rop_any,AUROC,external_validation
-CWESAP000110288,0,0.68619865,0,rop_any,AUROC,external_validation
-CWESAP000110294,0,0.0,0,rop_any,AUROC,external_validation
-CWESAP000110296,0,1.2907733000000001,0,rop_any,AUROC,external_validation
 CWESAP000110297,0,0.0,0,rop_any,AUROC,external_validation
 CWESAP000110298,0,0.0,0,rop_any,AUROC,external_validation
 CWESAP000110302,0,0.8793776,0,rop_any,AUROC,external_validation
 CWESAP000110304,0,0.65078825,0,rop_any,AUROC,external_validation
-CWESAP000110305,0,0.6689944,0,rop_any,AUROC,external_validation
 CWESAP000110307,0,0.0,0,rop_any,AUROC,external_validation
 CWESAP000110309,0,0.0,0,rop_any,AUROC,external_validation
-CWESAP000110310,0,0.0,0,rop_any,AUROC,external_validation
-CWESAP000110311,0,0.0,0,rop_any,AUROC,external_validation
 CWESAP000110312,0,0.0,0,rop_any,AUROC,external_validation
 CWESAP000110314,0,0.9247305,0,rop_any,AUROC,external_validation
 CWESAP000110317,0,1.0794663,0,rop_any,AUROC,external_validation
-CWESAP000110320,0,0.0,0,rop_any,AUROC,external_validation
 CWESAP000111436,0,0.0,0,rop_any,AUROC,external_validation
 CWESAP000111437,0,0.0,0,rop_any,AUROC,external_validation
 CWESAP000111438,0,0.79882324,0,rop_any,AUROC,external_validation
@@ -20353,81 +20303,47 @@ CWESAP000111445,0,0.10162929,0,rop_any,AUROC,external_validation
 CWESAP000111446,0,1.3191823999999999,0,rop_any,AUROC,external_validation
 CWESAP000111447,0,0.7911424,0,rop_any,AUROC,external_validation
 CWESAP000111449,0,0.6575770000000001,0,rop_any,AUROC,external_validation
-CWESAP000111837,0,1.1787876,0,rop_any,AUROC,external_validation
-CWESAP000111838,0,0.108765975,0,rop_any,AUROC,external_validation
 CWESAP000111840,0,0.0,0,rop_any,AUROC,external_validation
 ETCHAP000110812,0,0.6096351999999999,0,rop_any,AUROC,external_validation
 HARRAP000111453,0,0.79177845,0,rop_any,AUROC,external_validation
-HARRAP000111455,0,0.68280333,0,rop_any,AUROC,external_validation
 HARRAP000111456,0,0.24515483,0,rop_any,AUROC,external_validation
-HARRAP000111459,0,1.4071538000000001,0,rop_any,AUROC,external_validation
-HARRAP000111460,0,0.20044188,0,rop_any,AUROC,external_validation
-HARRAP000111462,0,1.2515781000000001,0,rop_any,AUROC,external_validation
-HARRAP000111463,0,1.7842339,0,rop_any,AUROC,external_validation
-HARRAP000111465,0,0.0,0,rop_any,AUROC,external_validation
-HARRAP000111470,0,0.39703137,0,rop_any,AUROC,external_validation
 HARRAP000111471,0,0.7899581,0,rop_any,AUROC,external_validation
-HARRAP000111475,0,0.0,0,rop_any,AUROC,external_validation
 HARRAP000111478,0,0.48507568,0,rop_any,AUROC,external_validation
-HARRAP000111481,0,0.4848002,0,rop_any,AUROC,external_validation
-HARRAP000111485,0,0.0,0,rop_any,AUROC,external_validation
-HARRAP000111486,0,0.0,0,rop_any,AUROC,external_validation
-HARRAP000111489,0,0.32153836,0,rop_any,AUROC,external_validation
 JOTXAP000111527,0,0.8623805,0,rop_any,AUROC,external_validation
 JOTXAP000111532,0,1.1942991000000003,0,rop_any,AUROC,external_validation
-JOTXAP000111533,0,0.0,0,rop_any,AUROC,external_validation
 JOTXAP000111534,0,0.9778757,0,rop_any,AUROC,external_validation
 MCSAAP000110326,0,0.35805514,0,rop_any,AUROC,external_validation
-MCSAAP000110327,0,0.0,0,rop_any,AUROC,external_validation
-MCSAAP000110333,0,0.0,0,rop_any,AUROC,external_validation
-MCSAAP000110342,0,1.1701508,0,rop_any,AUROC,external_validation
 MCSAAP000110346,0,1.2065143999999999,0,rop_any,AUROC,external_validation
 MCSAAP000110353,0,0.059172228,0,rop_any,AUROC,external_validation
 MCSAAP000110361,0,0.0,0,rop_any,AUROC,external_validation
 MCSAAP000110366,0,0.0,0,rop_any,AUROC,external_validation
-MCSAAP000110371,0,0.19667342,0,rop_any,AUROC,external_validation
 MCSAAP000110373,0,0.0,0,rop_any,AUROC,external_validation
 MHSBAP000110162,0,0.11799913,0,rop_any,AUROC,external_validation
 MHSBAP000110175,0,0.0,0,rop_any,AUROC,external_validation
-MHSBAP000110179,0,1.3710438999999999,0,rop_any,AUROC,external_validation
 MHSBAP000110180,0,0.0,0,rop_any,AUROC,external_validation
 MHSBAP000110181,0,0.0,0,rop_any,AUROC,external_validation
-MHSBAP000110184,0,0.0,0,rop_any,AUROC,external_validation
 MHSBAP000110186,0,0.97429776,0,rop_any,AUROC,external_validation
-MHSBAP000110187,0,1.7184141,0,rop_any,AUROC,external_validation
 MHSBAP000110189,0,0.0,0,rop_any,AUROC,external_validation
-MHSBAP000110193,0,0.0,0,rop_any,AUROC,external_validation
-MHSBAP000110200,0,0.07332045,0,rop_any,AUROC,external_validation
-MHSBAP000110204,0,1.2726594,0,rop_any,AUROC,external_validation
 MHSBAP000111269,0,0.0,0,rop_any,AUROC,external_validation
 MHSBAP000111270,0,0.112282366,0,rop_any,AUROC,external_validation
 MHUVAP000111766,0,0.12267773,0,rop_any,AUROC,external_validation
 MRMCAP000110104,0,0.21046536,0,rop_any,AUROC,external_validation
 MRMCAP000110113,0,0.0,0,rop_any,AUROC,external_validation
-MRMCAP000110118,0,0.74855965,0,rop_any,AUROC,external_validation
 MRMCAP000110119,0,0.21368077,0,rop_any,AUROC,external_validation
 MRMCAP000110120,0,0.0,0,rop_any,AUROC,external_validation
 MRMCAP000110121,0,0.12336375,0,rop_any,AUROC,external_validation
 MRMCAP000110122,0,0.0,0,rop_any,AUROC,external_validation
-MRMCAP000110132,0,0.80097556,0,rop_any,AUROC,external_validation
 MRMCAP000110133,0,0.41851193,0,rop_any,AUROC,external_validation
 MRMCAP000110134,0,0.8517773000000001,0,rop_any,AUROC,external_validation
 MRMCAP000110135,0,0.7726215,0,rop_any,AUROC,external_validation
-MRMCAP000110141,0,0.0,0,rop_any,AUROC,external_validation
-MRMCAP000110146,0,0.0,0,rop_any,AUROC,external_validation
 MRMCAP000110152,0,1.0737453000000001,0,rop_any,AUROC,external_validation
 MRMCAP000110154,0,0.0,0,rop_any,AUROC,external_validation
-MRMCAP000111246,0,0.0,0,rop_any,AUROC,external_validation
-MRMCAP000111254,0,1.4551516000000002,0,rop_any,AUROC,external_validation
-MRMCAP000111255,0,0.0,0,rop_any,AUROC,external_validation
 MRMCAP000111261,0,0.5167279,0,rop_any,AUROC,external_validation
 N305AP000111677,0,1.2017558000000002,0,rop_any,AUROC,external_validation
 N305AP000111679,0,0.0,0,rop_any,AUROC,external_validation
 N305AP000111681,0,0.27989942,0,rop_any,AUROC,external_validation
 PSYDAP000110628,0,1.1699333,0,rop_any,AUROC,external_validation
 PSYDAP000110639,0,1.2317811,0,rop_any,AUROC,external_validation
-PSYDAP000110650,0,0.05766967,0,rop_any,AUROC,external_validation
-PSYDAP000110663,0,0.0,0,rop_any,AUROC,external_validation
 PSYDAP000110664,0,1.3361555,0,rop_any,AUROC,external_validation
 PSYDAP000110668,0,0.0,0,rop_any,AUROC,external_validation
 PSYDAP000110669,0,0.48663533,0,rop_any,AUROC,external_validation
@@ -20435,16 +20351,9 @@ PSYDAP000110670,0,0.9181662,0,rop_any,AUROC,external_validation
 PSYDAP000110677,0,0.2876152,0,rop_any,AUROC,external_validation
 PSYDAP000110678,0,0.0,0,rop_any,AUROC,external_validation
 PSYDAP000110679,0,2.6460676,0,rop_any,AUROC,external_validation
-PSYDAP000110680,0,1.1918875,0,rop_any,AUROC,external_validation
-PSYDAP000110682,0,0.46923164,0,rop_any,AUROC,external_validation
-PSYDAP000111315,0,0.98206836,0,rop_any,AUROC,external_validation
-PVHSAP000111328,0,0.98836285,0,rop_any,AUROC,external_validation
-PVHSAP000111336,0,1.6643245,0,rop_any,AUROC,external_validation
-PVHSAP000111346,0,0.059995107,0,rop_any,AUROC,external_validation
 SACHAP000110218,0,0.0,0,rop_any,AUROC,external_validation
 SACHAP000110220,0,0.8020029000000001,0,rop_any,AUROC,external_validation
 SACHAP000110221,0,1.1758779,0,rop_any,AUROC,external_validation
-SACHAP000110225,0,2.2002695,0,rop_any,AUROC,external_validation
 SACHAP000110226,0,2.7077617999999997,0,rop_any,AUROC,external_validation
 SACHAP000110229,0,0.6913935999999999,0,rop_any,AUROC,external_validation
 SACHAP000110232,0,0.0,0,rop_any,AUROC,external_validation
@@ -20454,54 +20363,37 @@ SACHAP000110241,0,0.3801089,0,rop_any,AUROC,external_validation
 SACHAP000110242,0,0.0,0,rop_any,AUROC,external_validation
 SACHAP000110243,0,1.3047247,0,rop_any,AUROC,external_validation
 SACHAP000110252,0,0.0,0,rop_any,AUROC,external_validation
-SACHAP000110255,0,0.8483582000000001,0,rop_any,AUROC,external_validation
 SACHAP000110258,0,2.8930724,0,rop_any,AUROC,external_validation
 SACHAP000110259,0,0.0,0,rop_any,AUROC,external_validation
 SACHAP000110262,0,0.89545125,0,rop_any,AUROC,external_validation
-SACHAP000110263,0,0.59229165,0,rop_any,AUROC,external_validation
 SACHAP000111106,0,0.15594979999999997,0,rop_any,AUROC,external_validation
 SACHAP000111117,0,1.8813973999999998,0,rop_any,AUROC,external_validation
-SACHAP000111122,0,0.0,0,rop_any,AUROC,external_validation
 SAGIAP000110388,0,0.9394726999999999,0,rop_any,AUROC,external_validation
-SAGIAP000110391,0,2.0460167,0,rop_any,AUROC,external_validation
-SAGIAP000110392,0,1.0283417,0,rop_any,AUROC,external_validation
 SAGIAP000110393,0,0.0,0,rop_any,AUROC,external_validation
-SAGIAP000110398,0,1.0342412,0,rop_any,AUROC,external_validation
-SAGIAP000110410,0,0.0,0,rop_any,AUROC,external_validation
 SAGIAP000110422,0,0.74764246,0,rop_any,AUROC,external_validation
-SAGIAP000110426,0,0.0,0,rop_any,AUROC,external_validation
-SAGIAP000110432,0,1.3966798,0,rop_any,AUROC,external_validation
 SAGIAP000110435,0,0.0,0,rop_any,AUROC,external_validation
 SAGIAP000110438,0,0.0,0,rop_any,AUROC,external_validation
 SAGIAP000111202,0,0.0,0,rop_any,AUROC,external_validation
-SAGIAP000111203,0,0.0,0,rop_any,AUROC,external_validation
 SAGIAP000111206,0,0.94790953,0,rop_any,AUROC,external_validation
 SAGIAP000111211,0,0.0,0,rop_any,AUROC,external_validation
 SAGIAP000111212,0,0.4519996,0,rop_any,AUROC,external_validation
 SAGIAP000111214,0,3.2868407,0,rop_any,AUROC,external_validation
-SRMCAP000110750,0,1.5866936000000003,0,rop_any,AUROC,external_validation
 SRMCAP000110752,0,0.3114623,0,rop_any,AUROC,external_validation
 STORAP000111607,0,0.5653226,0,rop_any,AUROC,external_validation
 STORAP000111616,0,0.8195975000000001,0,rop_any,AUROC,external_validation
-SWEDAP000110686,0,1.5077605,0,rop_any,AUROC,external_validation
-SWEDAP000110688,0,1.4051131000000001,0,rop_any,AUROC,external_validation
 SWEDAP000110692,0,0.0,0,rop_any,AUROC,external_validation
 SWEDAP000110693,0,0.0,0,rop_any,AUROC,external_validation
 SWEDAP000110695,0,1.8643125,0,rop_any,AUROC,external_validation
 SWEDAP000110711,0,1.3137671,0,rop_any,AUROC,external_validation
-SWEDAP000110712,0,2.4138625,0,rop_any,AUROC,external_validation
 SWEDAP000110714,0,2.557226,0,rop_any,AUROC,external_validation
 SWEDAP000110715,0,0.9071001000000001,0,rop_any,AUROC,external_validation
 SWEDAP000110717,0,2.9229436,0,rop_any,AUROC,external_validation
-TSONAP000110566,0,0.0,0,rop_any,AUROC,external_validation
 TSONAP000110568,0,0.33003530000000003,0,rop_any,AUROC,external_validation
 TSONAP000110573,0,1.5209609,0,rop_any,AUROC,external_validation
-TSONAP000110578,0,0.0,0,rop_any,AUROC,external_validation
 TSONAP000110581,0,1.1938971,0,rop_any,AUROC,external_validation
 TSONAP000110589,0,0.8905076,0,rop_any,AUROC,external_validation
 TSONAP000110595,0,0.28434756,0,rop_any,AUROC,external_validation
 TSONAP000110607,0,1.2435513999999999,0,rop_any,AUROC,external_validation
-TSONAP000110623,0,0.6628027,0,rop_any,AUROC,external_validation
 TSONAP000110624,0,0.16602083,0,rop_any,AUROC,external_validation
 TSONAP000111421,0,0.0,0,rop_any,AUROC,external_validation
 TSONAP000111424,0,0.8378774,0,rop_any,AUROC,external_validation
@@ -49523,20 +49415,14 @@ TSONAP000111827,0,0.0,0,nec_any,AUROC,external_validation
 41400,8,0.58507645,0,bpd_any,AVG Precision,kfold_test
 41400,9,0.3785563,0,bpd_any,AVG Precision,kfold_test
 AKCHAP000111049,0,0.14165273,1,bpd_any,AVG Precision,external_validation
-AKCHAP000111057,0,0.0,0,bpd_any,AVG Precision,external_validation
-AKCHAP000111059,0,1.0713518999999998,0,bpd_any,AVG Precision,external_validation
-ALEXAP000110866,0,2.1688755,1,bpd_any,AVG Precision,external_validation
 ALEXAP000110867,0,1.0114149,1,bpd_any,AVG Precision,external_validation
 ALEXAP000110869,0,0.0,0,bpd_any,AVG Precision,external_validation
 CAMCAP000110989,0,0.029909847000000003,1,bpd_any,AVG Precision,external_validation
-CAMCAP000110992,0,0.0,0,bpd_any,AVG Precision,external_validation
 CAMCAP000110996,0,0.9735732,1,bpd_any,AVG Precision,external_validation
 CAMCAP000111011,0,0.8178066999999999,1,bpd_any,AVG Precision,external_validation
 CAMCAP000111013,0,0.0,0,bpd_any,AVG Precision,external_validation
 CAMCAP000111015,0,0.0,0,bpd_any,AVG Precision,external_validation
-CAMCAP000111020,0,0.6321914000000001,1,bpd_any,AVG Precision,external_validation
 CAMCAP000111026,0,0.0,0,bpd_any,AVG Precision,external_validation
-CAMCAP000111030,0,1.5651059999999999,1,bpd_any,AVG Precision,external_validation
 CAMCAP000111032,0,0.56481725,1,bpd_any,AVG Precision,external_validation
 CAMCAP000111035,0,0.0,0,bpd_any,AVG Precision,external_validation
 CBHLAP000110510,0,0.0,0,bpd_any,AVG Precision,external_validation
@@ -49545,7 +49431,6 @@ CBHLAP000110514,0,1.8179764999999999,1,bpd_any,AVG Precision,external_validation
 CBHLAP000110518,0,0.9848998999999999,0,bpd_any,AVG Precision,external_validation
 CBHLAP000110521,0,2.2062037,1,bpd_any,AVG Precision,external_validation
 CBHLAP000110528,0,0.9950401,0,bpd_any,AVG Precision,external_validation
-COGSAP000110926,0,0.08287822,0,bpd_any,AVG Precision,external_validation
 COGSAP000110932,0,1.5636035,1,bpd_any,AVG Precision,external_validation
 COGSAP000110938,0,1.8704721000000002,0,bpd_any,AVG Precision,external_validation
 COGSAP000110941,0,0.0,1,bpd_any,AVG Precision,external_validation
@@ -49557,43 +49442,27 @@ COGSAP000110957,0,0.45435154,1,bpd_any,AVG Precision,external_validation
 COGSAP000110959,0,1.7451271000000002,0,bpd_any,AVG Precision,external_validation
 COGSAP000110960,0,0.34543025,1,bpd_any,AVG Precision,external_validation
 CRILAP000110450,0,1.928105,0,bpd_any,AVG Precision,external_validation
-CRILAP000110455,0,0.0,1,bpd_any,AVG Precision,external_validation
-CRILAP000110460,0,0.0,1,bpd_any,AVG Precision,external_validation
 CRILAP000110471,0,0.0,0,bpd_any,AVG Precision,external_validation
-CRILAP000110477,0,0.36088097,0,bpd_any,AVG Precision,external_validation
 CRILAP000110479,0,1.2578426999999999,1,bpd_any,AVG Precision,external_validation
 CRILAP000110480,0,0.0,1,bpd_any,AVG Precision,external_validation
 CRILAP000110493,0,0.14903867,1,bpd_any,AVG Precision,external_validation
-CRILAP000110496,0,0.84774005,1,bpd_any,AVG Precision,external_validation
 CRILAP000110497,0,0.0,1,bpd_any,AVG Precision,external_validation
-CRILAP000110504,0,1.1398576,1,bpd_any,AVG Precision,external_validation
 CRILAP000111164,0,0.0,0,bpd_any,AVG Precision,external_validation
 CRILAP000111168,0,0.98168606,1,bpd_any,AVG Precision,external_validation
-CWESAP000110266,0,0.0,0,bpd_any,AVG Precision,external_validation
-CWESAP000110269,0,0.29580313,0,bpd_any,AVG Precision,external_validation
-CWESAP000110276,0,1.153697,1,bpd_any,AVG Precision,external_validation
 CWESAP000110287,0,0.38206655,1,bpd_any,AVG Precision,external_validation
 CWESAP000110300,0,1.0145407,1,bpd_any,AVG Precision,external_validation
 CWESAP000110313,0,0.37317735,1,bpd_any,AVG Precision,external_validation
 CWESAP000110320,0,0.0,1,bpd_any,AVG Precision,external_validation
-CWESAP000110323,0,0.85877204,1,bpd_any,AVG Precision,external_validation
 CWESAP000111439,0,0.6697196,1,bpd_any,AVG Precision,external_validation
-CWESAP000111442,0,1.2089272,1,bpd_any,AVG Precision,external_validation
-CWESAP000111443,0,0.0,0,bpd_any,AVG Precision,external_validation
 CWESAP000111445,0,0.10162929,1,bpd_any,AVG Precision,external_validation
 CWESAP000111447,0,0.7911424,1,bpd_any,AVG Precision,external_validation
-CWESAP000111448,0,0.87675154,1,bpd_any,AVG Precision,external_validation
-CWESAP000111450,0,0.0,0,bpd_any,AVG Precision,external_validation
 CWESAP000111843,0,0.9090844000000001,0,bpd_any,AVG Precision,external_validation
 ETCHAP000110807,0,0.41677338,0,bpd_any,AVG Precision,external_validation
 ETCHAP000110808,0,0.43966332,1,bpd_any,AVG Precision,external_validation
-HARRAP000111452,0,0.86004394,0,bpd_any,AVG Precision,external_validation
 HARRAP000111454,0,1.1160183000000001,0,bpd_any,AVG Precision,external_validation
 HARRAP000111459,0,1.4071538000000001,1,bpd_any,AVG Precision,external_validation
-HARRAP000111461,0,0.70068145,1,bpd_any,AVG Precision,external_validation
 HARRAP000111462,0,1.2515781000000001,1,bpd_any,AVG Precision,external_validation
 HARRAP000111463,0,1.7842339,1,bpd_any,AVG Precision,external_validation
-HARRAP000111472,0,1.450243,1,bpd_any,AVG Precision,external_validation
 HARRAP000111480,0,0.0,1,bpd_any,AVG Precision,external_validation
 HARRAP000111482,0,0.19048232,1,bpd_any,AVG Precision,external_validation
 HARRAP000111486,0,0.0,1,bpd_any,AVG Precision,external_validation
@@ -49601,8 +49470,6 @@ JOTXAP000111527,0,0.8623805,1,bpd_any,AVG Precision,external_validation
 JOTXAP000111530,0,0.6780841999999999,1,bpd_any,AVG Precision,external_validation
 MCSAAP000110336,0,1.1756678,0,bpd_any,AVG Precision,external_validation
 MCSAAP000110351,0,0.0,1,bpd_any,AVG Precision,external_validation
-MCSAAP000110355,0,1.4433477,1,bpd_any,AVG Precision,external_validation
-MCSAAP000110356,0,0.0,0,bpd_any,AVG Precision,external_validation
 MCSAAP000110361,0,0.0,1,bpd_any,AVG Precision,external_validation
 MCSAAP000110369,0,1.5165056000000001,1,bpd_any,AVG Precision,external_validation
 MHSBAP000110158,0,0.9957726,0,bpd_any,AVG Precision,external_validation
@@ -49611,17 +49478,12 @@ MHSBAP000110166,0,0.0,0,bpd_any,AVG Precision,external_validation
 MHSBAP000110174,0,0.0,0,bpd_any,AVG Precision,external_validation
 MHSBAP000110177,0,1.3496153,0,bpd_any,AVG Precision,external_validation
 MHSBAP000110179,0,1.3710438999999999,1,bpd_any,AVG Precision,external_validation
-MHSBAP000110180,0,0.0,0,bpd_any,AVG Precision,external_validation
-MHSBAP000110188,0,0.0,1,bpd_any,AVG Precision,external_validation
 MHSBAP000110191,0,0.0,0,bpd_any,AVG Precision,external_validation
-MHSBAP000110194,0,1.5272268,1,bpd_any,AVG Precision,external_validation
 MHSBAP000110196,0,1.3201958,1,bpd_any,AVG Precision,external_validation
 MHSBAP000110198,0,0.0,0,bpd_any,AVG Precision,external_validation
 MHSBAP000110203,0,0.45739496,1,bpd_any,AVG Precision,external_validation
 MHSBAP000110206,0,2.4267154,0,bpd_any,AVG Precision,external_validation
-MHSBAP000110208,0,0.46817788,0,bpd_any,AVG Precision,external_validation
 MHSBAP000110210,0,1.7443718000000001,0,bpd_any,AVG Precision,external_validation
-MHUVAP000111751,0,0.0,1,bpd_any,AVG Precision,external_validation
 MHUVAP000111761,0,1.7759825,1,bpd_any,AVG Precision,external_validation
 MRMCAP000110102,0,1.9367411,1,bpd_any,AVG Precision,external_validation
 MRMCAP000110103,0,0.24628788,0,bpd_any,AVG Precision,external_validation
@@ -49630,27 +49492,21 @@ MRMCAP000110114,0,0.392013,0,bpd_any,AVG Precision,external_validation
 MRMCAP000110124,0,0.6889602,1,bpd_any,AVG Precision,external_validation
 MRMCAP000110126,0,0.0,0,bpd_any,AVG Precision,external_validation
 MRMCAP000110127,0,0.0,1,bpd_any,AVG Precision,external_validation
-MRMCAP000110128,0,0.7751713000000001,0,bpd_any,AVG Precision,external_validation
-MRMCAP000110130,0,0.0,0,bpd_any,AVG Precision,external_validation
 MRMCAP000110134,0,0.8517773000000001,1,bpd_any,AVG Precision,external_validation
 MRMCAP000110135,0,0.7726215,1,bpd_any,AVG Precision,external_validation
-MRMCAP000110138,0,1.246728,1,bpd_any,AVG Precision,external_validation
 MRMCAP000110140,0,0.0,1,bpd_any,AVG Precision,external_validation
 MRMCAP000110142,0,0.0,0,bpd_any,AVG Precision,external_validation
 MRMCAP000110148,0,0.0,0,bpd_any,AVG Precision,external_validation
 MRMCAP000110151,0,0.99974835,1,bpd_any,AVG Precision,external_validation
-MRMCAP000111248,0,0.0,0,bpd_any,AVG Precision,external_validation
 MRMCAP000111252,0,1.1635440000000001,0,bpd_any,AVG Precision,external_validation
 N305AP000111677,0,1.2017558000000002,1,bpd_any,AVG Precision,external_validation
 N305AP000111678,0,1.3871238000000001,1,bpd_any,AVG Precision,external_validation
-PSYDAP000110628,0,1.1699333,1,bpd_any,AVG Precision,external_validation
 PSYDAP000110631,0,0.0,1,bpd_any,AVG Precision,external_validation
 PSYDAP000110635,0,0.39706597,0,bpd_any,AVG Precision,external_validation
 PSYDAP000110641,0,1.5403291000000001,1,bpd_any,AVG Precision,external_validation
 PSYDAP000110643,0,1.3610983,1,bpd_any,AVG Precision,external_validation
 PSYDAP000110645,0,0.0,1,bpd_any,AVG Precision,external_validation
 PSYDAP000110646,0,2.5032257999999996,0,bpd_any,AVG Precision,external_validation
-PSYDAP000110651,0,0.0,0,bpd_any,AVG Precision,external_validation
 PSYDAP000110655,0,0.0,1,bpd_any,AVG Precision,external_validation
 PSYDAP000110656,0,0.32962912,0,bpd_any,AVG Precision,external_validation
 PSYDAP000110662,0,0.5744596,0,bpd_any,AVG Precision,external_validation
@@ -49658,26 +49514,21 @@ PSYDAP000110665,0,0.0,0,bpd_any,AVG Precision,external_validation
 PSYDAP000110681,0,0.0,0,bpd_any,AVG Precision,external_validation
 PSYDAP000110685,0,0.16035965,0,bpd_any,AVG Precision,external_validation
 PSYDAP000111303,0,0.9447146999999999,1,bpd_any,AVG Precision,external_validation
-PVHSAP000111316,0,0.0,0,bpd_any,AVG Precision,external_validation
 PVHSAP000111317,0,0.0,0,bpd_any,AVG Precision,external_validation
 PVHSAP000111320,0,1.5810137,0,bpd_any,AVG Precision,external_validation
 PVHSAP000111322,0,0.9717017,0,bpd_any,AVG Precision,external_validation
 PVHSAP000111330,0,0.085652806,0,bpd_any,AVG Precision,external_validation
 PVHSAP000111337,0,0.91707355,0,bpd_any,AVG Precision,external_validation
 PVHSAP000111338,0,0.0,0,bpd_any,AVG Precision,external_validation
-PVHSAP000111339,0,0.0,1,bpd_any,AVG Precision,external_validation
 PVHSAP000111343,0,0.0,1,bpd_any,AVG Precision,external_validation
 PVHSAP000111344,0,2.511187,1,bpd_any,AVG Precision,external_validation
 PVHSAP000111345,0,1.1282865,1,bpd_any,AVG Precision,external_validation
-PVHSAP000111351,0,0.9993371999999999,1,bpd_any,AVG Precision,external_validation
-PVHSAP000111353,0,0.0,0,bpd_any,AVG Precision,external_validation
 PVHSAP000111354,0,0.0,0,bpd_any,AVG Precision,external_validation
 PVHSAP000111357,0,0.0,0,bpd_any,AVG Precision,external_validation
 PVHSAP000111360,0,0.0,1,bpd_any,AVG Precision,external_validation
 SACHAP000110218,0,0.0,1,bpd_any,AVG Precision,external_validation
 SACHAP000110230,0,0.0,0,bpd_any,AVG Precision,external_validation
 SACHAP000110247,0,0.55602425,1,bpd_any,AVG Precision,external_validation
-SACHAP000110265,0,1.3536974,1,bpd_any,AVG Precision,external_validation
 SACHAP000111121,0,1.3750088,1,bpd_any,AVG Precision,external_validation
 SACHAP000111122,0,0.0,0,bpd_any,AVG Precision,external_validation
 SAGIAP000110396,0,0.90048516,1,bpd_any,AVG Precision,external_validation
@@ -49687,33 +49538,20 @@ SAGIAP000110407,0,0.47366872,0,bpd_any,AVG Precision,external_validation
 SAGIAP000110414,0,2.2424176,1,bpd_any,AVG Precision,external_validation
 SAGIAP000110422,0,0.74764246,1,bpd_any,AVG Precision,external_validation
 SAGIAP000110438,0,0.0,1,bpd_any,AVG Precision,external_validation
-SAGIAP000110439,0,0.0,0,bpd_any,AVG Precision,external_validation
 SAGIAP000111205,0,0.13935351,1,bpd_any,AVG Precision,external_validation
 SAGIAP000111207,0,0.0,1,bpd_any,AVG Precision,external_validation
-SAGIAP000111215,0,1.4308199,1,bpd_any,AVG Precision,external_validation
-SRMCAP000110747,0,0.0,0,bpd_any,AVG Precision,external_validation
 SRMCAP000110751,0,0.31475790000000003,0,bpd_any,AVG Precision,external_validation
-SRMCAP000110752,0,0.3114623,0,bpd_any,AVG Precision,external_validation
 SRMCAP000110753,0,1.1061132,0,bpd_any,AVG Precision,external_validation
 SRMCAP000110754,0,0.0,0,bpd_any,AVG Precision,external_validation
 SRMCAP000110757,0,1.0053867,0,bpd_any,AVG Precision,external_validation
 STORAP000111608,0,1.2283528000000001,1,bpd_any,AVG Precision,external_validation
-STORAP000111610,0,0.20129678,0,bpd_any,AVG Precision,external_validation
-STORAP000111612,0,0.64070743,0,bpd_any,AVG Precision,external_validation
 SWEDAP000110689,0,0.12177555,1,bpd_any,AVG Precision,external_validation
-SWEDAP000110696,0,0.72711223,1,bpd_any,AVG Precision,external_validation
 SWEDAP000110699,0,0.037129164,1,bpd_any,AVG Precision,external_validation
-SWEDAP000110703,0,1.8735921000000002,0,bpd_any,AVG Precision,external_validation
 SWEDAP000110705,0,0.11254158,0,bpd_any,AVG Precision,external_validation
 SWEDAP000110708,0,2.1327672000000004,0,bpd_any,AVG Precision,external_validation
-SWEDAP000110710,0,0.0,1,bpd_any,AVG Precision,external_validation
 SWEDAP000110721,0,0.0,0,bpd_any,AVG Precision,external_validation
 TSONAP000110570,0,1.1783961,0,bpd_any,AVG Precision,external_validation
 TSONAP000110578,0,0.0,0,bpd_any,AVG Precision,external_validation
-TSONAP000110580,0,1.081104,1,bpd_any,AVG Precision,external_validation
-TSONAP000110581,0,1.1938971,1,bpd_any,AVG Precision,external_validation
-TSONAP000110583,0,0.69493556,0,bpd_any,AVG Precision,external_validation
-TSONAP000110586,0,0.8494733,1,bpd_any,AVG Precision,external_validation
 TSONAP000110599,0,0.8302779,0,bpd_any,AVG Precision,external_validation
 TSONAP000110607,0,1.2435513999999999,1,bpd_any,AVG Precision,external_validation
 TSONAP000110610,0,1.367968,1,bpd_any,AVG Precision,external_validation
@@ -59692,65 +59530,16 @@ TSONAP000111434,0,1.3917356,1,bpd_any,AVG Precision,external_validation
 41262,7,0.0,0,rop_any,AVG Precision,kfold_test
 41262,8,0.09000605,0,rop_any,AVG Precision,kfold_test
 41262,9,0.12047452,0,rop_any,AVG Precision,kfold_test
-AKCHAP000111053,0,0.2979492,0,rop_any,AVG Precision,external_validation
-AKCHAP000111054,0,0.0,0,rop_any,AVG Precision,external_validation
-AKCHAP000111056,0,0.0,0,rop_any,AVG Precision,external_validation
-AKCHAP000111058,0,0.0,0,rop_any,AVG Precision,external_validation
-ALEXAP000110866,0,2.1688755,0,rop_any,AVG Precision,external_validation
-ALEXAP000110867,0,1.0114149,0,rop_any,AVG Precision,external_validation
-ALEXAP000110870,0,1.2743075000000001,0,rop_any,AVG Precision,external_validation
-ALEXAP000110871,0,1.1453200000000001,0,rop_any,AVG Precision,external_validation
-ALEXAP000110876,0,0.39264372,0,rop_any,AVG Precision,external_validation
-CAMCAP000110988,0,0.0,0,rop_any,AVG Precision,external_validation
-CAMCAP000110989,0,0.029909847000000003,0,rop_any,AVG Precision,external_validation
-CAMCAP000110991,0,0.33639106,0,rop_any,AVG Precision,external_validation
-CAMCAP000110992,0,0.0,0,rop_any,AVG Precision,external_validation
-CAMCAP000110994,0,0.0,0,rop_any,AVG Precision,external_validation
-CAMCAP000110995,0,0.0,0,rop_any,AVG Precision,external_validation
-CAMCAP000110996,0,0.9735732,0,rop_any,AVG Precision,external_validation
-CAMCAP000110998,0,0.0,0,rop_any,AVG Precision,external_validation
-CAMCAP000111001,0,0.47402340000000004,0,rop_any,AVG Precision,external_validation
-CAMCAP000111006,0,0.6588579999999999,0,rop_any,AVG Precision,external_validation
-CAMCAP000111008,0,0.0,0,rop_any,AVG Precision,external_validation
-CAMCAP000111017,0,1.8145329,0,rop_any,AVG Precision,external_validation
 CAMCAP000111019,0,1.7141074,0,rop_any,AVG Precision,external_validation
 CAMCAP000111020,0,0.6321914000000001,0,rop_any,AVG Precision,external_validation
-CAMCAP000111024,0,0.6887081,0,rop_any,AVG Precision,external_validation
-CAMCAP000111026,0,0.0,0,rop_any,AVG Precision,external_validation
 CAMCAP000111028,0,0.0,0,rop_any,AVG Precision,external_validation
-CAMCAP000111029,0,0.65348625,0,rop_any,AVG Precision,external_validation
-CAMCAP000111031,0,0.6722459,0,rop_any,AVG Precision,external_validation
-CAMCAP000111032,0,0.56481725,0,rop_any,AVG Precision,external_validation
-CAMCAP000111036,0,0.23794518,0,rop_any,AVG Precision,external_validation
-CAMCAP000111037,0,0.13239852,0,rop_any,AVG Precision,external_validation
-CAMCAP000111038,0,0.0,0,rop_any,AVG Precision,external_validation
 CBHLAP000110506,0,0.78846484,0,rop_any,AVG Precision,external_validation
 CBHLAP000110518,0,0.9848998999999999,0,rop_any,AVG Precision,external_validation
-CBHLAP000110519,0,1.0608166,0,rop_any,AVG Precision,external_validation
-CBHLAP000110520,0,2.2473824000000002,0,rop_any,AVG Precision,external_validation
-CBHLAP000110522,0,1.7460095000000002,0,rop_any,AVG Precision,external_validation
-CBHLAP000110523,0,0.90110344,0,rop_any,AVG Precision,external_validation
-CBHLAP000110524,0,0.26467618,0,rop_any,AVG Precision,external_validation
-CBHLAP000110526,0,2.5684035,0,rop_any,AVG Precision,external_validation
-CBHLAP000110527,0,1.7938738999999997,0,rop_any,AVG Precision,external_validation
-CBHLAP000110530,0,0.0,0,rop_any,AVG Precision,external_validation
 CBHLAP000110531,0,0.0,0,rop_any,AVG Precision,external_validation
-COGSAP000110931,0,0.50697845,0,rop_any,AVG Precision,external_validation
 COGSAP000110936,0,0.019836169,0,rop_any,AVG Precision,external_validation
 COGSAP000110937,0,0.8131774,0,rop_any,AVG Precision,external_validation
 COGSAP000110939,0,1.0507375,0,rop_any,AVG Precision,external_validation
-COGSAP000110941,0,0.0,0,rop_any,AVG Precision,external_validation
-COGSAP000110944,0,2.320442,0,rop_any,AVG Precision,external_validation
-COGSAP000110946,0,1.5764796,0,rop_any,AVG Precision,external_validation
-COGSAP000110947,0,0.0,0,rop_any,AVG Precision,external_validation
-COGSAP000110950,0,1.8492697,0,rop_any,AVG Precision,external_validation
-COGSAP000110955,0,0.7394608,0,rop_any,AVG Precision,external_validation
-COGSAP000110958,0,0.0,0,rop_any,AVG Precision,external_validation
-COGSAP000110960,0,0.34543025,0,rop_any,AVG Precision,external_validation
-CRILAP000110446,0,0.0,0,rop_any,AVG Precision,external_validation
 CRILAP000110447,0,0.0,0,rop_any,AVG Precision,external_validation
-CRILAP000110448,0,0.0,0,rop_any,AVG Precision,external_validation
-CRILAP000110454,0,0.209823,0,rop_any,AVG Precision,external_validation
 CRILAP000110455,0,0.0,0,rop_any,AVG Precision,external_validation
 CRILAP000110456,0,0.0,0,rop_any,AVG Precision,external_validation
 CRILAP000110458,0,0.0,0,rop_any,AVG Precision,external_validation
@@ -59758,352 +59547,137 @@ CRILAP000110459,0,0.0,0,rop_any,AVG Precision,external_validation
 CRILAP000110460,0,0.0,0,rop_any,AVG Precision,external_validation
 CRILAP000110461,0,0.0,0,rop_any,AVG Precision,external_validation
 CRILAP000110464,0,0.578767,0,rop_any,AVG Precision,external_validation
-CRILAP000110465,0,0.0,0,rop_any,AVG Precision,external_validation
 CRILAP000110466,0,0.82108516,0,rop_any,AVG Precision,external_validation
-CRILAP000110469,0,0.0,0,rop_any,AVG Precision,external_validation
 CRILAP000110475,0,4.0679739999999995,0,rop_any,AVG Precision,external_validation
 CRILAP000110480,0,0.0,0,rop_any,AVG Precision,external_validation
-CRILAP000110481,0,0.0,0,rop_any,AVG Precision,external_validation
 CRILAP000110482,0,0.6753336,0,rop_any,AVG Precision,external_validation
 CRILAP000110483,0,0.0,0,rop_any,AVG Precision,external_validation
-CRILAP000110484,0,0.0,0,rop_any,AVG Precision,external_validation
-CRILAP000110487,0,0.88382864,0,rop_any,AVG Precision,external_validation
-CRILAP000110488,0,0.20226456,0,rop_any,AVG Precision,external_validation
-CRILAP000110490,0,0.9172993,0,rop_any,AVG Precision,external_validation
 CRILAP000110496,0,0.84774005,0,rop_any,AVG Precision,external_validation
 CRILAP000110497,0,0.0,0,rop_any,AVG Precision,external_validation
-CRILAP000110499,0,0.0,0,rop_any,AVG Precision,external_validation
 CRILAP000110500,0,0.38535452,0,rop_any,AVG Precision,external_validation
-CRILAP000110501,0,1.5243145,0,rop_any,AVG Precision,external_validation
-CRILAP000110504,0,1.1398576,0,rop_any,AVG Precision,external_validation
 CRILAP000111156,0,0.5170798,0,rop_any,AVG Precision,external_validation
-CRILAP000111159,0,1.1757667,0,rop_any,AVG Precision,external_validation
 CRILAP000111161,0,0.0484966,0,rop_any,AVG Precision,external_validation
 CRILAP000111162,0,1.4424754,0,rop_any,AVG Precision,external_validation
-CRILAP000111163,0,0.7213543,0,rop_any,AVG Precision,external_validation
-CRILAP000111164,0,0.0,0,rop_any,AVG Precision,external_validation
 CRILAP000111165,0,0.0,0,rop_any,AVG Precision,external_validation
-CRILAP000111166,0,0.008543262,0,rop_any,AVG Precision,external_validation
-CRILAP000111167,0,0.36254102,0,rop_any,AVG Precision,external_validation
-CRILAP000111168,0,0.98168606,0,rop_any,AVG Precision,external_validation
 CRILAP000111169,0,0.4527359,0,rop_any,AVG Precision,external_validation
-CRILAP000111170,0,0.98637414,0,rop_any,AVG Precision,external_validation
-CWESAP000110270,0,0.0,0,rop_any,AVG Precision,external_validation
-CWESAP000110273,0,0.12183379999999999,0,rop_any,AVG Precision,external_validation
-CWESAP000110274,0,0.46280828,0,rop_any,AVG Precision,external_validation
-CWESAP000110275,0,1.1694559,0,rop_any,AVG Precision,external_validation
-CWESAP000110276,0,1.153697,0,rop_any,AVG Precision,external_validation
-CWESAP000110277,0,1.2246736999999999,0,rop_any,AVG Precision,external_validation
 CWESAP000110281,0,0.0,0,rop_any,AVG Precision,external_validation
-CWESAP000110282,0,0.0,0,rop_any,AVG Precision,external_validation
-CWESAP000110283,0,1.0904576000000001,0,rop_any,AVG Precision,external_validation
-CWESAP000110287,0,0.38206655,0,rop_any,AVG Precision,external_validation
-CWESAP000110288,0,0.68619865,0,rop_any,AVG Precision,external_validation
 CWESAP000110289,0,0.44067252,0,rop_any,AVG Precision,external_validation
 CWESAP000110293,0,0.40121055,0,rop_any,AVG Precision,external_validation
-CWESAP000110296,0,1.2907733000000001,0,rop_any,AVG Precision,external_validation
 CWESAP000110297,0,0.0,0,rop_any,AVG Precision,external_validation
 CWESAP000110298,0,0.0,0,rop_any,AVG Precision,external_validation
 CWESAP000110299,0,0.0,0,rop_any,AVG Precision,external_validation
 CWESAP000110302,0,0.8793776,0,rop_any,AVG Precision,external_validation
-CWESAP000110303,0,0.022894493999999998,0,rop_any,AVG Precision,external_validation
 CWESAP000110304,0,0.65078825,0,rop_any,AVG Precision,external_validation
-CWESAP000110306,0,1.4697258,0,rop_any,AVG Precision,external_validation
-CWESAP000110307,0,0.0,0,rop_any,AVG Precision,external_validation
-CWESAP000110308,0,0.6678208000000001,0,rop_any,AVG Precision,external_validation
 CWESAP000110309,0,0.0,0,rop_any,AVG Precision,external_validation
 CWESAP000110310,0,0.0,0,rop_any,AVG Precision,external_validation
-CWESAP000110311,0,0.0,0,rop_any,AVG Precision,external_validation
-CWESAP000110312,0,0.0,0,rop_any,AVG Precision,external_validation
-CWESAP000110313,0,0.37317735,0,rop_any,AVG Precision,external_validation
-CWESAP000110314,0,0.9247305,0,rop_any,AVG Precision,external_validation
-CWESAP000110315,0,0.48621949999999997,0,rop_any,AVG Precision,external_validation
-CWESAP000110317,0,1.0794663,0,rop_any,AVG Precision,external_validation
-CWESAP000110319,0,0.0,0,rop_any,AVG Precision,external_validation
 CWESAP000110322,0,0.4968152,0,rop_any,AVG Precision,external_validation
 CWESAP000111436,0,0.0,0,rop_any,AVG Precision,external_validation
-CWESAP000111437,0,0.0,0,rop_any,AVG Precision,external_validation
-CWESAP000111438,0,0.79882324,0,rop_any,AVG Precision,external_validation
-CWESAP000111439,0,0.6697196,0,rop_any,AVG Precision,external_validation
-CWESAP000111440,0,0.0,0,rop_any,AVG Precision,external_validation
-CWESAP000111441,0,0.0,0,rop_any,AVG Precision,external_validation
-CWESAP000111442,0,1.2089272,0,rop_any,AVG Precision,external_validation
 CWESAP000111445,0,0.10162929,0,rop_any,AVG Precision,external_validation
-CWESAP000111446,0,1.3191823999999999,0,rop_any,AVG Precision,external_validation
-CWESAP000111448,0,0.87675154,0,rop_any,AVG Precision,external_validation
 CWESAP000111837,0,1.1787876,0,rop_any,AVG Precision,external_validation
 CWESAP000111838,0,0.108765975,0,rop_any,AVG Precision,external_validation
 CWESAP000111840,0,0.0,0,rop_any,AVG Precision,external_validation
 ETCHAP000110808,0,0.43966332,0,rop_any,AVG Precision,external_validation
-ETCHAP000110812,0,0.6096351999999999,0,rop_any,AVG Precision,external_validation
-ETCHAP000110815,0,2.0598302,0,rop_any,AVG Precision,external_validation
 HARRAP000111451,0,0.0,0,rop_any,AVG Precision,external_validation
-HARRAP000111453,0,0.79177845,0,rop_any,AVG Precision,external_validation
-HARRAP000111455,0,0.68280333,0,rop_any,AVG Precision,external_validation
-HARRAP000111456,0,0.24515483,0,rop_any,AVG Precision,external_validation
-HARRAP000111457,0,0.0,0,rop_any,AVG Precision,external_validation
-HARRAP000111458,0,0.0,0,rop_any,AVG Precision,external_validation
-HARRAP000111459,0,1.4071538000000001,0,rop_any,AVG Precision,external_validation
-HARRAP000111460,0,0.20044188,0,rop_any,AVG Precision,external_validation
 HARRAP000111462,0,1.2515781000000001,0,rop_any,AVG Precision,external_validation
-HARRAP000111463,0,1.7842339,0,rop_any,AVG Precision,external_validation
-HARRAP000111468,0,1.208394,0,rop_any,AVG Precision,external_validation
 HARRAP000111471,0,0.7899581,0,rop_any,AVG Precision,external_validation
-HARRAP000111472,0,1.450243,0,rop_any,AVG Precision,external_validation
-HARRAP000111473,0,1.9114646,0,rop_any,AVG Precision,external_validation
 HARRAP000111477,0,0.18643236,0,rop_any,AVG Precision,external_validation
 HARRAP000111478,0,0.48507568,0,rop_any,AVG Precision,external_validation
-HARRAP000111479,0,0.0,0,rop_any,AVG Precision,external_validation
-HARRAP000111480,0,0.0,0,rop_any,AVG Precision,external_validation
 HARRAP000111481,0,0.4848002,0,rop_any,AVG Precision,external_validation
-HARRAP000111482,0,0.19048232,0,rop_any,AVG Precision,external_validation
-HARRAP000111485,0,0.0,0,rop_any,AVG Precision,external_validation
-HARRAP000111486,0,0.0,0,rop_any,AVG Precision,external_validation
-JOTXAP000111527,0,0.8623805,0,rop_any,AVG Precision,external_validation
-JOTXAP000111532,0,1.1942991000000003,0,rop_any,AVG Precision,external_validation
-JOTXAP000111533,0,0.0,0,rop_any,AVG Precision,external_validation
-JOTXAP000111534,0,0.9778757,0,rop_any,AVG Precision,external_validation
-JOTXAP000111535,0,0.0,0,rop_any,AVG Precision,external_validation
-JOTXAP000111537,0,0.0,0,rop_any,AVG Precision,external_validation
-JOTXAP000111538,0,0.0,0,rop_any,AVG Precision,external_validation
-JOTXAP000111544,0,1.3157794,0,rop_any,AVG Precision,external_validation
-MCSAAP000110326,0,0.35805514,0,rop_any,AVG Precision,external_validation
 MCSAAP000110327,0,0.0,0,rop_any,AVG Precision,external_validation
-MCSAAP000110330,0,0.43153235,0,rop_any,AVG Precision,external_validation
-MCSAAP000110333,0,0.0,0,rop_any,AVG Precision,external_validation
-MCSAAP000110334,0,2.3924298,0,rop_any,AVG Precision,external_validation
-MCSAAP000110338,0,0.6138169,0,rop_any,AVG Precision,external_validation
-MCSAAP000110339,0,0.0,0,rop_any,AVG Precision,external_validation
-MCSAAP000110342,0,1.1701508,0,rop_any,AVG Precision,external_validation
-MCSAAP000110345,0,0.66626835,0,rop_any,AVG Precision,external_validation
-MCSAAP000110346,0,1.2065143999999999,0,rop_any,AVG Precision,external_validation
-MCSAAP000110347,0,0.0,0,rop_any,AVG Precision,external_validation
-MCSAAP000110349,0,0.23082232,0,rop_any,AVG Precision,external_validation
 MCSAAP000110353,0,0.059172228,0,rop_any,AVG Precision,external_validation
-MCSAAP000110364,0,0.26871857,0,rop_any,AVG Precision,external_validation
 MCSAAP000110366,0,0.0,0,rop_any,AVG Precision,external_validation
-MCSAAP000110367,0,0.0,0,rop_any,AVG Precision,external_validation
-MCSAAP000110368,0,0.0,0,rop_any,AVG Precision,external_validation
-MCSAAP000110371,0,0.19667342,0,rop_any,AVG Precision,external_validation
-MCSAAP000110372,0,0.0,0,rop_any,AVG Precision,external_validation
 MCSAAP000110373,0,0.0,0,rop_any,AVG Precision,external_validation
-MHSBAP000110156,0,0.98965174,0,rop_any,AVG Precision,external_validation
-MHSBAP000110159,0,0.0,0,rop_any,AVG Precision,external_validation
-MHSBAP000110163,0,0.0,0,rop_any,AVG Precision,external_validation
-MHSBAP000110164,0,2.643093,0,rop_any,AVG Precision,external_validation
-MHSBAP000110171,0,0.0,0,rop_any,AVG Precision,external_validation
-MHSBAP000110173,0,0.0,0,rop_any,AVG Precision,external_validation
 MHSBAP000110175,0,0.0,0,rop_any,AVG Precision,external_validation
-MHSBAP000110177,0,1.3496153,0,rop_any,AVG Precision,external_validation
 MHSBAP000110179,0,1.3710438999999999,0,rop_any,AVG Precision,external_validation
 MHSBAP000110180,0,0.0,0,rop_any,AVG Precision,external_validation
-MHSBAP000110181,0,0.0,0,rop_any,AVG Precision,external_validation
-MHSBAP000110182,0,0.19491683,0,rop_any,AVG Precision,external_validation
 MHSBAP000110186,0,0.97429776,0,rop_any,AVG Precision,external_validation
-MHSBAP000110189,0,0.0,0,rop_any,AVG Precision,external_validation
 MHSBAP000110194,0,1.5272268,0,rop_any,AVG Precision,external_validation
 MHSBAP000110199,0,1.4360851000000001,0,rop_any,AVG Precision,external_validation
-MHSBAP000110200,0,0.07332045,0,rop_any,AVG Precision,external_validation
-MHSBAP000110202,0,1.5187684,0,rop_any,AVG Precision,external_validation
-MHSBAP000110204,0,1.2726594,0,rop_any,AVG Precision,external_validation
 MHSBAP000111269,0,0.0,0,rop_any,AVG Precision,external_validation
 MHSBAP000111273,0,0.96282464,0,rop_any,AVG Precision,external_validation
-MHUVAP000111751,0,0.0,0,rop_any,AVG Precision,external_validation
-MHUVAP000111752,0,0.08121447,0,rop_any,AVG Precision,external_validation
-MHUVAP000111756,0,0.8239369000000001,0,rop_any,AVG Precision,external_validation
-MHUVAP000111758,0,0.32414755,0,rop_any,AVG Precision,external_validation
 MRMCAP000110104,0,0.21046536,0,rop_any,AVG Precision,external_validation
-MRMCAP000110110,0,1.0803746,0,rop_any,AVG Precision,external_validation
 MRMCAP000110111,0,1.1516472,0,rop_any,AVG Precision,external_validation
-MRMCAP000110113,0,0.0,0,rop_any,AVG Precision,external_validation
-MRMCAP000110114,0,0.392013,0,rop_any,AVG Precision,external_validation
-MRMCAP000110115,0,0.81674755,0,rop_any,AVG Precision,external_validation
-MRMCAP000110116,0,2.1638622000000005,0,rop_any,AVG Precision,external_validation
-MRMCAP000110118,0,0.74855965,0,rop_any,AVG Precision,external_validation
 MRMCAP000110119,0,0.21368077,0,rop_any,AVG Precision,external_validation
 MRMCAP000110120,0,0.0,0,rop_any,AVG Precision,external_validation
 MRMCAP000110121,0,0.12336375,0,rop_any,AVG Precision,external_validation
 MRMCAP000110122,0,0.0,0,rop_any,AVG Precision,external_validation
 MRMCAP000110126,0,0.0,0,rop_any,AVG Precision,external_validation
-MRMCAP000110128,0,0.7751713000000001,0,rop_any,AVG Precision,external_validation
 MRMCAP000110130,0,0.0,0,rop_any,AVG Precision,external_validation
 MRMCAP000110132,0,0.80097556,0,rop_any,AVG Precision,external_validation
-MRMCAP000110133,0,0.41851193,0,rop_any,AVG Precision,external_validation
 MRMCAP000110134,0,0.8517773000000001,0,rop_any,AVG Precision,external_validation
-MRMCAP000110135,0,0.7726215,0,rop_any,AVG Precision,external_validation
-MRMCAP000110136,0,0.012892006999999999,0,rop_any,AVG Precision,external_validation
 MRMCAP000110140,0,0.0,0,rop_any,AVG Precision,external_validation
 MRMCAP000110141,0,0.0,0,rop_any,AVG Precision,external_validation
-MRMCAP000110143,0,0.0,0,rop_any,AVG Precision,external_validation
 MRMCAP000110147,0,0.0,0,rop_any,AVG Precision,external_validation
-MRMCAP000110152,0,1.0737453000000001,0,rop_any,AVG Precision,external_validation
 MRMCAP000110154,0,0.0,0,rop_any,AVG Precision,external_validation
-MRMCAP000111247,0,0.74420035,0,rop_any,AVG Precision,external_validation
 MRMCAP000111249,0,0.7866221999999999,0,rop_any,AVG Precision,external_validation
-MRMCAP000111254,0,1.4551516000000002,0,rop_any,AVG Precision,external_validation
-MRMCAP000111259,0,0.0,0,rop_any,AVG Precision,external_validation
-MRMCAP000111261,0,0.5167279,0,rop_any,AVG Precision,external_validation
-MRMCAP000111264,0,0.62484413,0,rop_any,AVG Precision,external_validation
 N305AP000111677,0,1.2017558000000002,0,rop_any,AVG Precision,external_validation
-N305AP000111678,0,1.3871238000000001,0,rop_any,AVG Precision,external_validation
 N305AP000111679,0,0.0,0,rop_any,AVG Precision,external_validation
 N305AP000111681,0,0.27989942,0,rop_any,AVG Precision,external_validation
-PSYDAP000110626,0,0.0,0,rop_any,AVG Precision,external_validation
 PSYDAP000110628,0,1.1699333,0,rop_any,AVG Precision,external_validation
 PSYDAP000110629,0,0.0,0,rop_any,AVG Precision,external_validation
 PSYDAP000110631,0,0.0,0,rop_any,AVG Precision,external_validation
 PSYDAP000110641,0,1.5403291000000001,0,rop_any,AVG Precision,external_validation
 PSYDAP000110644,0,0.35201642,0,rop_any,AVG Precision,external_validation
-PSYDAP000110645,0,0.0,0,rop_any,AVG Precision,external_validation
 PSYDAP000110651,0,0.0,0,rop_any,AVG Precision,external_validation
-PSYDAP000110653,0,0.0,0,rop_any,AVG Precision,external_validation
-PSYDAP000110654,0,0.0,0,rop_any,AVG Precision,external_validation
 PSYDAP000110657,0,0.0,0,rop_any,AVG Precision,external_validation
-PSYDAP000110663,0,0.0,0,rop_any,AVG Precision,external_validation
 PSYDAP000110664,0,1.3361555,0,rop_any,AVG Precision,external_validation
-PSYDAP000110668,0,0.0,0,rop_any,AVG Precision,external_validation
-PSYDAP000110670,0,0.9181662,0,rop_any,AVG Precision,external_validation
-PSYDAP000110672,0,0.94926697,1,rop_any,AVG Precision,external_validation
 PSYDAP000110676,0,0.6240648,0,rop_any,AVG Precision,external_validation
-PSYDAP000110677,0,0.2876152,0,rop_any,AVG Precision,external_validation
-PSYDAP000110678,0,0.0,0,rop_any,AVG Precision,external_validation
-PSYDAP000110680,0,1.1918875,0,rop_any,AVG Precision,external_validation
-PSYDAP000110685,0,0.16035965,0,rop_any,AVG Precision,external_validation
-PSYDAP000111308,0,0.47596848,0,rop_any,AVG Precision,external_validation
-PVHSAP000111319,0,0.48401362,0,rop_any,AVG Precision,external_validation
-PVHSAP000111321,0,0.0,0,rop_any,AVG Precision,external_validation
 PVHSAP000111328,0,0.98836285,0,rop_any,AVG Precision,external_validation
 PVHSAP000111330,0,0.085652806,0,rop_any,AVG Precision,external_validation
-PVHSAP000111332,0,0.0,0,rop_any,AVG Precision,external_validation
 PVHSAP000111334,0,0.20432785,0,rop_any,AVG Precision,external_validation
-PVHSAP000111335,0,1.1767755,0,rop_any,AVG Precision,external_validation
-PVHSAP000111342,0,3.2420447,0,rop_any,AVG Precision,external_validation
-PVHSAP000111343,0,0.0,0,rop_any,AVG Precision,external_validation
-PVHSAP000111347,0,0.92237526,0,rop_any,AVG Precision,external_validation
-PVHSAP000111349,0,0.0,0,rop_any,AVG Precision,external_validation
-PVHSAP000111351,0,0.9993371999999999,0,rop_any,AVG Precision,external_validation
-PVHSAP000111356,0,0.0,0,rop_any,AVG Precision,external_validation
 PVHSAP000111363,0,0.0,0,rop_any,AVG Precision,external_validation
-SACHAP000110211,0,0.47759613,0,rop_any,AVG Precision,external_validation
-SACHAP000110214,0,2.95615,0,rop_any,AVG Precision,external_validation
-SACHAP000110215,0,0.6544389,1,rop_any,AVG Precision,external_validation
-SACHAP000110217,0,0.5451574,0,rop_any,AVG Precision,external_validation
-SACHAP000110220,0,0.8020029000000001,0,rop_any,AVG Precision,external_validation
-SACHAP000110221,0,1.1758779,0,rop_any,AVG Precision,external_validation
 SACHAP000110225,0,2.2002695,0,rop_any,AVG Precision,external_validation
 SACHAP000110226,0,2.7077617999999997,0,rop_any,AVG Precision,external_validation
-SACHAP000110227,0,1.840904,0,rop_any,AVG Precision,external_validation
 SACHAP000110229,0,0.6913935999999999,0,rop_any,AVG Precision,external_validation
-SACHAP000110231,0,0.3317418,0,rop_any,AVG Precision,external_validation
 SACHAP000110232,0,0.0,0,rop_any,AVG Precision,external_validation
-SACHAP000110233,0,0.25694728,0,rop_any,AVG Precision,external_validation
-SACHAP000110236,0,0.9055313,0,rop_any,AVG Precision,external_validation
 SACHAP000110237,0,0.0,0,rop_any,AVG Precision,external_validation
-SACHAP000110239,0,0.092221595,0,rop_any,AVG Precision,external_validation
 SACHAP000110241,0,0.3801089,0,rop_any,AVG Precision,external_validation
 SACHAP000110242,0,0.0,0,rop_any,AVG Precision,external_validation
-SACHAP000110243,0,1.3047247,0,rop_any,AVG Precision,external_validation
-SACHAP000110244,0,0.20994222,0,rop_any,AVG Precision,external_validation
 SACHAP000110245,0,0.96895516,0,rop_any,AVG Precision,external_validation
 SACHAP000110246,0,2.5843859,0,rop_any,AVG Precision,external_validation
-SACHAP000110247,0,0.55602425,0,rop_any,AVG Precision,external_validation
-SACHAP000110249,0,0.48772165,0,rop_any,AVG Precision,external_validation
 SACHAP000110252,0,0.0,0,rop_any,AVG Precision,external_validation
-SACHAP000110254,0,1.3689489,0,rop_any,AVG Precision,external_validation
-SACHAP000110258,0,2.8930724,0,rop_any,AVG Precision,external_validation
 SACHAP000110259,0,0.0,0,rop_any,AVG Precision,external_validation
 SACHAP000110261,0,0.8877123,0,rop_any,AVG Precision,external_validation
 SACHAP000110262,0,0.89545125,0,rop_any,AVG Precision,external_validation
-SACHAP000110264,0,0.5135371,0,rop_any,AVG Precision,external_validation
-SACHAP000110265,0,1.3536974,0,rop_any,AVG Precision,external_validation
 SACHAP000111111,0,0.0,0,rop_any,AVG Precision,external_validation
-SACHAP000111115,0,0.31229246,0,rop_any,AVG Precision,external_validation
 SACHAP000111117,0,1.8813973999999998,0,rop_any,AVG Precision,external_validation
 SACHAP000111122,0,0.0,0,rop_any,AVG Precision,external_validation
-SAGIAP000110388,0,0.9394726999999999,0,rop_any,AVG Precision,external_validation
 SAGIAP000110390,0,1.4396313,0,rop_any,AVG Precision,external_validation
 SAGIAP000110391,0,2.0460167,0,rop_any,AVG Precision,external_validation
 SAGIAP000110393,0,0.0,0,rop_any,AVG Precision,external_validation
-SAGIAP000110395,0,0.0,0,rop_any,AVG Precision,external_validation
 SAGIAP000110397,0,1.7680276999999998,0,rop_any,AVG Precision,external_validation
 SAGIAP000110399,0,0.51673996,0,rop_any,AVG Precision,external_validation
-SAGIAP000110400,0,0.0,0,rop_any,AVG Precision,external_validation
-SAGIAP000110401,0,0.0,0,rop_any,AVG Precision,external_validation
 SAGIAP000110404,0,0.0,0,rop_any,AVG Precision,external_validation
-SAGIAP000110414,0,2.2424176,0,rop_any,AVG Precision,external_validation
 SAGIAP000110420,0,1.1000656,0,rop_any,AVG Precision,external_validation
-SAGIAP000110421,0,1.6732770000000001,0,rop_any,AVG Precision,external_validation
-SAGIAP000110422,0,0.74764246,0,rop_any,AVG Precision,external_validation
-SAGIAP000110426,0,0.0,0,rop_any,AVG Precision,external_validation
 SAGIAP000110427,0,1.4408789,0,rop_any,AVG Precision,external_validation
-SAGIAP000110429,0,0.5275093000000001,0,rop_any,AVG Precision,external_validation
-SAGIAP000110431,0,0.19221555,0,rop_any,AVG Precision,external_validation
-SAGIAP000110432,0,1.3966798,0,rop_any,AVG Precision,external_validation
-SAGIAP000110434,0,0.0,0,rop_any,AVG Precision,external_validation
-SAGIAP000110435,0,0.0,0,rop_any,AVG Precision,external_validation
-SAGIAP000110438,0,0.0,0,rop_any,AVG Precision,external_validation
-SAGIAP000110442,0,0.0,0,rop_any,AVG Precision,external_validation
-SAGIAP000110444,0,0.5484501,0,rop_any,AVG Precision,external_validation
 SAGIAP000110445,0,1.4427441,0,rop_any,AVG Precision,external_validation
 SAGIAP000111202,0,0.0,0,rop_any,AVG Precision,external_validation
 SAGIAP000111203,0,0.0,0,rop_any,AVG Precision,external_validation
-SAGIAP000111204,0,0.0,0,rop_any,AVG Precision,external_validation
 SAGIAP000111205,0,0.13935351,0,rop_any,AVG Precision,external_validation
 SAGIAP000111207,0,0.0,0,rop_any,AVG Precision,external_validation
-SAGIAP000111209,0,0.5499227,0,rop_any,AVG Precision,external_validation
-SAGIAP000111210,0,0.657983,0,rop_any,AVG Precision,external_validation
 SAGIAP000111211,0,0.0,0,rop_any,AVG Precision,external_validation
-SAGIAP000111212,0,0.4519996,0,rop_any,AVG Precision,external_validation
-SRMCAP000110747,0,0.0,0,rop_any,AVG Precision,external_validation
-SRMCAP000110748,0,2.0724343999999997,0,rop_any,AVG Precision,external_validation
-SRMCAP000110749,0,0.0,0,rop_any,AVG Precision,external_validation
-SRMCAP000110750,0,1.5866936000000003,0,rop_any,AVG Precision,external_validation
 SRMCAP000110751,0,0.31475790000000003,0,rop_any,AVG Precision,external_validation
 SRMCAP000110752,0,0.3114623,0,rop_any,AVG Precision,external_validation
 STORAP000111607,0,0.5653226,0,rop_any,AVG Precision,external_validation
 STORAP000111608,0,1.2283528000000001,0,rop_any,AVG Precision,external_validation
 STORAP000111609,0,0.0,0,rop_any,AVG Precision,external_validation
-STORAP000111612,0,0.64070743,0,rop_any,AVG Precision,external_validation
 STORAP000111616,0,0.8195975000000001,0,rop_any,AVG Precision,external_validation
 SWEDAP000110686,0,1.5077605,0,rop_any,AVG Precision,external_validation
 SWEDAP000110688,0,1.4051131000000001,0,rop_any,AVG Precision,external_validation
-SWEDAP000110690,0,1.218267,0,rop_any,AVG Precision,external_validation
-SWEDAP000110691,0,0.36587083,0,rop_any,AVG Precision,external_validation
 SWEDAP000110692,0,0.0,0,rop_any,AVG Precision,external_validation
-SWEDAP000110693,0,0.0,0,rop_any,AVG Precision,external_validation
 SWEDAP000110694,0,0.0,0,rop_any,AVG Precision,external_validation
 SWEDAP000110695,0,1.8643125,0,rop_any,AVG Precision,external_validation
-SWEDAP000110696,0,0.72711223,0,rop_any,AVG Precision,external_validation
-SWEDAP000110697,0,0.15808006,0,rop_any,AVG Precision,external_validation
-SWEDAP000110698,0,0.55775857,0,rop_any,AVG Precision,external_validation
-SWEDAP000110705,0,0.11254158,0,rop_any,AVG Precision,external_validation
 SWEDAP000110710,0,0.0,0,rop_any,AVG Precision,external_validation
 SWEDAP000110711,0,1.3137671,0,rop_any,AVG Precision,external_validation
-SWEDAP000110713,0,0.48465222,0,rop_any,AVG Precision,external_validation
 SWEDAP000110714,0,2.557226,0,rop_any,AVG Precision,external_validation
 SWEDAP000110715,0,0.9071001000000001,0,rop_any,AVG Precision,external_validation
 SWEDAP000110716,0,1.2674776,0,rop_any,AVG Precision,external_validation
 SWEDAP000110717,0,2.9229436,0,rop_any,AVG Precision,external_validation
-TSONAP000110568,0,0.33003530000000003,0,rop_any,AVG Precision,external_validation
-TSONAP000110571,0,0.0,0,rop_any,AVG Precision,external_validation
 TSONAP000110577,0,0.0,0,rop_any,AVG Precision,external_validation
-TSONAP000110578,0,0.0,0,rop_any,AVG Precision,external_validation
-TSONAP000110579,0,1.4086264,0,rop_any,AVG Precision,external_validation
 TSONAP000110580,0,1.081104,0,rop_any,AVG Precision,external_validation
 TSONAP000110581,0,1.1938971,0,rop_any,AVG Precision,external_validation
-TSONAP000110584,0,0.9121955,0,rop_any,AVG Precision,external_validation
-TSONAP000110585,0,0.0,0,rop_any,AVG Precision,external_validation
-TSONAP000110595,0,0.28434756,0,rop_any,AVG Precision,external_validation
-TSONAP000110607,0,1.2435513999999999,0,rop_any,AVG Precision,external_validation
-TSONAP000110610,0,1.367968,0,rop_any,AVG Precision,external_validation
-TSONAP000110611,0,1.5510535,0,rop_any,AVG Precision,external_validation
 TSONAP000110616,0,0.8133958,0,rop_any,AVG Precision,external_validation
-TSONAP000110621,0,0.27159017,0,rop_any,AVG Precision,external_validation
-TSONAP000110624,0,0.16602083,0,rop_any,AVG Precision,external_validation
 TSONAP000111421,0,0.0,0,rop_any,AVG Precision,external_validation
-TSONAP000111427,0,1.4735406999999998,0,rop_any,AVG Precision,external_validation
-TSONAP000111429,0,2.27353,0,rop_any,AVG Precision,external_validation
-TSONAP000111826,0,0.40139693,0,rop_any,AVG Precision,external_validation
 TSONAP000111827,0,0.0,0,rop_any,AVG Precision,external_validation
 26,0,0.0,0,ivh_any,AVG Precision,kfold_test
 26,1,0.0,0,ivh_any,AVG Precision,kfold_test
@@ -70607,36 +70181,24 @@ TSONAP000111827,0,0.0,0,rop_any,AVG Precision,external_validation
 41406,9,0.0,0,ivh_any,AVG Precision,kfold_test
 AKCHAP000111051,0,0.0,0,ivh_any,AVG Precision,external_validation
 ALEXAP000110866,0,2.1688755,1,ivh_any,AVG Precision,external_validation
-ALEXAP000110871,0,1.1453200000000001,1,ivh_any,AVG Precision,external_validation
 ALEXAP000110875,0,0.0,1,ivh_any,AVG Precision,external_validation
 CAMCAP000110987,0,0.7332778,1,ivh_any,AVG Precision,external_validation
 CAMCAP000110989,0,0.029909847000000003,1,ivh_any,AVG Precision,external_validation
-CAMCAP000111005,0,0.0,1,ivh_any,AVG Precision,external_validation
-CAMCAP000111007,0,0.0,0,ivh_any,AVG Precision,external_validation
 CAMCAP000111011,0,0.8178066999999999,1,ivh_any,AVG Precision,external_validation
-CAMCAP000111012,0,0.0,1,ivh_any,AVG Precision,external_validation
 CAMCAP000111014,0,1.9462851000000003,0,ivh_any,AVG Precision,external_validation
-CAMCAP000111016,0,1.4923549999999999,0,ivh_any,AVG Precision,external_validation
-CAMCAP000111024,0,0.6887081,0,ivh_any,AVG Precision,external_validation
-CAMCAP000111025,0,1.244448,1,ivh_any,AVG Precision,external_validation
 CAMCAP000111030,0,1.5651059999999999,1,ivh_any,AVG Precision,external_validation
-CAMCAP000111032,0,0.56481725,1,ivh_any,AVG Precision,external_validation
 CAMCAP000111038,0,0.0,0,ivh_any,AVG Precision,external_validation
 CBHLAP000110506,0,0.78846484,1,ivh_any,AVG Precision,external_validation
 CBHLAP000110507,0,0.13133544,1,ivh_any,AVG Precision,external_validation
 CBHLAP000110516,0,2.857897,1,ivh_any,AVG Precision,external_validation
 CBHLAP000110522,0,1.7460095000000002,1,ivh_any,AVG Precision,external_validation
-CBHLAP000110525,0,0.30942264,1,ivh_any,AVG Precision,external_validation
-CBHLAP000110529,0,0.28054509999999994,1,ivh_any,AVG Precision,external_validation
 CBHLAP000110530,0,0.0,1,ivh_any,AVG Precision,external_validation
 COGSAP000110928,0,1.3149642,1,ivh_any,AVG Precision,external_validation
-COGSAP000110934,0,0.8273712,0,ivh_any,AVG Precision,external_validation
 COGSAP000110937,0,0.8131774,1,ivh_any,AVG Precision,external_validation
 COGSAP000110940,0,1.6276042,1,ivh_any,AVG Precision,external_validation
 COGSAP000110952,0,2.4556816,1,ivh_any,AVG Precision,external_validation
 COGSAP000110955,0,0.7394608,1,ivh_any,AVG Precision,external_validation
 COGSAP000110960,0,0.34543025,1,ivh_any,AVG Precision,external_validation
-CRILAP000110448,0,0.0,0,ivh_any,AVG Precision,external_validation
 CRILAP000110454,0,0.209823,1,ivh_any,AVG Precision,external_validation
 CRILAP000110461,0,0.0,0,ivh_any,AVG Precision,external_validation
 CRILAP000110486,0,0.5628114000000001,1,ivh_any,AVG Precision,external_validation
@@ -70644,8 +70206,6 @@ CRILAP000110489,0,0.028033419,1,ivh_any,AVG Precision,external_validation
 CRILAP000110490,0,0.9172993,1,ivh_any,AVG Precision,external_validation
 CRILAP000110493,0,0.14903867,1,ivh_any,AVG Precision,external_validation
 CRILAP000110504,0,1.1398576,1,ivh_any,AVG Precision,external_validation
-CRILAP000111156,0,0.5170798,1,ivh_any,AVG Precision,external_validation
-CRILAP000111163,0,0.7213543,1,ivh_any,AVG Precision,external_validation
 CRILAP000111165,0,0.0,0,ivh_any,AVG Precision,external_validation
 CRILAP000111168,0,0.98168606,1,ivh_any,AVG Precision,external_validation
 CRILAP000111170,0,0.98637414,0,ivh_any,AVG Precision,external_validation
@@ -70654,34 +70214,24 @@ CWESAP000110281,0,0.0,1,ivh_any,AVG Precision,external_validation
 CWESAP000110283,0,1.0904576000000001,1,ivh_any,AVG Precision,external_validation
 CWESAP000110284,0,0.0,1,ivh_any,AVG Precision,external_validation
 CWESAP000110287,0,0.38206655,1,ivh_any,AVG Precision,external_validation
-CWESAP000110288,0,0.68619865,1,ivh_any,AVG Precision,external_validation
 CWESAP000110289,0,0.44067252,1,ivh_any,AVG Precision,external_validation
-CWESAP000110296,0,1.2907733000000001,1,ivh_any,AVG Precision,external_validation
 CWESAP000110298,0,0.0,0,ivh_any,AVG Precision,external_validation
 CWESAP000110301,0,1.8327682,1,ivh_any,AVG Precision,external_validation
 CWESAP000110302,0,0.8793776,1,ivh_any,AVG Precision,external_validation
-CWESAP000110305,0,0.6689944,1,ivh_any,AVG Precision,external_validation
 CWESAP000110323,0,0.85877204,1,ivh_any,AVG Precision,external_validation
 CWESAP000110324,0,0.8869794,1,ivh_any,AVG Precision,external_validation
 CWESAP000111436,0,0.0,1,ivh_any,AVG Precision,external_validation
 CWESAP000111437,0,0.0,1,ivh_any,AVG Precision,external_validation
 CWESAP000111439,0,0.6697196,1,ivh_any,AVG Precision,external_validation
 CWESAP000111442,0,1.2089272,1,ivh_any,AVG Precision,external_validation
-CWESAP000111445,0,0.10162929,1,ivh_any,AVG Precision,external_validation
 CWESAP000111446,0,1.3191823999999999,1,ivh_any,AVG Precision,external_validation
-CWESAP000111448,0,0.87675154,1,ivh_any,AVG Precision,external_validation
-CWESAP000111836,0,1.6566512999999998,1,ivh_any,AVG Precision,external_validation
 CWESAP000111838,0,0.108765975,1,ivh_any,AVG Precision,external_validation
 CWESAP000111841,0,0.0,1,ivh_any,AVG Precision,external_validation
 ETCHAP000110808,0,0.43966332,1,ivh_any,AVG Precision,external_validation
 ETCHAP000110812,0,0.6096351999999999,1,ivh_any,AVG Precision,external_validation
-ETCHAP000110813,0,1.5831321000000003,1,ivh_any,AVG Precision,external_validation
-ETCHAP000110814,0,0.0,0,ivh_any,AVG Precision,external_validation
-HARRAP000111452,0,0.86004394,0,ivh_any,AVG Precision,external_validation
 HARRAP000111459,0,1.4071538000000001,1,ivh_any,AVG Precision,external_validation
 HARRAP000111463,0,1.7842339,1,ivh_any,AVG Precision,external_validation
 HARRAP000111464,0,0.0,0,ivh_any,AVG Precision,external_validation
-HARRAP000111468,0,1.208394,1,ivh_any,AVG Precision,external_validation
 HARRAP000111471,0,0.7899581,0,ivh_any,AVG Precision,external_validation
 HARRAP000111472,0,1.450243,1,ivh_any,AVG Precision,external_validation
 HARRAP000111473,0,1.9114646,1,ivh_any,AVG Precision,external_validation
@@ -70690,149 +70240,96 @@ HARRAP000111475,0,0.0,1,ivh_any,AVG Precision,external_validation
 HARRAP000111477,0,0.18643236,1,ivh_any,AVG Precision,external_validation
 HARRAP000111485,0,0.0,0,ivh_any,AVG Precision,external_validation
 HARRAP000111489,0,0.32153836,1,ivh_any,AVG Precision,external_validation
-JOTXAP000111527,0,0.8623805,1,ivh_any,AVG Precision,external_validation
 JOTXAP000111528,0,0.44839022,1,ivh_any,AVG Precision,external_validation
 JOTXAP000111530,0,0.6780841999999999,1,ivh_any,AVG Precision,external_validation
-JOTXAP000111532,0,1.1942991000000003,1,ivh_any,AVG Precision,external_validation
-JOTXAP000111534,0,0.9778757,1,ivh_any,AVG Precision,external_validation
-MCSAAP000110326,0,0.35805514,1,ivh_any,AVG Precision,external_validation
-MCSAAP000110333,0,0.0,1,ivh_any,AVG Precision,external_validation
 MCSAAP000110339,0,0.0,1,ivh_any,AVG Precision,external_validation
 MCSAAP000110346,0,1.2065143999999999,1,ivh_any,AVG Precision,external_validation
-MCSAAP000110350,0,1.5066855,1,ivh_any,AVG Precision,external_validation
 MCSAAP000110351,0,0.0,1,ivh_any,AVG Precision,external_validation
 MCSAAP000110361,0,0.0,1,ivh_any,AVG Precision,external_validation
 MCSAAP000110363,0,0.6132259,1,ivh_any,AVG Precision,external_validation
-MCSAAP000110366,0,0.0,0,ivh_any,AVG Precision,external_validation
-MCSAAP000110369,0,1.5165056000000001,1,ivh_any,AVG Precision,external_validation
 MHSBAP000110156,0,0.98965174,1,ivh_any,AVG Precision,external_validation
 MHSBAP000110157,0,0.5973979,0,ivh_any,AVG Precision,external_validation
 MHSBAP000110160,0,0.0,0,ivh_any,AVG Precision,external_validation
 MHSBAP000110162,0,0.11799913,1,ivh_any,AVG Precision,external_validation
-MHSBAP000110165,0,0.64063245,1,ivh_any,AVG Precision,external_validation
-MHSBAP000110167,0,1.9831903999999998,1,ivh_any,AVG Precision,external_validation
 MHSBAP000110172,0,0.0,0,ivh_any,AVG Precision,external_validation
 MHSBAP000110173,0,0.0,0,ivh_any,AVG Precision,external_validation
 MHSBAP000110179,0,1.3710438999999999,1,ivh_any,AVG Precision,external_validation
 MHSBAP000110181,0,0.0,1,ivh_any,AVG Precision,external_validation
 MHSBAP000110184,0,0.0,0,ivh_any,AVG Precision,external_validation
-MHSBAP000110192,0,0.0,0,ivh_any,AVG Precision,external_validation
 MHSBAP000110193,0,0.0,1,ivh_any,AVG Precision,external_validation
 MHSBAP000110194,0,1.5272268,1,ivh_any,AVG Precision,external_validation
 MHSBAP000110196,0,1.3201958,1,ivh_any,AVG Precision,external_validation
 MHSBAP000110200,0,0.07332045,0,ivh_any,AVG Precision,external_validation
 MHSBAP000110202,0,1.5187684,1,ivh_any,AVG Precision,external_validation
-MHSBAP000110205,0,0.7754808000000001,1,ivh_any,AVG Precision,external_validation
 MHSBAP000110207,0,0.0,1,ivh_any,AVG Precision,external_validation
 MHUVAP000111752,0,0.08121447,1,ivh_any,AVG Precision,external_validation
 MRMCAP000110109,0,1.8572790000000001,1,ivh_any,AVG Precision,external_validation
-MRMCAP000110110,0,1.0803746,1,ivh_any,AVG Precision,external_validation
 MRMCAP000110111,0,1.1516472,1,ivh_any,AVG Precision,external_validation
 MRMCAP000110116,0,2.1638622000000005,1,ivh_any,AVG Precision,external_validation
-MRMCAP000110118,0,0.74855965,1,ivh_any,AVG Precision,external_validation
-MRMCAP000110123,0,0.7818461,0,ivh_any,AVG Precision,external_validation
 MRMCAP000110127,0,0.0,1,ivh_any,AVG Precision,external_validation
 MRMCAP000110129,0,0.969843,1,ivh_any,AVG Precision,external_validation
-MRMCAP000110132,0,0.80097556,0,ivh_any,AVG Precision,external_validation
 MRMCAP000110135,0,0.7726215,1,ivh_any,AVG Precision,external_validation
 MRMCAP000110136,0,0.012892006999999999,0,ivh_any,AVG Precision,external_validation
 MRMCAP000110139,0,0.0,1,ivh_any,AVG Precision,external_validation
-MRMCAP000110140,0,0.0,1,ivh_any,AVG Precision,external_validation
-MRMCAP000110141,0,0.0,0,ivh_any,AVG Precision,external_validation
 MRMCAP000110145,0,0.0,0,ivh_any,AVG Precision,external_validation
 MRMCAP000110151,0,0.99974835,1,ivh_any,AVG Precision,external_validation
 MRMCAP000111246,0,0.0,1,ivh_any,AVG Precision,external_validation
 MRMCAP000111247,0,0.74420035,1,ivh_any,AVG Precision,external_validation
 MRMCAP000111264,0,0.62484413,1,ivh_any,AVG Precision,external_validation
-PSYDAP000110628,0,1.1699333,1,ivh_any,AVG Precision,external_validation
 PSYDAP000110632,0,0.3575509,0,ivh_any,AVG Precision,external_validation
 PSYDAP000110636,0,0.16913153,0,ivh_any,AVG Precision,external_validation
-PSYDAP000110640,0,0.0,0,ivh_any,AVG Precision,external_validation
 PSYDAP000110641,0,1.5403291000000001,1,ivh_any,AVG Precision,external_validation
-PSYDAP000110643,0,1.3610983,1,ivh_any,AVG Precision,external_validation
 PSYDAP000110651,0,0.0,0,ivh_any,AVG Precision,external_validation
-PSYDAP000110653,0,0.0,0,ivh_any,AVG Precision,external_validation
-PSYDAP000110656,0,0.32962912,0,ivh_any,AVG Precision,external_validation
-PSYDAP000110670,0,0.9181662,1,ivh_any,AVG Precision,external_validation
 PSYDAP000110676,0,0.6240648,1,ivh_any,AVG Precision,external_validation
 PSYDAP000110677,0,0.2876152,1,ivh_any,AVG Precision,external_validation
-PSYDAP000110679,0,2.6460676,0,ivh_any,AVG Precision,external_validation
-PSYDAP000110680,0,1.1918875,1,ivh_any,AVG Precision,external_validation
-PSYDAP000111303,0,0.9447146999999999,1,ivh_any,AVG Precision,external_validation
 PSYDAP000111305,0,0.4868777,1,ivh_any,AVG Precision,external_validation
-PSYDAP000111309,0,1.096215,0,ivh_any,AVG Precision,external_validation
 PVHSAP000111323,0,0.5638274999999999,0,ivh_any,AVG Precision,external_validation
 PVHSAP000111335,0,1.1767755,1,ivh_any,AVG Precision,external_validation
 PVHSAP000111336,0,1.6643245,1,ivh_any,AVG Precision,external_validation
-PVHSAP000111340,0,1.7440006000000001,0,ivh_any,AVG Precision,external_validation
 PVHSAP000111341,0,2.2317827,0,ivh_any,AVG Precision,external_validation
 PVHSAP000111349,0,0.0,0,ivh_any,AVG Precision,external_validation
-PVHSAP000111352,0,3.0326076,1,ivh_any,AVG Precision,external_validation
 PVHSAP000111358,0,0.0,1,ivh_any,AVG Precision,external_validation
-SACHAP000110215,0,0.6544389,0,ivh_any,AVG Precision,external_validation
-SACHAP000110219,0,1.2495657,1,ivh_any,AVG Precision,external_validation
 SACHAP000110221,0,1.1758779,1,ivh_any,AVG Precision,external_validation
 SACHAP000110244,0,0.20994222,1,ivh_any,AVG Precision,external_validation
 SACHAP000110247,0,0.55602425,1,ivh_any,AVG Precision,external_validation
 SACHAP000110251,0,0.5389662,0,ivh_any,AVG Precision,external_validation
-SACHAP000110255,0,0.8483582000000001,1,ivh_any,AVG Precision,external_validation
 SACHAP000110264,0,0.5135371,1,ivh_any,AVG Precision,external_validation
 SACHAP000111106,0,0.15594979999999997,1,ivh_any,AVG Precision,external_validation
 SACHAP000111108,0,0.0,1,ivh_any,AVG Precision,external_validation
-SACHAP000111110,0,0.0,0,ivh_any,AVG Precision,external_validation
 SAGIAP000110388,0,0.9394726999999999,1,ivh_any,AVG Precision,external_validation
 SAGIAP000110392,0,1.0283417,1,ivh_any,AVG Precision,external_validation
 SAGIAP000110398,0,1.0342412,1,ivh_any,AVG Precision,external_validation
-SAGIAP000110412,0,0.0,0,ivh_any,AVG Precision,external_validation
 SAGIAP000110413,0,0.57195455,0,ivh_any,AVG Precision,external_validation
 SAGIAP000110415,0,1.2885146,1,ivh_any,AVG Precision,external_validation
 SAGIAP000110422,0,0.74764246,1,ivh_any,AVG Precision,external_validation
 SAGIAP000110424,0,0.81225264,1,ivh_any,AVG Precision,external_validation
 SAGIAP000110428,0,0.95398355,0,ivh_any,AVG Precision,external_validation
 SAGIAP000110432,0,1.3966798,0,ivh_any,AVG Precision,external_validation
-SAGIAP000110434,0,0.0,1,ivh_any,AVG Precision,external_validation
 SAGIAP000110436,0,0.0,1,ivh_any,AVG Precision,external_validation
 SAGIAP000110438,0,0.0,1,ivh_any,AVG Precision,external_validation
-SAGIAP000111202,0,0.0,0,ivh_any,AVG Precision,external_validation
 SAGIAP000111205,0,0.13935351,1,ivh_any,AVG Precision,external_validation
 SAGIAP000111207,0,0.0,1,ivh_any,AVG Precision,external_validation
 SRMCAP000110749,0,0.0,1,ivh_any,AVG Precision,external_validation
-SRMCAP000110755,0,0.4845894,0,ivh_any,AVG Precision,external_validation
-STORAP000111601,0,0.95637554,0,ivh_any,AVG Precision,external_validation
-STORAP000111602,0,2.7880974,0,ivh_any,AVG Precision,external_validation
 STORAP000111615,0,0.0,0,ivh_any,AVG Precision,external_validation
 SWEDAP000110686,0,1.5077605,1,ivh_any,AVG Precision,external_validation
 SWEDAP000110692,0,0.0,1,ivh_any,AVG Precision,external_validation
-SWEDAP000110693,0,0.0,0,ivh_any,AVG Precision,external_validation
 SWEDAP000110696,0,0.72711223,1,ivh_any,AVG Precision,external_validation
 SWEDAP000110699,0,0.037129164,1,ivh_any,AVG Precision,external_validation
-SWEDAP000110710,0,0.0,1,ivh_any,AVG Precision,external_validation
 SWEDAP000110715,0,0.9071001000000001,1,ivh_any,AVG Precision,external_validation
 SWEDAP000110718,0,1.0129981,0,ivh_any,AVG Precision,external_validation
 TSONAP000110567,0,1.3115085,1,ivh_any,AVG Precision,external_validation
 TSONAP000110568,0,0.33003530000000003,1,ivh_any,AVG Precision,external_validation
-TSONAP000110569,0,1.2270887,1,ivh_any,AVG Precision,external_validation
 TSONAP000110573,0,1.5209609,1,ivh_any,AVG Precision,external_validation
-TSONAP000110575,0,0.0,1,ivh_any,AVG Precision,external_validation
-TSONAP000110579,0,1.4086264,1,ivh_any,AVG Precision,external_validation
 TSONAP000110580,0,1.081104,1,ivh_any,AVG Precision,external_validation
 TSONAP000110581,0,1.1938971,1,ivh_any,AVG Precision,external_validation
-TSONAP000110582,0,0.71524847,0,ivh_any,AVG Precision,external_validation
-TSONAP000110584,0,0.9121955,1,ivh_any,AVG Precision,external_validation
 TSONAP000110586,0,0.8494733,1,ivh_any,AVG Precision,external_validation
 TSONAP000110589,0,0.8905076,1,ivh_any,AVG Precision,external_validation
-TSONAP000110591,0,1.0075617000000001,0,ivh_any,AVG Precision,external_validation
 TSONAP000110595,0,0.28434756,1,ivh_any,AVG Precision,external_validation
 TSONAP000110596,0,0.0,1,ivh_any,AVG Precision,external_validation
 TSONAP000110598,0,0.018826969,0,ivh_any,AVG Precision,external_validation
-TSONAP000110606,0,1.3457865,1,ivh_any,AVG Precision,external_validation
-TSONAP000110607,0,1.2435513999999999,1,ivh_any,AVG Precision,external_validation
-TSONAP000110615,0,0.0,1,ivh_any,AVG Precision,external_validation
-TSONAP000110616,0,0.8133958,1,ivh_any,AVG Precision,external_validation
 TSONAP000110621,0,0.27159017,1,ivh_any,AVG Precision,external_validation
 TSONAP000111427,0,1.4735406999999998,1,ivh_any,AVG Precision,external_validation
 TSONAP000111429,0,2.27353,1,ivh_any,AVG Precision,external_validation
-TSONAP000111430,0,0.0,1,ivh_any,AVG Precision,external_validation
 TSONAP000111433,0,0.29127163,1,ivh_any,AVG Precision,external_validation
 TSONAP000111434,0,1.3917356,1,ivh_any,AVG Precision,external_validation
 TSONAP000111435,0,0.8726656999999999,0,ivh_any,AVG Precision,external_validation
@@ -86061,7 +85558,6 @@ CRILAP000111170,0,0.98637414,0,nec_any,AVG Precision,external_validation
 CWESAP000110266,0,0.0,0,nec_any,AVG Precision,external_validation
 CWESAP000110269,0,0.29580313,0,nec_any,AVG Precision,external_validation
 CWESAP000110275,0,1.1694559,0,nec_any,AVG Precision,external_validation
-CWESAP000110281,0,0.0,0,nec_any,AVG Precision,external_validation
 CWESAP000110282,0,0.0,0,nec_any,AVG Precision,external_validation
 CWESAP000110284,0,0.0,0,nec_any,AVG Precision,external_validation
 CWESAP000110289,0,0.44067252,0,nec_any,AVG Precision,external_validation
@@ -86103,7 +85599,6 @@ MHSBAP000110171,0,0.0,0,nec_any,AVG Precision,external_validation
 MHSBAP000110175,0,0.0,0,nec_any,AVG Precision,external_validation
 MHSBAP000110177,0,1.3496153,0,nec_any,AVG Precision,external_validation
 MHSBAP000110179,0,1.3710438999999999,0,nec_any,AVG Precision,external_validation
-MHSBAP000110180,0,0.0,0,nec_any,AVG Precision,external_validation
 MHSBAP000110186,0,0.97429776,0,nec_any,AVG Precision,external_validation
 MHSBAP000110199,0,1.4360851000000001,0,nec_any,AVG Precision,external_validation
 MHSBAP000110209,0,0.0,0,nec_any,AVG Precision,external_validation
@@ -86150,7 +85645,6 @@ PSYDAP000110676,0,0.6240648,0,nec_any,AVG Precision,external_validation
 PSYDAP000111301,0,0.0,0,nec_any,AVG Precision,external_validation
 PVHSAP000111323,0,0.5638274999999999,0,nec_any,AVG Precision,external_validation
 PVHSAP000111331,0,1.0988152,0,nec_any,AVG Precision,external_validation
-PVHSAP000111333,0,0.83696777,0,nec_any,AVG Precision,external_validation
 PVHSAP000111340,0,1.7440006000000001,0,nec_any,AVG Precision,external_validation
 PVHSAP000111343,0,0.0,0,nec_any,AVG Precision,external_validation
 PVHSAP000111363,0,0.0,0,nec_any,AVG Precision,external_validation
