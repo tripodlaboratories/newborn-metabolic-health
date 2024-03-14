@@ -52,7 +52,7 @@ def score_predictions(
             {'neg_preds': 1 - preds[col].values,
              'pos_preds': preds[col].values,
              'true_vals': true_values[col].values,
-             'condition_overlap': true_values[columns_to_score].sum(axis=1)
+             'total_conditions': true_values[columns_to_score].sum(axis=1)
              })
 
         try:
@@ -79,7 +79,7 @@ def score_predictions(
         # Caculate auroc and aupr using strict negatives as 0
         # i.e., negative conditions without overlap from others
         strict_ctrl_df = col_df[
-            -((col_df['true_vals'] == 0) & (col_df['condition_overlap'] > 1))]
+            -((col_df['true_vals'] == 0) & (col_df['total_conditions'] > 0))]
         col_auroc_strict = roc_auc_score(
             y_true=strict_ctrl_df['true_vals'],
             y_score=strict_ctrl_df['pos_preds'],

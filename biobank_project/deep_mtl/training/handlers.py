@@ -7,13 +7,15 @@ from typing import List
 import numpy as np
 import pandas as pd
 from sklearn.preprocessing import StandardScaler
+from sklearn import metrics
 import torch
 from torch import nn, optim, as_tensor
 from torch.autograd import Variable
 import torch.optim as optim
 from torch.utils.data import DataLoader, TensorDataset
+import wandb
 
-from biobank_project.deep_mtl.training import utils
+from biobank_project.deep_mtl.training import utils, tracking
 
 
 class EarlyStopping:
@@ -147,109 +149,81 @@ class ModelTraining:
             test_criterion = criterion
 
         # Train model over epochs and collect results
-        losses_over_epochs = []
-        train_preds_over_epochs = []
-        test_preds_over_epochs = []
-        valid_preds_over_epochs = []
+        training_tracker = tracking.TrainingTracker()
 
         for epoch in range(n_epochs):
-            train_losses = []
-            test_losses = []
-            train_index = []
-            train_preds = []
-            test_index = []
-            test_set_preds = []
-            valid_losses = []
-            valid_index = []
-            valid_preds = []
+            epoch_tracker = tracking.EpochTracker(epoch)
 
             self.model.train()
-            for ix, (xb, yb) in self.train_loader:
-                if torch.is_tensor(ix):
-                    ix = ix.data.numpy()
-                train_index.append(ix)
-                model_output = self.model(xb)
-                if apply_sigmoid is True:
-                    train_preds.append(torch.sigmoid(model_output))
-                else:
-                    train_preds.append(model_output)
-
-                loss = criterion(model_output, yb)
-
-                self.optimizer.zero_grad()
-                loss.backward()
-                self.optimizer.step()
-                train_losses.append(loss.data)
+            self.iter_model_over_data(
+                self.train_loader, epoch_tracker.train,
+                apply_sigmoid=apply_sigmoid, criterion=criterion,
+                take_optimizer_step=True, optimizer=self.optimizer)
 
             self.model.eval()
             with torch.no_grad():
-                for ix, (xb, yb) in self.test_loader:
-                    if torch.is_tensor(ix):
-                        ix = ix.data.numpy()
-                    test_index.append(ix)
-                    model_output = self.model(xb)
-                    loss = criterion(model_output, yb)
-                    test_losses.append(loss.data)
-
-                    if apply_sigmoid is True:
-                        test_set_preds.append(torch.sigmoid(model_output))
-                    else:
-                        test_set_preds.append(model_output)
+                self.iter_model_over_data(
+                    self.test_loader, epoch_tracker.test,
+                    apply_sigmoid=apply_sigmoid, criterion=criterion,
+                    take_optimizer_step=False)
 
                 if self.validation_loader is not None:
-                    for ix, (xb, yb) in self.validation_loader:
-                        if torch.is_tensor(ix):
-                            ix = ix.data.numpy()
-                        valid_index.append(ix)
-                        model_output = self.model(xb)
-                        loss = criterion(model_output, yb)
-                        valid_losses.append(loss.data)
-
-                        if apply_sigmoid is True:
-                            valid_preds.append(torch.sigmoid(model_output))
-                        else:
-                            valid_preds.append(model_output)
+                    self.iter_model_over_data(
+                        self.validation_loader, epoch_tracker.valid,
+                        apply_sigmoid=apply_sigmoid, criterion=criterion,
+                        take_optimizer_step=False)
 
             # Mean training and test losses across batches
-            mean_train_loss = np.mean(train_losses)
-            mean_test_loss = np.mean(test_losses)
-            epoch_results = {
-                'train_loss': [mean_train_loss],
-                'test_loss': [mean_test_loss]}
-            if len(valid_losses) > 0:
-                epoch_results['valid_loss'] = [np.mean(valid_losses)]
+            epoch_losses_df = epoch_tracker.summarize_losses()
+            training_tracker.losses.append(epoch_losses_df)
+            epoch_train_preds = epoch_tracker.summarize_preds(
+                epoch_tracker.train, colnames=colnames)
+            epoch_test_preds = epoch_tracker.summarize_preds(
+                epoch_tracker.test, colnames=colnames)
+            if epoch % 25 == 0:
+                wandb.log(
+                    {'train_preds': wandb.plot.histogram(
+                        wandb.Table(data=epoch_train_preds[colnames]),
+                        value='predictions',
+                        title='Train Predictions Score Distribution'),
+                    'test_preds': wandb.plot.histogram(
+                        wandb.Table(data=epoch_test_preds[colnames]),
+                        value='predictions',
+                        title='Test Predictions Score Distribution'),
+                     'epoch': epoch
+                    }, commit=False)
+            training_tracker.test.preds.append(epoch_test_preds)
 
-            current_epoch_df = pd.DataFrame.from_dict(epoch_results)
-            current_epoch_df['epoch'] = epoch
-            losses_over_epochs.append(current_epoch_df)
+            # Log some performance metrics that require training and test
+            # predictions
+            train_set_true_vals = epoch_tracker.gather_true_vals(
+                epoch_tracker.train, colnames=colnames)
+            # Evaluate metric on train preds
+            train_scores = self.score_epoch_predictions(
+                'train', epoch_train_preds, train_set_true_vals,
+                colnames=colnames)
+            test_set_true_vals = epoch_tracker.gather_true_vals(
+                epoch_tracker.test, colnames=colnames)
+            test_scores = self.score_epoch_predictions(
+                'test', epoch_test_preds, test_set_true_vals,
+                colnames=colnames)
 
-            # test_index is a list of tensors, where each list item
-            # corresponds to the index of that batch
-            complete_test_index = [ix for batch_indices in test_index
-            for ix in batch_indices]
-            current_epoch_preds = pd.DataFrame(
-                torch.cat(test_set_preds, dim=0).data.numpy(),
-                columns=colnames, index=complete_test_index)
-            current_epoch_preds['epoch'] = epoch
-            test_preds_over_epochs.append(current_epoch_preds)
+            # weights and biases logging
+            wandb.log({
+                'mean_train_loss': np.mean(epoch_tracker.train.losses),
+                'mean_test_loss': np.mean(epoch_tracker.test.losses),
+                'train_scores': train_scores,
+                'test_scores': test_scores,
+                'epoch': epoch
+            })
 
             if output_training_preds is True:
-                complete_train_index = [ix for batch_indices in train_index
-                for ix in batch_indices]
-                current_epoch_train_preds = pd.DataFrame(
-                    torch.cat(train_preds, dim=0).data.numpy(),
-                    columns=colnames, index=complete_train_index)
-                current_epoch_train_preds['epoch'] = epoch
-                train_preds_over_epochs.append(current_epoch_train_preds)
+                training_tracker.train.preds.append(epoch_train_preds)
 
-            if len(valid_preds) > 0:
-                complete_valid_index = [ix for batch_indices in valid_index
-                for ix in batch_indices]
-                current_epoch_preds = pd.DataFrame(
-                    torch.cat(valid_preds, dim=0).data.numpy(),
-                    columns=colnames, index=complete_valid_index)
-                current_epoch_preds['epoch'] = epoch
-                valid_preds_over_epochs.append(current_epoch_preds)
+            if len(epoch_tracker.validation.preds) > 0:
+                current_epoch_valid_preds = epoch_tracker.summarize_preds(
+                    epoch_tracker.validation, colnames=colnames)
+                training_tracker.validation.preds.append(current_epoch_valid_preds)
 
             # Evaluate for early stopping
             if early_stopping_handler is not None:
@@ -259,14 +233,67 @@ class ModelTraining:
                     break
 
         training_output = {
-            'losses': pd.concat(losses_over_epochs),
-            'preds': pd.concat(test_preds_over_epochs)}
+            'losses': pd.concat(training_tracker.losses),
+            'preds': pd.concat(training_tracker.test.preds)}
         if output_training_preds is True:
-            training_output['train_preds'] = pd.concat(train_preds_over_epochs)
-        if len(valid_preds_over_epochs) > 0:
-            training_output['valid_preds'] = pd.concat(valid_preds_over_epochs)
-
+            training_output['train_preds'] = pd.concat(
+                training_tracker.train.preds)
+        if len(training_tracker.validation.preds) > 0:
+            training_output['valid_preds'] = pd.concat(
+                training_tracker.validation.preds)
         return training_output
+
+    def iter_model_over_data(
+        self,
+        data_loader,
+        epoch_tracker_attribute,
+        apply_sigmoid,
+        criterion,
+        take_optimizer_step=False,
+        optimizer=None):
+        for ix, (xb, yb) in data_loader:
+            if torch.is_tensor(ix):
+                ix = ix.data.numpy()
+            epoch_tracker_attribute.index.append(ix)
+            epoch_tracker_attribute.true_vals.append(yb)
+
+            model_output = self.model(xb)
+            if apply_sigmoid is True:
+                epoch_tracker_attribute.preds.append(
+                    torch.sigmoid(model_output))
+            else:
+                epoch_tracker_attribute.preds.append(model_output)
+
+            loss = criterion(model_output, yb)
+            if take_optimizer_step is True:
+                optimizer.zero_grad()
+                loss.backward()
+                optimizer.step()
+
+            epoch_tracker_attribute.losses.append(loss.data)
+
+    def score_epoch_predictions(
+            self, dataset: str, preds, true_vals, colnames) -> dict():
+        """
+        args:
+            dataset: 'train', 'test', or 'valid'
+        """
+        true_vals['total_conditions'] = true_vals.sum(axis=1)
+        scores = dict.fromkeys(
+            [f'{outcome}_auroc' for outcome in colnames] +
+            [f'{outcome}_aupr' for outcome in colnames])
+        for outcome in colnames:
+            negatives_with_other_outcomes = (
+                (true_vals[outcome] == 0) &
+                (true_vals['total_conditions'] > 0))
+            outcome_preds = preds.loc[~negatives_with_other_outcomes, outcome]
+            outcome_true_vals = true_vals.loc[~negatives_with_other_outcomes, outcome]
+            scores[f'{outcome}_auroc'] = metrics.roc_auc_score(
+                outcome_true_vals, outcome_preds)
+            scores[f'{outcome}_aupr'] = metrics.average_precision_score(
+                outcome_true_vals, outcome_preds)
+
+        return {f'{dataset}_{k}': v for k, v in scores.items()}
 
 
 class MixedOutputTraining(ModelTraining):
