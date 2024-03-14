@@ -19,7 +19,7 @@ clinical_models <- c("en", "lasso", "lr")
 clinical_model_rename_map <- c("EN", "Lasso", "Logistic Regression")
 names(clinical_model_rename_map) <- clinical_models
 
-# Add the subgroup discovery predictions and figure out how to incorporate
+# Add the subgroup discovery predictions
 # There are two different subgroup discovery experiments, one on model
 # predictions and one on the health index
 subgroup_discovery_dir <- "./results/subgroup_discovery/"
