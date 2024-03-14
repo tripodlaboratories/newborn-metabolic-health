@@ -1,6 +1,7 @@
 .PHONY: environment tests integration_tests
 .PHONY: correlation_networks
 .PHONY: performance_curves subgroup_discovery single_unit_analysis
+.PHONY: feature_removal_results
 
 #############
 # VARIABLES #
@@ -65,6 +66,14 @@ performance_curves:
 
 ## Subgroup discovery results
 #subgroup_discovery:
+
+## Iterative feature removal experiments
+feature_removal_results:
+	Rscript ./scripts/plotting/deep_mtl_results/feature_removal_results.R \
+		-i ./results/deep_mtl/neonatal/feature_removal/ \
+		-o ./results/deep_mtl/plots/feature_removal_by_total_aupr.pdf \
+		--feature_file ./results/deep_mtl/neonatal/feature_removal/ensemble_46_feat_total_aupr_ranks/features.txt \
+		--total_aupr_ranks
 
 ## Further analysis of single unit bottleneck
 single_unit_analysis:
