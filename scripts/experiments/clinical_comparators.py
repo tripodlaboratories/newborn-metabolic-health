@@ -106,8 +106,10 @@ def main(args):
 
     # Organize variables into feature sets for specific types of model input
     feature_sets = {
-        'minimal_vars': ['gacat', 'bwtcat'],
-        'additional_risk_vars': ['gacat', 'bwtcat', 'infant_sex', 'ap1cat', 'ap5cat']
+        'bwtga': ['gacat', 'bwtcat'],
+        'minimal_vars': ['bwtcat', 'gacat', 'infant_sex'],
+        'additional_risk_vars': ['gacat', 'bwtcat', 'infant_sex', 'ap1cat', 'ap5cat'],
+        'apgar_only': ['ap1cat', 'ap5cat']
     }
     # Collect all feature names for subsetting data
     all_features = [f for features in feature_sets.values() for f in features]
@@ -184,11 +186,13 @@ def main(args):
             penalty='elasticnet', cv=n_cv_folds,
             scoring=classification_scoring_metric,
             l1_ratios=l1_ratio_range, solver='saga',
-            Cs=num_C_vals, n_jobs=n_jobs, max_iter=max_iter),
+            Cs=num_C_vals, n_jobs=n_jobs, max_iter=max_iter,
+            random_state=np.random.RandomState(101)),
         'lasso': LogisticRegressionCV(
             penalty='l1', solver='saga', cv=n_cv_folds,
             scoring=classification_scoring_metric,
-            Cs=num_C_vals, n_jobs=n_jobs, max_iter=max_iter),
+            Cs=num_C_vals, n_jobs=n_jobs, max_iter=max_iter,
+            random_state=np.random.RandomState(101)),
         'lr': LogisticRegression(
             penalty='none', max_iter=max_iter)
         }
