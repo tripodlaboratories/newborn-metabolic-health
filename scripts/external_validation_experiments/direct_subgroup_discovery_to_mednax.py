@@ -2,6 +2,7 @@
 import argparse
 import logging
 import pandas as pd
+from pandas.api.types import is_numeric_dtype
 import numpy as np
 
 # sklearn imports for evaluating results
@@ -74,6 +75,7 @@ def main(args):
     # TODO: Read in Mednax metabolites
     val_preds = pd.read_csv(valid_preds_file).set_index(val_index_col)
     valid_true_vals = pd.read_csv(valid_true_vals_file).set_index(val_index_col)
+    valid_metab = pd.read_csv(valid_metab_file)
 
     #read in raw data to get actual response for validation data, not currently included in prediction .csv's
     cal_biobank_data = pd.read_csv("./data/processed/neonatal_conditions.csv", low_memory=False)
@@ -96,19 +98,13 @@ def main(args):
         cal_metabolites = [l.strip() for l in f.readlines()]
 
     # Read in metadata
+    # TODO: Metadata is probably not necessary, testing removal phase
     metadata = pd.read_csv("./data/processed/metadata.csv", low_memory=False)
-
-    # Improve the ID setting, should be able to use the row_id instead of gdspid
-    #subset by observations
-    subset_data = metadata[metadata["row_id"].isin(pd.unique(preds.index))]
-    subset_data = subset_data.set_index("row_id")
-    subset_data = subset_data.drop("gdspid", axis=1)
 
     # validation_true_vals = external_true_vals.loc[subset_val_data.index]
     validation_true_vals = valid_true_vals.loc[val_preds.index]
 
     #check that all indices are the same
-    assert (preds.index == subset_data.index).all()
     assert (preds.index == true_vals.index).all()
     assert (preds.index == preds_over_iters.index).all()
     assert (val_preds.index == validation_true_vals.index).all()
@@ -153,13 +149,20 @@ def main(args):
             col_annotation = "_sgdisc"
 
             # NOTE: limit to True healthy controls (removing controls with positive co-outcomes)
-            in_analysis_set = (true_vals[np.setdiff1d(["nec_any","rop_any","bpd_any","ivh_any"], [targ])].sum(axis=1) == 0) | (true_vals[targ] == 1)
-            in_analysis_set_val = (validation_true_vals[np.setdiff1d(["nec_any","rop_any","bpd_any","ivh_any"], [targ])].sum(axis=1) == 0) | (validation_true_vals[targ] == 1)
+            outcome_labels = ["nec_any","rop_any","bpd_any","ivh_any"]
+            in_analysis_set = (
+                true_vals[np.setdiff1d(outcome_labels, [targ])].sum(axis=1) == 0) | (true_vals[targ] == 1)
+            in_analysis_set_val = (
+                validation_true_vals[np.setdiff1d(outcome_labels, [targ])].sum(axis=1) == 0) | (validation_true_vals[targ] == 1)
+
+            # NOTE: Since we are interested in identifying HEALTHY individuals
+            # The target for prediction will be switched to healthy obs
+            true_vals = 1 - true_vals # this along with a change in the 'in_analysis_set' vector is the only change
+            validation_true_vals = 1 - validation_true_vals[outcome_labels]
 
             #k-fold
             outcome_preds = preds.loc[in_analysis_set]
             outcome_true_vals = true_vals.loc[in_analysis_set,:]
-            outcome_subset_data = subset_data.loc[in_analysis_set,:]
 
             #validation
             val_outcome_preds = val_preds.loc[in_analysis_set_val]
@@ -170,77 +173,67 @@ def main(args):
             many_val_outcome_preds = val_preds.loc[in_analysis_set_val]
 
             #double check that all indices are the same
-            assert (preds.index == subset_data.index).all()
             assert (preds.index == true_vals.index).all()
             assert (val_preds.index == validation_true_vals.index).all()
 
-            temp_data = outcome_subset_data[outcome_subset_data.columns.values[outcome_subset_data.isna().sum() == 0]].copy()
+            # TODO: Fix how the temp data is used here:
+            metab_data = cal_biobank_data[cal_metabolites]
+            metab_data = metab_data.loc[preds.index]
+            searchspace_input = metab_data[metab_data.columns.values[metab_data.isna().sum() == 0]].copy()
+            #temp_data = outcome_subset_data[outcome_subset_data.columns.values[outcome_subset_data.isna().sum() == 0]].copy()
 
-            #constructing list of demographic and metabolomic features to in_analysis_set
-            # TODO: Change the logic for defining the columns to be clearer and more consistent with selected columns
-            in_analysis_set_features = temp_data.columns.to_series().apply(lambda z: True if ("rc" in z) or (z in [targ+col_annotation]) else False)
-            temp_data = temp_data[temp_data.columns[in_analysis_set_features]]
+            #constructing list of demographic and metabolomic features to keep
+            # NOTE: Currently only filters on metabolite columns, but extension
+            # to other demographics would require different logic
+            # e.g., condition | searchspace_input.columns.isin(demographics_features)
+            in_analysis_set_features = (searchspace_input.columns.isin(cal_metabolites))
+            searchspace_input = searchspace_input[searchspace_input.columns[in_analysis_set_features]]
 
             #compile list of features which need to be transformed into quantiles
-            transform = temp_data.apply(lambda z: z.name if (temp_data[z.name].dtype == "float64") or ("rc" in z.name) else None).unique()[1:]
-
+            # NOTE: Categorical features need to be protected from quantile transformation
+            to_transform =  searchspace_input.columns.isin(cal_metabolites) | searchspace_input.apply(is_numeric_dtype)
             searchspace_data = {}
 
             #transform all data into various quantiles [2,3,5] as per martins experiment
-            for c in temp_data.columns:
-                if c in transform:
+            for c in searchspace_input.columns:
+                if c in to_transform:
                     for q in [2,3,5]:
                         column = f"{c}_q-{q}"
-                        searchspace_data[column] = pd.qcut(temp_data[c], q, duplicates="drop").cat.codes
+                        searchspace_data[column] = pd.qcut(
+                            searchspace_input[c], q, duplicates="drop").cat.codes
                 else:
-                    searchspace_data[c] = temp_data[c]
+                    searchspace_data[c] = searchspace_input[c]
 
             searchspace_data = pd.DataFrame(searchspace_data)
 
-            # TODO: Should change the logic for finding out which columsn are metabolites
-            # (don't have to do the string matching with '_rc')
-            # create indicator vector for metabolite columns by matching rc string, used for metabolite only analyses if necessary
-            # TODO: Remove the old metabolite data which is currently commented out
-            # is_metabolite = searchspace_data.columns.to_series().apply(lambda z: True if "rc" in z else False)
-            is_metabolite = searchspace_data.columns.isin(cal_metabolites)
-
-            # TODO: Change the logic so that the metadata is not expected to be used in the subgroup discovery procedure
-            temp_val_data = subset_val_data_outcome[subset_val_data_outcome.columns.values[subset_val_data_outcome.isna().sum() == 0]].copy()
+            is_metabolite = searchspace_data.columns.str.replace(
+                r'_q.*$', '').isin(cal_metabolites)
+            searchspace_input_val = valid_metab[valid_metab.columns.values[valid_metab.isna().sum() == 0]].copy()
 
             #constructing list of demographic and metabolomic features to in_analysis_set
-            # FIXME: TODO: Fix the metabolite data selection logic
-            # in_analysis_set_val_features = temp_val_data.columns.isin(cal_metabolites)
-            in_analysis_set_val_features = temp_val_data.columns.to_series().apply(lambda z: True if ("rc" in z) or (z in [targ+col_annotation]) else False)
-            temp_val_data = temp_val_data[temp_val_data.columns[in_analysis_set_val_features]]
+            in_analysis_set_val_features = (searchspace_input_val.columns.isin(cal_metabolites))
+            searchspace_input_val = searchspace_input_val[searchspace_input_val.columns[in_analysis_set_val_features]]
 
             #compile list of features which need to be transformed into quantiles
-            transform = temp_val_data.apply(lambda z: z.name if (temp_val_data[z.name].dtype == "float64") or ("rc" in z.name) else None).unique()[1:]
+            # NOTE: If you have categorical features - they need to be protected before.
+            to_transform = searchspace_input_val.columns.isin(cal_metabolites) | searchspace_input_val.apply(is_numeric_dtype)
 
             searchspace_val_data = {}
             #transform all data into various quantiles [2,3,5] as per martins experiment
-            for c in temp_val_data.columns:
-                if c in transform:
+            for c in searchspace_input_val.columns:
+                if c in to_transform:
                     for q in [2,3,5]:
                         column = f"{c}_q-{q}"
-                        searchspace_val_data[column] = pd.qcut(temp_val_data[c], q, duplicates="drop").cat.codes
+                        searchspace_val_data[column] = pd.qcut(
+                            searchspace_input_val[c], q, duplicates="drop").cat.codes
                 else:
-                    searchspace_val_data[c] = temp_val_data[c]
-
+                    searchspace_val_data[c] = searchspace_input_val[c]
 
             searchspace_val_data = pd.DataFrame(searchspace_val_data)
+            is_val_metabolite = searchspace_val_data.columns.str.replace(
+                r'_q.*$', '').isin(cal_metabolites)
 
-            # TODO: Replace searching logic from '_rc' string. 
-            # create indicator vector for metabolite columns by matching rc string, used for metabolite only analyses if necessary
-            is_val_metabolite = searchspace_val_data.columns.to_series().apply(lambda z: True if "rc" in z else False)
- 
-            # TODO: When should the switch happen for the label 
-            # TODO: NOTE: This was because previously this is used as a way to measure True Positives
-            # TODO: The label switch DOES need to happen for calculating AUROC and AUPRC
-            # NOTE: Since we are interested in identifying HEALTHY individuals
-            # The target for prediction will be switched to healthy obs
-            true_vals = 1 - true_vals # this along with a change in the 'in_analysis_set' vector is the only change
-            validation_true_vals = 1 - validation_true_vals
-
+            # INIT subgroup discovery objects and procedure
             target = ps.PredictionTarget(outcome_true_vals[targ].to_numpy(), outcome_preds.to_numpy(), evaluation_metric)
             searchspace = ps.create_selectors(searchspace_data[searchspace_data.columns[is_metabolite]])
             task = ps.SubgroupDiscoveryTask(
@@ -252,7 +245,7 @@ def main(args):
                 qf=ps.PredictionQFNumeric(a=subgroup_alphas[outcome])
             )
 
-            results= ps.BeamSearch(beam_width=subgroup_sizes[outcome]).execute(task)
+            results = ps.BeamSearch(beam_width=subgroup_sizes[outcome]).execute(task)
             # TODO: Extract the subgroup discovery logic and apply to the Mednax dataset
             # TODO: Remove commented examples from the final script
             # EXAMPLES
