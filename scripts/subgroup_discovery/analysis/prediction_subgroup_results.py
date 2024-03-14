@@ -71,7 +71,7 @@ def main(args):
     true_vals = true_vals.groupby(["row_id"])[["nec_any","rop_any","bpd_any", "ivh_any"]].mean() #smart way (it is, double checked against stupid for loop method)
 
     #collapse all outcomes to patients x outcomes dataframe
-    external_true_vals = external_true_vals[["nec_any","rop_any","bpd_any", "ivh_any"]] #smart way (it is, double checked against stupid for loop method)
+    external_true_vals = external_true_vals[["nec_any","rop_any","bpd_any", "ivh_any"]]
 
     metabolite_labels = pd.read_csv("./config/metabolite_labels.csv")
     data = pd.read_csv("./data/processed/metadata.csv", low_memory=False)
@@ -169,12 +169,10 @@ def main(args):
             ###########################################################################
             ## massage metabolites and demographic data into quantiles for discovery ##
             ###########################################################################
-            #(subset_data.index == subgroup_targets.index).all()
-            #
             temp_data = subset_data_outcome[subset_data_outcome.columns.values[subset_data_outcome.isna().sum() == 0]].copy()
             #
             #constructing list of demographic and metabolomic features to keep
-            keep_features = temp_data.columns.to_series().apply(lambda z: True if ("rc" in z) or (z in ["sex3", "mrace_catm", "payer_catm", "medu_catm", targ+pred_type]) else False)
+            keep_features = temp_data.columns.to_series().apply(lambda z: True if ("rc" in z) or (z in [targ+pred_type]) else False)
             temp_data = temp_data[temp_data.columns[keep_features]]
             #
             #compile list of features which need to be transformed into quantiles
@@ -203,7 +201,7 @@ def main(args):
             temp_val_data = subset_val_data_outcome[subset_val_data_outcome.columns.values[subset_val_data_outcome.isna().sum() == 0]].copy()
             #
             #constructing list of demographic and metabolomic features to keep
-            keep_val_features = temp_val_data.columns.to_series().apply(lambda z: True if ("rc" in z) or (z in ["sex3", "mrace_catm", "payer_catm", "medu_catm", targ+pred_type]) else False)
+            keep_val_features = temp_val_data.columns.to_series().apply(lambda z: True if ("rc" in z) or (z in [targ+pred_type]) else False)
             temp_val_data = temp_val_data[temp_val_data.columns[keep_val_features]]
             #
             #compile list of features which need to be transformed into quantiles
@@ -517,7 +515,7 @@ def main(args):
 
                 if count == select_index:
                     # Means: count variable has reached the percentile threshold for calculation
-                    # TODO: Extract the true values and predictions from "outcome_true_vals[targ][bool_vec], outcome_preds[targ][bool_vec]"
+                    # Extract the true values and predictions from "outcome_true_vals[targ][bool_vec], outcome_preds[targ][bool_vec]"
                     preds_top_subgroups = outcome_preds[targ][bool_vec]
                     true_vals_top_subgroups = outcome_true_vals[targ][bool_vec]
                     random_preds_top_subgroups = rand_pred[bool_vec]
@@ -881,7 +879,3 @@ def main(args):
 if __name__ == '__main__':
     args = get_args()
     main(args)
-
-###################
-## End of Script ##
-###################
