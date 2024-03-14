@@ -20,6 +20,8 @@ import pickle
 #to install use the following command "pip install git+https://github.com/Teculos/pysubgroup.git@predictionQF"
 import pysubgroup as ps
 
+from biobank_project.subgroup_discovery.scoring import SubgroupScorer
+
 #setting printing parameters so subgroup descriptions actually display
 pd.set_option('display.max_rows', 500)
 pd.set_option('display.max_columns', 500)
@@ -54,119 +56,6 @@ def get_args():
     parser.add_argument(
         '-l', '--log_level', default='INFO', help='logger level')
     return parser.parse_args()
-
-
-class SubgroupScorer():
-    def __init__(
-        self,
-        sg_num,
-        sg_description,
-        sg_mask: 'np.ndarray[np.bool]',
-        true_vals: np.ndarray,
-        preds: np.ndarray,
-        multiple_iter_preds: pd.DataFrame=None):
-        '''
-        args:
-            multiple_iter_preds:
-                Dataframe of predictions, one column per iteration (e.g., per repeated K-Fold iteration)
-        '''
-        self.sg_num = sg_num
-        self.sg_description = sg_description
-        self.sg_mask = sg_mask
-        self.true_vals = true_vals[sg_mask]
-        self.preds = preds[sg_mask]
-        if multiple_iter_preds is not None:
-            self.multiple_iter_preds = multiple_iter_preds
-            self.n_iters = len(multiple_iter_preds.columns)
-
-        self.logger = logging.getLogger('SubgroupScorer')
-
-    def _no_subgroup_exceptions(self):
-        # Need to handle the case where a subgroup is NOT FOUND in a (likely validation)
-        # dataset OR there are no true positives
-        if self.sg_mask.sum() == 0:
-            self.logger.warning(
-                f'No individuals found in subgroup {self.sg_num}: {self.sg_description}')
-            return False
-        elif len(self.true_vals.unique()) == 1:
-            self.logger.warning(
-                f'Only one case type present in subgroup {self.sg_num}: {self.sg_description}')
-            return False
-        else:
-            return True
-
-    def _score_overall_auprc(self, specified_preds=None, return_tuple=False):
-        if self._no_subgroup_exceptions():
-            preds = specified_preds if specified_preds is not None else self.preds
-            precision, recall, thresholds = precision_recall_curve(
-                    self.true_vals, preds)
-            if return_tuple is False:
-                return auc(recall, precision)
-            else:
-                return (precision, recall, thresholds)
-        else:
-            if return_tuple is False:
-                return np.nan
-            else:
-                # null tuple in place of (recall, precision, thresholds)
-                # in list form since usually arrays of recall, precision, and
-                # thresholds are returned
-                return ([np.nan], [np.nan], [np.nan])
-
-    def _score_multiple_iters_auprc(self):
-        auprc_over_iters = []
-        for i in range(self.n_iters):
-            iter_auprc = self._score_overall_auprc(
-                specified_preds=self.multiple_iter_preds.iloc[:, i][self.sg_mask])
-            auprc_over_iters.append(iter_auprc)
-        AUPRC_mean = np.mean(auprc_over_iters)
-        if len(auprc_over_iters) == 1:
-            AUPRC_sd = 0
-        else:
-            AUPRC_sd = np.std(auprc_over_iters, ddof=1)
-
-        return AUPRC_mean, AUPRC_sd
-
-    def score_auprc(self, score_over_iters=False):
-        if score_over_iters is False:
-            return self._score_overall_auprc()
-        else:
-            return self._score_multiple_iters_auprc()
-
-    def _score_overall_auroc(self, specified_preds=None, return_tuple=False):
-        if self._no_subgroup_exceptions():
-            preds = specified_preds if specified_preds is not None else self.preds
-            if return_tuple is False:
-                return roc_auc_score(self.true_vals, preds)
-            else:
-                return roc_curve(self.true_vals, preds)
-        else:
-            if return_tuple is False:
-                return np.nan
-            else:
-                # A null tuple instead of (fpr, tpr, thresholds)
-                # in list form to match usually array return types
-                return ([np.nan], [np.nan], [np.nan])
-
-    def _score_multiple_iters_auroc(self):
-        auroc_over_iters = []
-        for i in range(self.n_iters):
-            iter_auroc = self._score_overall_auroc(
-                specified_preds=self.multiple_iter_preds.iloc[:, i][self.sg_mask])
-            auroc_over_iters.append(iter_auroc)
-        AUROC_mean = np.mean(auroc_over_iters)
-        if len(auroc_over_iters) == 1:
-            AUROC_sd = 0
-        else:
-            AUROC_sd = np.std(auroc_over_iters, ddof=1)
-
-        return AUROC_mean, AUROC_sd
-
-    def score_auroc(self, score_over_iters=False):
-        if score_over_iters is False:
-            return self._score_overall_auroc()
-        else:
-            return self._score_multiple_iters_auroc()
 
 
 def main(args):
@@ -249,7 +138,9 @@ def main(args):
     subgroup_sizes_avg_prec = {"bpd":100, "rop":300, "ivh":100, "nec":100}
 
     subgroup_alphas_auroc = {"bpd":0.0575, "rop":0.073, "ivh":0.0585, "nec":0.085}
-    subgroup_sizes_auroc = {"bpd":200, "rop":300, "ivh":100, "nec":100}
+    # TODO: Are the subgroup sizes too small in this setting?
+    #subgroup_sizes_auroc = {"bpd":200, "rop":300, "ivh":100, "nec":100}
+    subgroup_sizes_auroc = {"bpd":300, "rop":400, "ivh":250, "nec":250}
 
     subgroup_alphas_list = {"AVG Precision":subgroup_alphas_avg_prec, "AUROC":subgroup_alphas_auroc}
     subgroup_sizes_list = {"AVG Precision":subgroup_sizes_avg_prec, "AUROC":subgroup_sizes_auroc}
@@ -261,7 +152,7 @@ def main(args):
     top_k_subgroup_preds_iters = []
 
     for metric in evaluation_order:
-        logger.info(f'starting subgroup discovery with metric: {metric}')
+        logger.info(f'Starting subgroup discovery with metric: {metric}')
 
         subgroup_alphas = subgroup_alphas_list[metric]
         subgroup_sizes = subgroup_sizes_list[metric]
