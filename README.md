@@ -34,7 +34,18 @@ Use `make test` or `pytest -v ./tests/ `to run all tests.
 Individual manuscript results can be reproduced with various `make` commands.
 Obtain a list of make rules with `make help`
 
-## Using Models in New Analyses
+## Using the checkpointed model
+A checkpointed model can be used to make predictions on NBS data. Expected
+metabolite column order can be found in `./config/`.
+```
+python ./scripts/infer_with_checkpointed_model.py \
+  -i ${NEW_NBS_DATASET} \
+  --id_column "sample_id" \
+  -o ./results/new_results/ \
+  -s ./checkpoints/metabolic_health_index_1unit_bottleneck/model_state_dict.pt \
+```
+
+## Using Model Training Handlers and K-Fold Procedures
 See model training scripts in `./scripts/` for examples of model initialization
 and repeated K-Fold training handlers.
 
