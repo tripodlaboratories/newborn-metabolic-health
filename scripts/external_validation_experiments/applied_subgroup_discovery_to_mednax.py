@@ -95,12 +95,15 @@ class SubgroupScorer():
         else:
             return True
 
-    def _score_overall_auprc(self, specified_preds=None):
+    def _score_overall_auprc(self, specified_preds=None, return_tuple=False):
         if self._no_subgroup_exceptions():
             preds = specified_preds if specified_preds is not None else self.preds
             precision, recall, thresholds = precision_recall_curve(
                     self.true_vals, preds)
-            return auc(recall, precision)
+            if return_tuple is False:
+                return auc(recall, precision)
+            else:
+                return (recall, precision)
         else:
             return np.nan
 
@@ -124,10 +127,13 @@ class SubgroupScorer():
         else:
             return self._score_multiple_iters_auprc()
 
-    def _score_overall_auroc(self, specified_preds=None):
+    def _score_overall_auroc(self, specified_preds=None, return_tuple=False):
         if self._no_subgroup_exceptions():
             preds = specified_preds if specified_preds is not None else self.preds
-            return roc_auc_score(self.true_vals, preds)
+            if return_tuple is False:
+                return roc_auc_score(self.true_vals, preds)
+            else:
+                return roc_curve(self.true_vals, preds)
         else:
             return np.nan
 
@@ -569,7 +575,9 @@ def main(args):
                         true_vals=outcome_true_vals[targ], preds=outcome_preds,
                         multiple_iter_preds=outcome_preds_over_iters)
                     kfold_AUROC_20 = top20_scorer.score_auroc()
+                    ROC_tuple_20 = top20_scorer._score_overall_auroc(return_tuple=True)
                     kfold_AUPRC_20 = top20_scorer.score_auprc()
+                    PR_tuple_20 = top20_scorer._score_overall_auprc(return_tuple=True)
                     kfold_AUROC_20_mean, kfold_AUROC_20_sd = top20_scorer.score_auroc(
                         score_over_iters=True)
                     kfold_AUPRC_20_mean, kfold_AUPRC_20_sd = top20_scorer.score_auprc(
@@ -623,7 +631,9 @@ def main(args):
                         true_vals=validation_outcome_true_vals[targ], preds=val_outcome_preds,
                         multiple_iter_preds=val_outcome_preds_over_iters)
                     val_AUROC_20 = top20_scorer.score_auroc()
+                    ROC_tuple_20_val = top20_scorer._score_overall_auroc(return_tuple=True)
                     val_AUPRC_20 = top20_scorer.score_auprc()
+                    PR_tuple_20_val = top20_scorer._score_overall_auprc(return_tuple=True)
                     val_AUROC_20_mean, val_AUROC_20_sd = top20_scorer.score_auroc(
                         score_over_iters=True)
                     val_AUPRC_20_mean, val_AUPRC_20_sd = top20_scorer.score_auprc(
