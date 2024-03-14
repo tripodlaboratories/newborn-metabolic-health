@@ -9,7 +9,7 @@ import pandas as pd
 from sklearn.experimental import enable_hist_gradient_boosting
 from sklearn.ensemble import RandomForestClassifier, HistGradientBoostingClassifier
 from sklearn.linear_model import LogisticRegressionCV
-from sklearn.model_selection import RandomizedSearchCV
+from sklearn.model_selection import RandomizedSearchCV, train_test_split
 from sklearn.multioutput import MultiOutputClassifier
 from torch import optim, Tensor
 from torch.nn import BCEWithLogitsLoss, MSELoss
