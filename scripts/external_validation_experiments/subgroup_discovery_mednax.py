@@ -6,7 +6,7 @@ from pathlib import PurePath
 import numpy as np
 import pandas as pd
 from sklearn.ensemble import RandomForestClassifier
-from sklearn.model_selection import KFold, RandomizedSearchCV
+from sklearn.model_selection import StratifiedKFold, RandomizedSearchCV
 from sklearn.preprocessing import StandardScaler
 
 from biobank_project.io import read_lines
@@ -70,7 +70,7 @@ def main():
     rs = np.random.RandomState(random_state_int)
     n_folds = 5
     n_kfold_repeats = 10
-    kf = KFold(n_splits=n_folds, random_state=rs, shuffle=True)
+    kf = StratifiedKFold(n_splits=n_folds, random_state=rs, shuffle=True)
 
     # Set up randomized search for RF hyperparameters
     # Hyperparameter tuning for random forest
@@ -140,6 +140,7 @@ def main():
 
     # Assemble dataframe of results.
     kfold_results_df = pd.concat(kfold_dfs)
+    kfold_results_df.index.name = 'row_id'
     kfold_params_df = pd.DataFrame(kfold_params)
 
     # Use the consensus best hyperparameters across K-Fold to then test

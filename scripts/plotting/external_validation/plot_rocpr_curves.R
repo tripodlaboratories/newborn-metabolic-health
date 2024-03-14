@@ -154,6 +154,7 @@ if (is.null(output_file)) {
 	results_pdf <- output_file
 }
 
+# Begin creating ROC curves in the plot
 pdf(results_pdf, height=7, width=7, useDingbats=FALSE)
 roc_list <- vector("list", length(neonatal_outcomes))
 names(roc_list) <- neonatal_outcomes
