@@ -1,0 +1,8 @@
+name: r-3.6.3
+channels:
+  - conda-forge
+  - defaults
+dependencies:
+  - r-base=3.6.3
+  - r-renv=0.13.2
+
