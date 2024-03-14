@@ -4,10 +4,12 @@ import logging
 import os
 from pathlib import PurePath
 
+import numpy as np
 import pandas as pd
 from sklearn.experimental import enable_hist_gradient_boosting
 from sklearn.ensemble import RandomForestClassifier, HistGradientBoostingClassifier
 from sklearn.linear_model import LogisticRegressionCV
+from sklearn.model_selection import RandomizedSearchCV
 from sklearn.multioutput import MultiOutputClassifier
 from torch import optim, Tensor
 from torch.nn import BCEWithLogitsLoss, MSELoss
@@ -46,6 +48,10 @@ def get_argparser():
     parser.add_argument(
         '--n_jobs', type=int,
         help="--n_jobs argument for sklearn models.")
+    parser.add_argument(
+        '--as_health_index', action='store_true',
+        help='Recode sick and healthy infants in analogy to metabolic health index.'
+    )
     return parser
 
 
@@ -81,6 +87,7 @@ def main(args):
     single_condition = args.single_condition
     validate = args.validate
     n_jobs = args.n_jobs
+    as_health_index = args.as_health_index
 
     # Read in data
     input_data = pd.read_csv(input_file, low_memory=False)
@@ -118,6 +125,15 @@ def main(args):
         input_data = data_subset
         assert 'total_conditions' not in input_data
 
+    if as_health_index is True:
+        logger.info('Recoding outcomes as one outcome of healthy/sick.')
+        input_data['total_conditions'] = input_data[outcomes].sum(axis=1)
+        input_data['healthy_infant'] = np.where(
+            input_data['total_conditions'] == 0, 1, 0)
+        input_data.drop(
+            columns=outcomes + ['total_conditions'], inplace=True)
+        outcomes = ['healthy_infant']
+
     # Split data into X and Y
     data_X = input_data.drop(outcomes, axis=1)
     data_Y = input_data[outcomes]
@@ -138,8 +154,63 @@ def main(args):
     n_cv_folds = 5
     classification_scoring_metric='roc_auc'
 
+    # Hyperparameter tuning for HGBC and XGBoost
+    random_state_int = 101
+    random_search_args = {
+        'n_iter': 100,
+        'cv': 3,
+        'random_state': random_state_int,
+        'n_jobs': n_jobs,
+        'verbose': 1
+    }
+    n_estimators = [50, 100, 200, 400, 600, 800, 1000, 1400, 1800, 2000]
+
+    # Hyperparamter Tuning for RandomForest
+    max_depth = [10, 30, 50, 70, 90, 100, None]
+    min_samples_split = [2, 5, 10]
+    rf_grid = {
+        'n_estimators': n_estimators,
+        'max_depth': max_depth,
+        'min_samples_split': min_samples_split,
+    }
+    rf = RandomForestClassifier(n_jobs=1)
+    rfcv = RandomizedSearchCV(
+        rf, param_distributions=rf_grid, **random_search_args)
+
+    # Hyperparameter tuning for hgbc
+    histgb_grid = {
+        'learning_rate': [0.001, 0.1, 0.5, 1.0],
+        'max_iter': n_estimators,
+        'l2_regularization': [0.0, 0.1, 1.0, 5.0, 10., 50.],
+        'min_samples_leaf': [10, 20, 50, 100]
+    }
+    histgb = HistGradientBoostingClassifier(
+        random_state=random_state_int, loss='binary_crossentropy')
+    histgbcv = RandomizedSearchCV(
+        histgb, param_distributions=histgb_grid, **random_search_args )
+
+    # Hyperparameter tuning for xgboost
+    learning_rate = [0.001, 0.01, 0.1, 0.2, 0.3]
+    reg_lambda = [0.1, 1.0, 5.0, 10.0, 50.0, 100.0]
+    xgb_grid = {
+        'n_estimators': n_estimators,
+        'learning_rate': learning_rate,
+        'subsample': [0.5, 0.6, 0.7, 0.8, 0.9, 1.0],
+        'min_child_weight': [0.1, 1., 3., 5., 7., 10.],
+        'max_depth': [6, 10, 15, 20],
+        'colsample_bytree': [0.4, 0.6, 0.8, 1.0],
+        'gamma': [0.0, 0.25, 0.5, 1.0],
+        'reg_lambda': reg_lambda,
+    }
+    xgb = XGBClassifier(verbosity=0, n_jobs=1, use_label_encoder=False)
+    xgbcv = RandomizedSearchCV(
+        xgb, param_distributions=xgb_grid, **random_search_args)
+
     # Model specific hyperparameters for ensemble methods
     models = {
+        'rf': rfcv,
+        'hgbc': histgbcv,
+        'xgboost': xgbcv,
         'en': LogisticRegressionCV(
             penalty='elasticnet', cv=n_cv_folds,
             scoring=classification_scoring_metric,
@@ -148,22 +219,17 @@ def main(args):
         'lasso': LogisticRegressionCV(
             penalty='l1', solver='saga', cv=n_cv_folds,
             scoring=classification_scoring_metric,
-            Cs=num_C_vals, n_jobs=n_jobs, max_iter=max_iter),
-        'rf': RandomForestClassifier(n_jobs=n_jobs),
-        'hgbc': HistGradientBoostingClassifier(
-            loss='binary_crossentropy', random_state=101),
-        'xgboost': XGBClassifier(n_jobs=n_jobs)
+            Cs=num_C_vals, n_jobs=n_jobs, max_iter=max_iter)
     }
 
     # Set up model training
     n_folds = 5
     resampler = MajorityDownsampler(random_state=101)
 
-    multi_task_output_dir = output_dir.joinpath('multi_task/')
-    logger.info('Training multitask models for all outcomes.')
     train_args = {'colnames': data_Y.columns}
+
     for model_name, model in models.items():
-        if model_name in ['en', 'lasso', 'hgbc', 'xgboost']:
+        if (as_health_index is False) and (model_name in ['en', 'lasso', 'hgbc', 'xgboost']):
             # Use multitarget classification helper if the model is not
             # inherently multioutput
             model = MultiOutputClassifier(model)
@@ -186,7 +252,7 @@ def main(args):
             training_args=train_args, resampler=resampler)
         logger.info('Finished training for: ' + model_name)
 
-        model_output_dir = multi_task_output_dir.joinpath(
+        model_output_dir = output_dir.joinpath(
             model_name + '/')
         os.makedirs(model_output_dir, exist_ok=True)
         write_results(model_results, model_output_dir)

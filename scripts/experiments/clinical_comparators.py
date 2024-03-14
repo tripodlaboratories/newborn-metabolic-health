@@ -46,6 +46,9 @@ def get_argparser():
     parser.add_argument(
         '--n_jobs', type=int,
         help="--n_jobs argument for sklearn models.")
+    parser.add_argument(
+        '--as_health_index', action='store_true',
+        help='Recode sick and healthy infants in analogy to metabolic health index.')
     return parser
 
 
@@ -81,6 +84,7 @@ def main(args):
     single_condition = args.single_condition
     validate = args.validate
     n_jobs = args.n_jobs
+    as_health_index = args.as_health_index
 
     # Read in data
     input_data = pd.read_csv(input_file, low_memory=False)
@@ -137,6 +141,7 @@ def main(args):
     # Recode infant sex encoding to {0,1} (in original data it is {1,2}
     # 0: males, 1: females
     input_data['infant_sex'] = input_data['sex3'] - 1
+
     # Convert categorical labels of birthweight and gestational age to numeric
     input_data['gacat'] = input_data['gacat'].apply(
         lambda x: float(re.sub(r'^[0-9]*_', '', x)) - 0.5)
@@ -157,6 +162,15 @@ def main(args):
     # Drop NA rows (and check the impact on dataframe size).
     modeling_data = input_data[all_features + outcomes].copy()
     modeling_data.dropna(inplace=True)
+
+    if as_health_index is True:
+        logger.info('Recoding outcomes as one outcome of healthy/sick.')
+        modeling_data['total_conditions'] = modeling_data[outcomes].sum(axis=1)
+        modeling_data['healthy_infant'] = np.where(
+            modeling_data['total_conditions'] == 0, 1, 0)
+        modeling_data.drop(
+            columns=outcomes + ['total_conditions'], inplace=True)
+        outcomes = ['healthy_infant']
 
     # Split data into X and Y
     data_X = modeling_data[all_features]
