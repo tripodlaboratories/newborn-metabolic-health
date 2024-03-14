@@ -179,6 +179,10 @@ dmypy.json
 
 # Data Directories and deep NN predictions which can get large
 archive*/*
-data/*
+data
 *train_preds.csv
 *.gz
+
+# Project-specific aspects not needed to be checked in
+renv/*
+wandb/
