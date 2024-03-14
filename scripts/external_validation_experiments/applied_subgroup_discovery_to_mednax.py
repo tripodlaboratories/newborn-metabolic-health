@@ -282,23 +282,25 @@ def main(args):
             # NOTE: limit to True healthy controls (removing controls with positive co-outcomes)
             outcome_labels = ["nec_any","rop_any","bpd_any","ivh_any"]
             other_outcomes = np.setdiff1d(outcome_labels, targ)
-            in_analysis_set = (
-                true_vals[other_outcomes].sum(axis=1) == 0) | (true_vals[targ] == 1)
-            in_analysis_set_val = (
-                validation_true_vals[other_outcomes].sum(axis=1) == 0) | (validation_true_vals[targ] == 1)
+            in_true_controls = (true_vals[other_outcomes].sum(axis=1) == 0) & (true_vals[targ] == 0)
+            in_analysis_set = (in_true_controls) | (true_vals[targ] == 1)
+            in_true_controls_val = (validation_true_vals[other_outcomes].sum(axis=1) == 0) & (true_vals[targ] == 0)
+            in_analysis_set_val = (in_true_controls_val) | (validation_true_vals[targ] == 1)
 
             # NOTE: Since we are interested in identifying HEALTHY individuals
             # The target for prediction will be switched to healthy obs
-            true_vals = 1 - true_vals # this along with a change in the 'in_analysis_set' vector is the only change
-            validation_true_vals = 1 - validation_true_vals[outcome_labels]
+            healthy_true_vals = 1 - true_vals # this along with a change in the 'in_analysis_set' vector is the only change
+            healthy_validation_true_vals = 1 - validation_true_vals[outcome_labels]
 
             #k-fold
             outcome_preds = preds.loc[in_analysis_set]
-            outcome_true_vals = true_vals.loc[in_analysis_set,:]
+            outcome_true_vals = healthy_true_vals.loc[in_analysis_set,:]
+            targ_true_vals = outcome_true_vals[targ]
 
             #validation
             val_outcome_preds = val_preds.loc[in_analysis_set_val]
-            validation_outcome_true_vals = validation_true_vals.loc[in_analysis_set_val,:]
+            validation_outcome_true_vals = healthy_validation_true_vals.loc[in_analysis_set_val,:]
+            valid_targ_true_vals = validation_outcome_true_vals[targ]
 
             #iter predictions to calculate SD
             outcome_preds_over_iters = preds_over_iters.loc[in_analysis_set]
@@ -371,7 +373,7 @@ def main(args):
                 r'_q.*$', '').isin(cal_metabolites)
 
             # INIT subgroup discovery objects and procedure
-            target = ps.PredictionTarget(outcome_true_vals[targ].to_numpy(), outcome_preds.to_numpy(), evaluation_metric)
+            target = ps.PredictionTarget(targ_true_vals.to_numpy(), outcome_preds.to_numpy(), evaluation_metric)
             searchspace = ps.create_selectors(searchspace_data[searchspace_data.columns[is_metabolite]])
             task = ps.SubgroupDiscoveryTask(
                 searchspace_data,
@@ -402,7 +404,7 @@ def main(args):
                 # Iterating through subgroups to add custom stats (i.e., AUROC and AUPRC)
                 runtotal_scorer = SubgroupScorer(
                     'Total Merged Subgroup', f'Merged from {sg_num} subgroups', total_merge_mask,
-                    true_vals=outcome_true_vals[targ], preds=outcome_preds,
+                    true_vals=targ_true_vals, preds=outcome_preds,
                     multiple_iter_preds=outcome_preds_over_iters)
                 AUROC = runtotal_scorer.score_auroc()
                 AUPRC = runtotal_scorer.score_auprc()
@@ -411,7 +413,7 @@ def main(args):
                 # Next calculate the AUPRC in the subgroup
                 subgroup_scorer = SubgroupScorer(
                     sg_num, sg_description, sg_mask,
-                    true_vals=outcome_true_vals[targ], preds=outcome_preds,
+                    true_vals=targ_true_vals, preds=outcome_preds,
                     multiple_iter_preds=outcome_preds_over_iters)
                 subgroup_AUROC = subgroup_scorer.score_auroc()
                 subgroup_AUPRC = subgroup_scorer.score_auprc()
@@ -444,7 +446,7 @@ def main(args):
             #compile metrics of performance WITHOUT any subgroup masking
             nomask_scorer = SubgroupScorer(
                 'No Subgroup Mask', 'Entire Dataset', np.full(len(outcome_preds), True),
-                true_vals=outcome_true_vals[targ], preds=outcome_preds,
+                true_vals=targ_true_vals, preds=outcome_preds,
                 multiple_iter_preds=outcome_preds_over_iters)
             kfold_AUROC = nomask_scorer.score_auroc()
             kfold_AUPRC = nomask_scorer.score_auprc()
@@ -468,7 +470,7 @@ def main(args):
                 total_merge_mask = np.logical_or(total_merge_mask, sg_mask)
                 runtotal_scorer = SubgroupScorer(
                     'Total Merged Subgroup', f'Merged from {sg_num} subgroups', total_merge_mask,
-                    true_vals=validation_outcome_true_vals[targ], preds=val_outcome_preds,
+                    true_vals=valid_targ_true_vals, preds=val_outcome_preds,
                     multiple_iter_preds=val_outcome_preds_over_iters)
                 AUROC = runtotal_scorer.score_auroc()
                 AUPRC = runtotal_scorer.score_auprc()
@@ -478,7 +480,7 @@ def main(args):
                 # Next calculate the AUPRC in the subgroup
                 subgroup_scorer = SubgroupScorer(
                     sg_num, sg_description, sg_mask,
-                    true_vals=validation_outcome_true_vals[targ], preds=val_outcome_preds,
+                    true_vals=valid_targ_true_vals, preds=val_outcome_preds,
                     multiple_iter_preds=val_outcome_preds_over_iters)
                 subgroup_AUROC = subgroup_scorer.score_auroc()
                 subgroup_AUPRC = subgroup_scorer.score_auprc()
@@ -510,7 +512,7 @@ def main(args):
             #compile metrics of performance on validation set WITHOUT any subgroup masking
             nomask_scorer = SubgroupScorer(
                 'No Subgroup Mask', 'Entire Dataset', np.full(len(val_outcome_preds), True),
-                true_vals=validation_outcome_true_vals[targ], preds=val_outcome_preds,
+                true_vals=valid_targ_true_vals, preds=val_outcome_preds,
                 multiple_iter_preds=val_outcome_preds_over_iters)
             val_AUROC = nomask_scorer.score_auroc()
             val_AUPRC = nomask_scorer.score_auprc()
@@ -520,18 +522,24 @@ def main(args):
             val_AUPRC_mean, val_AUPRC_sd = nomask_scorer.score_auprc(
                 score_over_iters=True)
 
-            #create random vector
+            #create random vectors on the test and validation data
             np.random.seed(1234)
-            rand_val_pred = np.random.uniform(0,1,len(validation_outcome_true_vals[targ]))
             rand_pred = np.random.uniform(0,1,len(outcome_true_vals[targ]))
+            rand_scorer = SubgroupScorer(
+                'Random', 'Evaluation against random predictions',
+                np.full(len(targ_true_vals), True),
+                true_vals=targ_true_vals, preds=rand_pred)
+            rand_AUROC = rand_scorer.score_auroc()
+            rand_AUPRC = rand_scorer.score_auprc()
 
-            rand_AUROC = roc_auc_score(outcome_true_vals[targ], rand_pred)
-            rand_precision, rand_recall, rand_thresholds = precision_recall_curve(outcome_true_vals[targ], rand_pred)
-            rand_AUPRC = auc(rand_recall, rand_precision)
-
-            rand_val_AUROC = roc_auc_score(validation_outcome_true_vals[targ], rand_val_pred)
-            rand_precision, rand_recall, rand_thresholds = precision_recall_curve(validation_outcome_true_vals[targ], rand_val_pred)
-            rand_val_AUPRC = auc(rand_recall, rand_precision)
+            rand_val_pred = np.random.uniform(0,1,len(validation_outcome_true_vals[targ]))
+            rand_val_scorer = SubgroupScorer(
+                'Random on Validation',
+                'Evaluation against random predictions',
+                np.full(len(valid_targ_true_vals), True),
+                true_vals=valid_targ_true_vals, preds=rand_val_pred)
+            rand_val_AUROC = rand_val_scorer.score_auroc()
+            rand_val_AUPRC = rand_val_scorer.score_auprc()
 
             # Usually the top 20 percentile of data
             select = (subgroup_results_df[r"%data"] * 100)
@@ -552,7 +560,7 @@ def main(args):
 
                 if sg_num == select_index:
                     preds_top_subgroups = outcome_preds[total_merge_mask]
-                    true_vals_top_subgroups = outcome_true_vals[targ][total_merge_mask]
+                    true_vals_top_subgroups = targ_true_vals[total_merge_mask]
                     random_preds_top_subgroups = rand_pred[total_merge_mask]
                     assert sorted(preds_top_subgroups.index) == sorted(true_vals_top_subgroups.index)
                     outcome_top_subgroups_df = pd.DataFrame.from_dict(
@@ -566,7 +574,7 @@ def main(args):
 
                     top20_scorer = SubgroupScorer(
                         'Top 20', 'Top 20 Percent of Data', total_merge_mask,
-                        true_vals=outcome_true_vals[targ], preds=outcome_preds,
+                        true_vals=targ_true_vals, preds=outcome_preds,
                         multiple_iter_preds=outcome_preds_over_iters)
                     kfold_AUROC_20 = top20_scorer.score_auroc()
                     ROC_tuple_20 = top20_scorer._score_overall_auroc(return_tuple=True)
@@ -579,7 +587,7 @@ def main(args):
 
                     top20_rand_scorer = SubgroupScorer(
                        'Top 20 Random', r'Random Predictions on top 20%data', total_merge_mask,
-                        true_vals=outcome_true_vals[targ], preds=rand_pred)
+                        true_vals=targ_true_vals, preds=rand_pred)
                     rand_AUROC_20 = top20_rand_scorer.score_auroc()
                     rand_AUPRC_20 = top20_rand_scorer.score_auprc()
 
@@ -611,7 +619,7 @@ def main(args):
                 total_merge_mask = np.logical_or(total_merge_mask, sg_mask)
                 if sg_num == select_index:
                     preds_top_subgroups = val_outcome_preds[total_merge_mask]
-                    true_vals_top_subgroups = validation_outcome_true_vals[targ][total_merge_mask]
+                    true_vals_top_subgroups = valid_targ_true_vals[total_merge_mask]
                     random_preds_top_subgroups = rand_val_pred[total_merge_mask]
                     assert sorted(preds_top_subgroups.index) == sorted(true_vals_top_subgroups.index)
                     outcome_top_subgroups_df = pd.DataFrame.from_dict(
@@ -625,7 +633,7 @@ def main(args):
 
                     top20_scorer = SubgroupScorer(
                         'Top 20', 'Top 20 Percent of Data', total_merge_mask,
-                        true_vals=validation_outcome_true_vals[targ], preds=val_outcome_preds,
+                        true_vals=valid_targ_true_vals, preds=val_outcome_preds,
                         multiple_iter_preds=val_outcome_preds_over_iters)
                     val_AUROC_20 = top20_scorer.score_auroc()
                     ROC_tuple_20_val = top20_scorer._score_overall_auroc(return_tuple=True)
@@ -638,7 +646,7 @@ def main(args):
 
                     top20_rand_scorer = SubgroupScorer(
                        'Top 20 Random', r'Random Predictions on top 20%data', total_merge_mask,
-                        true_vals=validation_outcome_true_vals[targ], preds=rand_val_pred)
+                        true_vals=valid_targ_true_vals, preds=rand_val_pred)
                     rand_val_AUROC_20 = top20_rand_scorer.score_auroc()
                     rand_val_AUPRC_20 = top20_rand_scorer.score_auprc()
 
