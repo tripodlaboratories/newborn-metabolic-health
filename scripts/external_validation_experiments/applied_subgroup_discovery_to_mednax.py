@@ -56,6 +56,68 @@ def get_args():
     return parser.parse_args()
 
 
+class SubgroupScorer():
+    def __init__(
+        sg_num,
+        sg_description,
+        sg_mask: 'np.ndarray[np.bool]',
+        true_vals: np.ndarray,
+        preds: np.ndarray,
+        multiple_iters: bool=False):
+        self.sg_num = sg_num
+        self.sg_description = sg_description
+        self.true_vals = true_vals[sg_mask]
+        self.preds = preds[sg_mask]
+        self.multiple_iters = multiple_iters
+        self.logger = logging.getLogger('SubgroupScorer')
+
+    def _no_subgroup_exceptions(self):
+        # Need to handle the case where a subgroup is NOT FOUND in a (likely validation)
+        # dataset OR there are no true positives
+        if self.sg_mask.sum() == 0:
+            self.logger.warning(
+                f'No individuals found in subgroup {self.sg_num}: {self.sg_description}')
+            return False
+        elif len(self.true_vals.unique()) == 1:
+            self.logger.warning(
+                f'Only one case type present in subgroup {self.sg_num}: {self.sg_description}')
+            return False
+        else:
+            return True
+
+    def _score_overall_auprc(self):
+        if self._no_subgroup_exceptions():
+            precision, recall, thresholds = precision_recall_curve(
+                self.true_vals, self.preds)
+            return auc(recall_precision)
+        else:
+            return np.nan
+
+    def _score_multiple_iters_auprc(self):
+        raise NotImplementedError
+
+    def score_auprc(self):
+        if self.multiple_iters is False:
+            return _score_overall_auprc()
+        else:
+            return _score_multiple_iters_auprc()
+
+    def _score_overall_auroc(self):
+        if self._no_subgroup_exceptions():
+            return roc_auc_score(self.true_vals, self.preds)
+        else:
+            return np.nan
+
+    def _score_multiple_iters_auroc():
+        raise NotImplementedError
+
+    def score_auroc(self):
+        if self.multiple_iters is False:
+            return _score_overall_auroc()
+        else:
+            return _score_multiple_iters_auroc()
+
+
 def main(args):
     results_dir = args.input_directory
     valid_metab_file = args.validation_metabolites
@@ -300,18 +362,21 @@ def main(args):
                 sg_quality, sg_description, qf = sg
                 sg_mask, sg_size = ps.get_cover_array_and_size(sg_description, data=searchspace_data)
 
-                # To be used to calculate statistics on a merged top 1:current_subgroup
+                # To be used to calculate statistics on a merged top 1:current_subgroup (as a running total)
                 total_merge_mask = np.logical_or(total_merge_mask, sg_mask)
 
-                # NOTE: The next logic exists because it's difficult to add custom stats to the dataframe original output
-                precision, recall, thresholds = precision_recall_curve(
-                    outcome_true_vals[targ][total_merge_mask], outcome_preds[total_merge_mask])
-                AUPRC = auc(recall, precision)
-                precision, recall, thresholds = precision_recall_curve(
-                    outcome_true_vals[targ][sg_mask], outcome_preds[sg_mask])
-                subgroup_AUPRC = auc(recall, precision)
-                #append all data to array
-                #compile metrics of performancpe
+                # Iterating through subgroups to add custom stats (i.e., AUROC and AUPRC)
+                runtotal_scorer = SubgroupScorer(
+                    'Total Merged Subgroup', f'Merged from {sg_num} subgroups', total_merge_mask,
+                    true_vals=outcome_true_vals[targ], preds=outcome_preds)
+                AUPRC = runtotal_scorer.score_auprc()
+                # Next calculate the AUPRC in the subgroup
+                subgroup_scorer = SubgroupScorer(
+                    sg_num, sg_description, sg_mask,
+                    true_vals=outcome_true_vals[targ], preds=outcome_preds)
+                subgroup_AUPRC = subgroup_scorer.score_auprc()
+
+                #compile metrics of performance
                 n_prediction_iters = len(outcome_preds_over_iters.columns)
 
                 # TODO: Clarify what this condition is checking for...?
@@ -441,27 +506,18 @@ def main(args):
                 sg_quality, sg_description, qf = sg
                 sg_mask, sg_size = ps.get_cover_array_and_size(sg_description, data=searchspace_val_data)
 
-                # To be used to calculate statistics on a merged top 1:current_subgroup
+                # To be used to calculate statistics on a merged top 1:current_subgroup (as running total)
                 total_merge_mask = np.logical_or(total_merge_mask, sg_mask)
+                runtotal_scorer = SubgroupScorer(
+                    'Total Merged Subgroup', f'Merged from {subgroup_num} subgroups', total_merge_mask,
+                    true_vals=validation_outcome_true_vals[targ], preds=val_outcome_preds)
+                AUPRC = runtotal_scorer.score_auprc()
 
-                precision, recall, thresholds = precision_recall_curve(
-                    validation_outcome_true_vals[targ][total_merge_mask],
-                    val_outcome_preds[total_merge_mask])
-                AUPRC = auc(recall, precision)
-
-                # In the validation data, need to handle the case where a subgroup is
-                # NOT FOUND in the validation dataset OR there are no true positives
-                if sg_mask.sum() == 0:
-                    logger.warning(f'No individuals found in subgroup {sg_num}: {sg_description}')
-                    subgroup_AUPRC = np.nan
-                elif len(validation_outcome_true_vals[targ][sg_mask].unique())== 1:
-                    logger.warning(f'Only one case type present in subgroup {sg_num}: {sg_description}')
-                    subgroup_AUPRC = np.nan
-                else:
-                    precision, recall, thresholds = precision_recall_curve(
-                        validation_outcome_true_vals[targ][sg_mask],
-                        val_outcome_preds[sg_mask])
-                    subgroup_AUPRC = auc(recall, precision)
+                # Next calculate the AUPRC in the subgroup
+                subgroup_scorer = SubgroupScorer(
+                    sg_num, sg_description, sg_mask,
+                    true_vals=validation_outcome_true_vals[targ], preds=val_outcome_preds)
+                subgroup_AUPRC = subgroup_scorer.score_auprc()
 
                 n_validation_prediction_iters = len(val_outcome_preds_over_iters.columns)
                 if len(validation_outcome_true_vals[targ][total_merge_mask]) == validation_outcome_true_vals[targ][total_merge_mask].sum():
@@ -480,9 +536,7 @@ def main(args):
                     AUPRC_mean = np.mean(temp_auprc)
 
                 else:
-                    AUROC = roc_auc_score(
-                        validation_outcome_true_vals[targ][total_merge_mask],
-                        val_outcome_preds[total_merge_mask])
+                    AUROC = runtotal_scorer.score_auroc()
 
                     temp_auroc = []
                     temp_auprc = []
@@ -527,18 +581,7 @@ def main(args):
                     subgroup_AUPRC_mean = np.mean(temp_auprc)
 
                 else:
-                    # Handle cases of no individuals in subgroup in validation data
-                    # Or no positive cases in the outcome
-                    if sg_mask.sum() == 0:
-                        logger.warning(f'No individuals found in subgroup {sg_num}: {sg_description}')
-                        subgroup_AUROC = np.nan
-                    elif len(validation_outcome_true_vals[targ][sg_mask].unique()) == 1:
-                        logger.warning(f'Only one class found in subgroup {sg_num}: {sg_description}')
-                        subgroup_AUROC = np.nan
-                    else:
-                        subgroup_AUROC = roc_auc_score(
-                            validation_outcome_true_vals[targ][sg_mask],
-                            val_outcome_preds[sg_mask])
+                    subgroup_AUROC = subgroup_scorer.score_auroc()
 
                     #calculate sd metrics
                     temp_auroc = []
@@ -714,7 +757,6 @@ def main(args):
                     rand_val_AUROC_20 = roc_auc_score(validation_outcome_true_vals[targ][total_merge_mask], rand_val_pred[total_merge_mask])
                     rand_precision, rand_recall, rand_thresholds = precision_recall_curve(validation_outcome_true_vals[targ][total_merge_mask], rand_val_pred[total_merge_mask])
                     rand_val_AUPRC_20 = auc(rand_recall, rand_precision)
-
 
                     temp_auroc = []
                     temp_auprc = []
