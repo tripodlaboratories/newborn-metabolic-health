@@ -126,6 +126,8 @@ def main(args):
 
     # Create a list of dataframes for the top K predictions from each subgroup discovery setting
     top_k_subgroup_predictions = []
+    # This second list stores predictions from individual iterations
+    top_k_subgroup_preds_iters = []
 
     for metric in evaluation_order:
         print("starting analysis using - " + metric)
@@ -536,8 +538,21 @@ def main(args):
                     kfold_AUROC_20_mean = np.mean(temp_auroc)
                     kfold_AUPRC_20_sd = np.std(temp_auprc, ddof=1)
                     kfold_AUPRC_20_mean = np.mean(temp_auprc)
-                #
-            #
+
+                    # Save predictions in top subgroups over iters
+                    preds_iters_top_subgroups = (many_outcome_preds[bool_vec]
+                        .reset_index()
+                        .melt(id_vars='row_id', value_name='preds')
+                        .set_index('row_id'))
+                    top_subgroups_iters_df = (pd.merge(
+                        preds_iters_top_subgroups,
+                        true_vals_top_subgroups.rename('true_vals'),
+                        left_index=True, right_index=True))
+                    top_subgroups_iters_df['outcome'] = targ
+                    top_subgroups_iters_df['evaluation_metric'] = metric
+                    top_subgroups_iters_df['dataset'] = 'kfold_test'
+                    top_k_subgroup_preds_iters.append(top_subgroups_iters_df)
+
             select =  (subgroup_val_results_df["% data"]* 100)
             select_index = select.index[select == min(select, key=lambda x:abs(x-20))][0]
             bool_vec = np.full((len(searchspace_val_data.index)), False)
@@ -592,8 +607,21 @@ def main(args):
                     val_AUROC_20_mean = np.mean(temp_auroc)
                     val_AUPRC_20_sd = np.std(temp_auprc, ddof=1)
                     val_AUPRC_20_mean = np.mean(temp_auprc)
-                #
-                #
+
+                    # Save results over iters
+                    preds_iters_top_subgroups = (many_val_outcome_preds[bool_vec]
+                        .reset_index()
+                        .melt(id_vars='row_id', value_name='preds')
+                        .set_index('row_id'))
+                    top_subgroups_iters_df = (pd.merge(
+                        preds_iters_top_subgroups,
+                        true_vals_top_subgroups.rename('true_vals'),
+                        left_index=True, right_index=True))
+                    top_subgroups_iters_df['outcome'] = targ
+                    top_subgroups_iters_df['evaluation_metric'] = metric
+                    top_subgroups_iters_df['dataset'] = 'holdout_validation'
+                    top_k_subgroup_preds_iters.append(top_subgroups_iters_df)
+
             #
             iter_results[targ+pred_type] = [kfold_AUROC_mean, kfold_AUROC_sd, val_AUROC_mean, val_AUROC_sd, kfold_AUROC_20_mean, kfold_AUROC_20_sd, val_AUROC_20_mean, val_AUROC_20_sd,
             kfold_AUPRC_mean, kfold_AUPRC_sd, val_AUPRC_mean, val_AUPRC_sd, kfold_AUPRC_20_mean, kfold_AUPRC_20_sd, val_AUPRC_20_mean, val_AUPRC_20_sd]
@@ -853,6 +881,9 @@ def main(args):
     top_k_subgroup_predictions = pd.concat(top_k_subgroup_predictions)
     top_k_subgroup_predictions.to_csv(
         output_dir + 'top_k_subgroup_predictions.csv')
+    top_k_subgroup_preds_iters = pd.concat(top_k_subgroup_preds_iters)
+    top_k_subgroup_preds_iters.to_csv(
+        output_dir + 'top_k_subgroup_preds_over_iters.csv')
 
 
 if __name__ == '__main__':
