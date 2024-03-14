@@ -281,47 +281,40 @@ def main(args):
             # results.task.data = None
             # pickle.dump(...)
             # results to dataframe (hard to add custom statistics)
-            results.to_dataframe()
-            results.results # all the subgroups
+            # results.to_dataframe()
+            # results.results # all the subgroups
             # get information from THE FIRST subgroup
-            sg_quality, sg_description, qf = results.results[0]
+            # sg_quality, sg_description, qf = results.results[0]
             # get subgroup mask / selection array for ONE subgroup
-            sg_msk, sg_size = ps.get_cover_array_and_size(sg_description, data=searchspace_data)
+            # sg_mask, sg_size = ps.get_cover_array_and_size(sg_description, data=searchspace_data)
 
-            # TODO: Refactor the subgroup iteration
+            # Iterate over subgroups, collecting performance metrics
             subgroup_desc_df = results.to_dataframe()
-            all_subgroups = results.results
-            # NOTE: This is where the original logic resumes.
-            subgroup_desc = results.to_dataframe()["subgroup"]
 
-            # TODO: data should be called something more like summary_stats, or overall_summary_stats
+            all_subgroups = results.results
             summary_stats = []
             total_merge_description = ""
-            # TODO: Refactoring the Subgroup Discovery Iteration
-            # TODO: Need to add in logic for iteratively growing the subgroup slice.
-            # TODO: Which is probably what the elementwise_or thing is doing.
-            # This replaces bool_vec
             # Book-keeping for a continuously growing merging of subgroups
-            subgroup_merge_mask = np.full((len(searchspace_data.index)), False)
+            total_merge_mask = np.full((len(searchspace_data.index)), False)
             for sg_num, sg in enumerate(all_subgroups):
                 sg_quality, sg_description, qf = sg
-                sg_msk, sg_size = ps.get_cover_array_and_size(sg_description, data=searchspace_data)
+                sg_mask, sg_size = ps.get_cover_array_and_size(sg_description, data=searchspace_data)
 
                 # To be used to calculate statistics on a merged top 1:current_subgroup
-                subgroup_merge_mask = np.logical_or(subgroup_merge_mask, sg_msk)
+                total_merge_mask = np.logical_or(total_merge_mask, sg_mask)
 
                 # NOTE: The next logic exists because it's difficult to add custom stats to the dataframe original output
                 precision, recall, thresholds = precision_recall_curve(
-                    outcome_true_vals[targ][subgroup_merge_mask], outcome_preds[subgroup_merge_mask])
+                    outcome_true_vals[targ][total_merge_mask], outcome_preds[total_merge_mask])
                 AUPRC = auc(recall, precision)
                 precision, recall, thresholds = precision_recall_curve(
-                    outcome_true_vals[targ][sg_msk], outcome_preds[sg_msk])
+                    outcome_true_vals[targ][sg_mask], outcome_preds[sg_mask])
                 subgroup_AUPRC = auc(recall, precision)
                 #append all data to array
                 #compile metrics of performancpe
                 n_prediction_iters = len(outcome_preds_over_iters.columns)
                 # TODO: Clarify what this condition is checking for...?
-                if(len(outcome_true_vals[targ][subgroup_merge_mask]) == outcome_true_vals[targ][subgroup_merge_mask].sum()):
+                if(len(outcome_true_vals[targ][total_merge_mask]) == outcome_true_vals[targ][total_merge_mask].sum()):
                     AUROC = np.nan
                     AUROC_sd = np.nan
                     AUROC_mean = np.nan
@@ -330,8 +323,8 @@ def main(args):
                     temp_auprc = []
                     for i in range(n_prediction_iters):
                         precision, recall, thresholds = precision_recall_curve(
-                            outcome_true_vals[targ][sg_msk],
-                            outcome_preds_over_iters.iloc[:,i][sg_msk])
+                            outcome_true_vals[targ][sg_mask],
+                            outcome_preds_over_iters.iloc[:,i][sg_mask])
                         temp_auprc.append(auc(recall, precision))
 
                     AUPRC_sd = np.std(temp_auprc, ddof=1) #used to make std consistent with R
@@ -339,19 +332,19 @@ def main(args):
 
                 else:
                     AUROC = roc_auc_score(
-                        outcome_true_vals[targ][subgroup_merge_mask],
-                        outcome_preds[subgroup_merge_mask])
+                        outcome_true_vals[targ][total_merge_mask],
+                        outcome_preds[total_merge_mask])
 
                     temp_auroc = []
                     temp_auprc = []
                     for i in range(n_prediction_iters):
                         precision, recall, thresholds = precision_recall_curve(
-                            outcome_true_vals[targ][subgroup_merge_mask],
-                            outcome_preds_over_iters.iloc[:,i][subgroup_merge_mask])
+                            outcome_true_vals[targ][total_merge_mask],
+                            outcome_preds_over_iters.iloc[:,i][total_merge_mask])
                         temp_auprc.append(auc(recall, precision))
                         temp_auroc.append(roc_auc_score(
-                            outcome_true_vals[targ][subgroup_merge_mask],
-                            outcome_preds_over_iters.iloc[:,i][subgroup_merge_mask]))
+                            outcome_true_vals[targ][total_merge_mask],
+                            outcome_preds_over_iters.iloc[:,i][total_merge_mask]))
 
                     # Handling cases where validation data is not made over repeated iterations
                     if len(temp_auroc) == 1 or len(temp_auprc) == 1:
@@ -405,10 +398,10 @@ def main(args):
                 summary_stats.append({
                     'total_subgroup_merge': total_merge_description,
                     'subgroup': subgroup_description,
-                    'size': subgroup_merge_mask.sum(),
-                    r'%data': subgroup_size / len(searchspace_data.index),
-                    "subgroup size": subgroup_size,
-                    "subgroup number": subgroup_num,
+                    'size': total_merge_mask.sum(),
+                    r'%data': sg_size / len(searchspace_data.index),
+                    "subgroup size": sg_size,
+                    "subgroup number": sg_num,
                     "AUPRC": AUPRC,
                     "subgroup AUPRC": subgroup_AUPRC,
                     "AUROC": AUROC,
@@ -435,63 +428,69 @@ def main(args):
             kfold_AUPRC_mean = np.mean(temp_auprc)
 
             # TODO: Clarify the logic here: This applies the subgroup descriptions to the validation data
-            data = []
-            total_elem = ""
-            bool_vec = np.full((len(searchspace_val_data.index)), False)
-            count = 0
-            for elem in subgroup_desc:
-                count = count + 1
-                bool_vec_inner = np.full((len(searchspace_val_data.index)), True)
-                for cond in elem.split(" AND "):
-                    if("==" in cond):
-                        splt = cond.split("==")
-                        bool_vec_inner = bool_vec_inner & (searchspace_val_data[splt[0]] == (int(splt[1]) if "'" not in splt[1] and "." not in splt[1] else float(splt[1]) if "." in splt[1] else splt[1].replace("'","") ))
-                    if(">=" in cond):
-                        splt = cond.split(">=")
-                        bool_vec_inner = bool_vec_inner & (searchspace_val_data[splt[0]] >= (int(splt[1]) if "'" not in splt[1] and "." not in splt[1] else float(splt[1]) if "." in splt[1] else splt[1].replace("'","") ))
-                    if("<=" in cond):
-                        splt = cond.split("<=")
-                        bool_vec_inner = bool_vec_inner & (searchspace_val_data[splt[0]] <= (int(splt[1]) if "'" not in splt[1] and "." not in splt[1] else float(splt[1]) if "." in splt[1] else splt[1].replace("'","") ))
-                bool_vec = np.logical_or(bool_vec,  bool_vec_inner)
+            all_subgroups = results.results
+            summary_stats = []
+            total_merge_description = ""
+            total_merge_mask = np.full((len(searchspace_val_data.index)), False)
 
-                precision, recall, thresholds = precision_recall_curve(validation_outcome_true_vals[targ][bool_vec], val_outcome_preds[bool_vec])
+            for sg_num, sg in enumerate(all_subgroups):
+                sg_quality, sg_description, qf = sg
+                # TODO: Check that this is correctly applied tot he validation data
+                sg_mask, sg_size = ps.get_cover_array_and_size(sg_description, data=searchspace_val_data)
+
+                # To be used to calculate statistics on a merged top 1:current_subgroup
+                total_merge_mask = np.logical_or(total_merge_mask, sg_mask)
+
+                precision, recall, thresholds = precision_recall_curve(
+                    validation_outcome_true_vals[targ][total_merge_mask],
+                    val_outcome_preds[total_merge_mask])
                 AUPRC = auc(recall, precision)
 
                 # TODO: Debugging for the case where a subgroup is NOT FOUND in the validation dataset
                 try:
-                    precision, recall, thresholds = precision_recall_curve(validation_outcome_true_vals[targ][bool_vec_inner], val_outcome_preds[bool_vec_inner])
+                    precision, recall, thresholds = precision_recall_curve(
+                        validation_outcome_true_vals[targ][sg_mask],
+                        val_outcome_preds[sg_mask])
                     subgroup_AUPRC = auc(recall, precision)
                 except ValueError as e:
                     logger.warn(f'No individuals found in subgroup {count-1}, {subgroup_desc}')
                     subgroup_AUPRC = np.nan
 
-                #precision, recall, thresholds = precision_recall_curve(validation_outcome_true_vals[targ][bool_vec_inner], val_outcome_preds[bool_vec_inner])
+                #precision, recall, thresholds = precision_recall_curve(validation_outcome_true_vals[targ][sg_mask], val_outcome_preds[sg_mask])
                 #subgroup_AUPRC = auc(recall, precision)
 
                 n_validation_prediction_iters = len(val_outcome_preds_over_iters.columns)
-                if(len(validation_outcome_true_vals[targ][bool_vec]) == validation_outcome_true_vals[targ][bool_vec].sum()):
+                if(len(validation_outcome_true_vals[targ][total_merge_mask]) == validation_outcome_true_vals[targ][total_merge_mask].sum()):
                     AUROC = np.nan
                     AUROC_sd = np.nan
                     AUROC_mean = np.nan
 
                     temp_auprc = []
                     for i in range(n_validation_prediction_iters):
-                        precision, recall, thresholds = precision_recall_curve(validation_outcome_true_vals[targ][bool_vec], val_outcome_preds_over_iters.iloc[:,i][bool_vec])
+                        precision, recall, thresholds = precision_recall_curve(
+                            validation_outcome_true_vals[targ][total_merge_mask],
+                            val_outcome_preds_over_iters.iloc[:,i][total_merge_mask])
                         temp_auprc.append(auc(recall, precision))
 
                     AUPRC_sd = np.std(temp_auprc, ddof=1)
                     AUPRC_mean = np.mean(temp_auprc)
 
                 else:
-                    AUROC = roc_auc_score(validation_outcome_true_vals[targ][bool_vec], val_outcome_preds[bool_vec])
+                    AUROC = roc_auc_score(
+                        validation_outcome_true_vals[targ][total_merge_mask],
+                        val_outcome_preds[total_merge_mask])
 
                     temp_auroc = []
                     temp_auprc = []
 
                     for i in range(n_validation_prediction_iters):
-                        precision, recall, thresholds = precision_recall_curve(validation_outcome_true_vals[targ][bool_vec], val_outcome_preds_over_iters.iloc[:,i][bool_vec])
+                        precision, recall, thresholds = precision_recall_curve(
+                            validation_outcome_true_vals[targ][total_merge_mask],
+                            val_outcome_preds_over_iters.iloc[:,i][total_merge_mask])
                         temp_auprc.append(auc(recall, precision))
-                        temp_auroc.append(roc_auc_score(validation_outcome_true_vals[targ][bool_vec], val_outcome_preds_over_iters.iloc[:,i][bool_vec]))
+                        temp_auroc.append(roc_auc_score(
+                            validation_outcome_true_vals[targ][total_merge_mask],
+                            val_outcome_preds_over_iters.iloc[:,i][total_merge_mask]))
 
                     if len(temp_auroc) == 1 or len(temp_auprc) == 1:
                         AUROC_sd = 0
@@ -502,14 +501,16 @@ def main(args):
                     AUROC_mean = np.mean(temp_auroc)
                     AUPRC_mean = np.mean(temp_auprc)
 
-                if(len(validation_outcome_true_vals[targ][bool_vec_inner]) == validation_outcome_true_vals[targ][bool_vec_inner].sum()):
+                if(len(validation_outcome_true_vals[targ][sg_mask]) == validation_outcome_true_vals[targ][sg_mask].sum()):
                     subgroup_AUROC = np.nan
                     subgroup_AUROC_sd = np.nan
                     subgroup_AUROC_mean = np.nan
 
                     temp_auprc = []
                     for i in range(n_validation_prediction_iters):
-                        precision, recall, thresholds = precision_recall_curve(validation_outcome_true_vals[targ][bool_vec_inner], val_outcome_preds_over_iters.iloc[:,i][bool_vec_inner])
+                        precision, recall, thresholds = precision_recall_curve(
+                            validation_outcome_true_vals[targ][sg_mask],
+                            val_outcome_preds_over_iters.iloc[:,i][sg_mask])
                         temp_auprc.append(auc(recall, precision))
 
                     if len(temp_auprc) == 1:
@@ -519,15 +520,21 @@ def main(args):
                     subgroup_AUPRC_mean = np.mean(temp_auprc)
 
                 else:
-                    subgroup_AUROC = roc_auc_score(validation_outcome_true_vals[targ][bool_vec_inner], val_outcome_preds[bool_vec_inner])
+                    subgroup_AUROC = roc_auc_score(
+                        validation_outcome_true_vals[targ][sg_mask],
+                        val_outcome_preds[sg_mask])
 
                     #calculate sd metrics
                     temp_auroc = []
                     temp_auprc = []
                     for i in range(n_validation_prediction_iters):
-                        precision, recall, thresholds = precision_recall_curve(validation_outcome_true_vals[targ][bool_vec_inner], val_outcome_preds_over_iters.iloc[:,i][bool_vec_inner])
+                        precision, recall, thresholds = precision_recall_curve(
+                            validation_outcome_true_vals[targ][sg_mask],
+                            val_outcome_preds_over_iters.iloc[:,i][sg_mask])
                         temp_auprc.append(auc(recall, precision))
-                        temp_auroc.append(roc_auc_score(validation_outcome_true_vals[targ][bool_vec_inner], val_outcome_preds_over_iters.iloc[:,i][bool_vec_inner]))
+                        temp_auroc.append(roc_auc_score(
+                            validation_outcome_true_vals[targ][sg_mask],
+                            val_outcome_preds_over_iters.iloc[:,i][sg_mask]))
 
                     if len(temp_auroc) == 1 or len(temp_auprc) == 1:
                         subgroup_AUROC_sd = 0
@@ -539,11 +546,21 @@ def main(args):
                     subgroup_AUPRC_mean = np.mean(temp_auprc)
 
 
-                total_elem = elem + "-OR-" + total_elem
-                data.append([total_elem, elem, bool_vec.sum(), bool_vec.sum()/len(searchspace_val_data.iloc[:,0]), bool_vec_inner.sum(), count, AUPRC, subgroup_AUPRC, AUROC, subgroup_AUROC])
+                total_merge_description = subgroup_description + "-OR-" + total_merge_description
 
-            subgroup_val_results_df = pd.DataFrame(data, columns=["total group","subgroup","size", "% data", "subgroup size", "num_groups", "AUPRC", "subgroup AUPRC", "AUROC", "subgroup AUROC"])
+                summary_stats.append({
+                    'total_subgroup_merge': total_merge_description,
+                    'subgroup': subgroup_description,
+                    'size': total_merge_mask.sum(),
+                    r'%data': sg_size / len(searchspace_data.index),
+                    "subgroup size": sg_size,
+                    "subgroup number": sg_num,
+                    "AUPRC": AUPRC,
+                    "subgroup AUPRC": subgroup_AUPRC,
+                    "AUROC": AUROC,
+                    "subgroup AUROC": subgroup_AUROC})
 
+            subgroup_val_results_df = pd.DataFrame(summary_stats)
             val_AUROC = roc_auc_score(validation_outcome_true_vals[targ], val_outcome_preds)
             precision, recall, thresholds = precision_recall_curve(validation_outcome_true_vals[targ], val_outcome_preds)
             val_AUPRC = auc(recall, precision)
