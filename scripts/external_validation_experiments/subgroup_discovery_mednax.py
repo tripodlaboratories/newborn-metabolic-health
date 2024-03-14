@@ -92,17 +92,17 @@ def main():
 
     # Multiprocessing and other iterations of randomized search
     n_jobs = 30
-    random_search_args = {
+    search_args = {
         'n_iter': 100,
         'cv': 5,
-        'scoring': 'balanced_accuracy',
+        'scoring': 'average_precision',
         'random_state': random_state_int,
         'n_jobs': n_jobs,
         'verbose': 1
     }
     rf = RandomForestClassifier()
     rfcv = RandomizedSearchCV(
-        rf, param_distributions=rf_grid, **random_search_args)
+        rf, param_distributions=rf_grid, **search_args)
 
     data_X = cal_biobank_metab
     data_y = isin_top_subgroup
