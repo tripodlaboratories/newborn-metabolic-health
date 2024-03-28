@@ -215,7 +215,7 @@ def main(args):
         '_quant_[0-9]{1}', '', regex=True)
 
     # Output CSVs
-    metab_scores_long.to_csv(f'{out_dir}metab_scores.csv')
+    metab_scores_long.to_csv(f'{out_dir}metab_scores.csv', index=False)
     qbins.to_csv(f'{out_dir}quantile_assignments.csv')
 
 
