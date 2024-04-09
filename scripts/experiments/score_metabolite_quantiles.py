@@ -213,6 +213,7 @@ def main(args):
         var_name='quantile_split', value_name='quantile_assignment')
     metab_scores_long['metab'] = metab_scores_long.quantile_split.str.replace(
         '_quant_[0-9]{1}', '', regex=True)
+    metab_scores_long.dropna(inplace=True)
 
     # Output CSVs
     metab_scores_long.to_csv(f'{out_dir}metab_scores.csv', index=False)
