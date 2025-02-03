@@ -177,12 +177,28 @@ dmypy.json
 # IDEA
 .idea
 
+####################
+# PROJECT_SPECIFIC #
+####################
+# Local storage for older files and backups
+archive
+environment.bak
+
 # Data Directories and deep NN predictions which can get large
-archive*/*
+checkpoints
 data
 *train_preds.csv
 *.gz
 
-# Project-specific aspects not needed to be checked in
+# Compressed files for transfer
+pkg
+
+# Other tests for sim data that aren't relevant to commit
+tests/mock_data/
+
+# Don't commit notebooks in dev. Clean notebooks put in `notebooks-publish`
+notebooks/*.ipynb
+
+# Project-specific workflow + tooling aspects not needed to be checked in
 renv/*
 wandb/
