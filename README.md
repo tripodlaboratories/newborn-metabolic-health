@@ -16,7 +16,9 @@ For the manuscript, model implementation was done using Python 3.7.6 and
 Subgroup discovery results depend on `pysubgroup`.
 For data visualization and plotting in the manuscript, R 3.6.1 was used along
 with the `dplyr`, `tidyr`, `yardstick`, `pROC`, `ggthemes`, `ggplot2`, `readxl`,
-`tidygraph`, and `ggraph` packages.
+`tidygraph`, and `ggraph` packages.  
+
+Additional large file and binaries management done with `dvc`
 
 ## Installation
 With conda: `conda env create -f environment.yml`  

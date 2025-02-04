@@ -190,15 +190,16 @@ data
 *train_preds.csv
 *.gz
 
-# Compressed files for transfer
-pkg
+# Packaged code and model files for transfer
+/pkg
 
 # Other tests for sim data that aren't relevant to commit
 tests/mock_data/
 
-# Don't commit notebooks in dev. Clean notebooks put in `notebooks-publish`
-notebooks/*.ipynb
+# Don't commit dev notebooks. Clean notebooks put in `notebooks-publish`
+notebooks_dev/*.ipynb
 
 # Project-specific workflow + tooling aspects not needed to be checked in
+.envrc
 renv/*
 wandb/

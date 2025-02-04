@@ -1,0 +1,6 @@
+outs:
+- md5: b6aa823b0b26fe4f09749b5af076ee1b.dir
+  size: 102749709
+  nfiles: 102
+  hash: md5
+  path: pkg

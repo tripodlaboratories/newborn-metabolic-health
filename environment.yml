@@ -1,15 +1,17 @@
-name: newborn-metabolic-health-3.8
+name: newborn-metabolic-health
 channels:
   - defaults
   - conda-forge
   - pytorch
 dependencies:
+  - dvc
+  - dvc-gs
   - jupyterlab=1.*
   - matplotlib=3.*
   - numpy=1.*
   - pandas=1.*
   - pip
-  - python=3.8.*
+  - python=3.9.*
   - scikit-learn=1.0.*
   - scipy=1.*
   - seaborn=0.13.*

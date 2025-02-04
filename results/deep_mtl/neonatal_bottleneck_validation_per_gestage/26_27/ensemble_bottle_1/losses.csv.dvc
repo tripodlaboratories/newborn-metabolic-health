@@ -1,0 +1,5 @@
+outs:
+- md5: bd8b90693b9c0972088016189056eec9
+  size: 154990
+  hash: md5
+  path: losses.csv

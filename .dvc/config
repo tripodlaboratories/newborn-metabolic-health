@@ -1,0 +1,4 @@
+[core]
+    remote = gcs-bucket
+['remote "gcs-bucket"']
+    url = gs://project-dvc-remote/nbs-metabolic-health
