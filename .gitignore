@@ -190,8 +190,8 @@ data
 *train_preds.csv
 *.gz
 
-# Compressed files for transfer
-pkg
+# Packaged code and model files for transfer
+/pkg
 
 # Other tests for sim data that aren't relevant to commit
 tests/mock_data/
