@@ -2,3 +2,4 @@
 /scaler.pkl
 /tsne.pkl
 /umap.pkl
+/reduced_dims.csv
