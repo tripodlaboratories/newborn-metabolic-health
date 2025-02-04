@@ -1,4 +1,4 @@
 [core]
-    remote = gdrive-remote
-['remote "gdrive-remote"']
-    url = gdrive://1Q__LRgFDSUmfrFUgWwxfSTl7zfaIkNoM
+    remote = gcs-bucket
+['remote "gcs-bucket"']
+    url = gs://project-dvc-remote/nbs-metabolic-health

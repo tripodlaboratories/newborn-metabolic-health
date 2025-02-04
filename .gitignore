@@ -200,5 +200,6 @@ tests/mock_data/
 notebooks/*.ipynb
 
 # Project-specific workflow + tooling aspects not needed to be checked in
+.envrc
 renv/*
 wandb/
