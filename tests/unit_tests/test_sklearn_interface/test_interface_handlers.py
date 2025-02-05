@@ -45,7 +45,7 @@ class TestRegressionHandler:
 
     @pytest.fixture
     def training_runner(self, model):
-        return MOD.RegressionModelTraining(model=model)
+        return MOD.RegressionTraining(model=model)
 
     def test_handler_sets_data(self, training_runner, dataset):
         colnames = dataset.Y.columns

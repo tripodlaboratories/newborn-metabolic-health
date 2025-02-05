@@ -47,13 +47,13 @@ class TestKFold:
 
     @pytest.fixture
     def train_runner(self, model):
-        return handlers.RegressionModelTraining(model)
+        return handlers.RegressionTraining(model)
 
     @pytest.fixture
     def kfold(self, dataset, train_runner):
         splitter = KFold(n_splits=3, shuffle=True, random_state=101)
         return MOD.RepeatedKFold(
-            n_folds=3, data_X=dataset.X, data_Y=dataset.Y,
+            n_folds=3, n_iter=2, data_X=dataset.X, data_Y=dataset.Y,
             training_handler=train_runner, splitter=splitter,
             output_type='regression')
 
@@ -73,13 +73,6 @@ class TestKFold:
         assert len(true_vals['fold'].unique()) == kfold.n_folds
 
     def test_repeated_kfold_has_values_for_each_iter(self, kfold, train_args):
-        n_iter = 3
-        results = kfold.repeated_kfold(
-            train_args, n_iter=n_iter)
+        results = kfold.repeated_kfold(train_args)
         for k in results.keys():
-            assert len(results[k]['iter'].unique()) == n_iter
-
-
-
-
-
+            assert len(results[k]['iter'].unique()) == kfold.n_iter
