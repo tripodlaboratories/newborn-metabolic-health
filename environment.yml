@@ -7,6 +7,7 @@ dependencies:
   - dvc
   - dvc-gs
   - jupyterlab=1.*
+  - pytorch-lightning=1.5.*
   - matplotlib=3.*
   - numpy=1.*
   - pandas=1.*
