@@ -1,25 +1,25 @@
 name: newborn-metabolic-health
 channels:
-  - defaults
-  - conda-forge
   - pytorch
+  - conda-forge
+  - defaults
 dependencies:
-  - dvc
-  - dvc-gs
-  - jupyterlab=1.*
+  - python=3.9.*
+  - pytorch=1.6.*
   - pytorch-lightning=1.4.*
+  - torchmetrics=0.6.*
+  - pandas=2.1.*
+  - jupyterlab=1.*
   - matplotlib=3.*
   - numpy=1.*
-  - pandas=2.1.*
   - pip=23.*
-  - python=3.9.*
   - scikit-learn=1.3.*
   - scipy=1.*
   - seaborn=0.13.*
-  - pytorch=1.6.*
-  - torchvision
   - wandb=0.19.*
   - xlsxwriter
+  - dvc
+  - dvc-gs
   - pip:
     - pytest
     - xgboost==1.4.*
