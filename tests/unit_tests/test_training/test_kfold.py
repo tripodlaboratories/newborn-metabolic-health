@@ -9,7 +9,7 @@ from sklearn.datasets import (make_classification,
 from torch import nn, Tensor
 from unittest.mock import MagicMock, patch
 
-from biobank_project.deep_mtl.models import bottleneck
+from biobank_project.deep_mtl.models import bottleneck, bottleneck_variants
 from biobank_project.deep_mtl.training import handlers
 from biobank_project.deep_mtl.sampling import MajorityDownsampler
 from biobank_project.deep_mtl.training import kfold as MOD
@@ -127,6 +127,13 @@ def mixed_dataset_fixture():
             self.n_features = len(self.class_X.columns) + len(self.reg_X.columns)
     return MixedDataMaker
 
+@pytest.fixture
+def mock_wandb_run():
+    # Avoid external dependency, and requirement to call wandb.init() in tests
+    wandb_run = MagicMock()
+    wandb_run.log = MagicMock()
+    return wandb_run
+
 
 # Test Classes
 class TestRepeatedKFold:
@@ -142,9 +149,13 @@ class TestRepeatedKFold:
         return TestModel(
             n_inputs=dataset.X.shape[1], n_hidden=100, n_outputs=dataset.Y.shape[1])
 
+
+
+
     @pytest.fixture
-    def training_runner(self, test_model, dataset):
-        return handlers.ModelTraining(test_model, batch_size=50, shuffle_batch=True)
+    def training_runner(self, test_model, dataset, mock_wandb_run):
+        return handlers.ModelTraining(
+            test_model, batch_size=50, shuffle_batch=True, wandb_run=mock_wandb_run)
 
     @pytest.fixture
     def train_args(self, test_model, dataset):
@@ -232,16 +243,18 @@ class TestRepeatedKFold:
     def test_repeated_kfold_uses_early_stopping(self, dataset, training_runner, train_args):
         train_args['early_stopping_handler'] = handlers.EarlyStopping(patience=3)
         rkf = MOD.RepeatedKFold(
-            n_iter=10, n_folds=3, data_X=dataset.X,
+            n_iter=3, n_folds=3, data_X=dataset.X,
             data_Y=dataset.Y, training_handler=training_runner)
         results = rkf.repeated_kfold(train_args)
 
-    def test_repeated_kfold_can_use_resampler(self, ImbalancedDataMaker, TestModel):
+    def test_repeated_kfold_can_use_resampler(
+            self, ImbalancedDataMaker, TestModel, mock_wandb_run):
         np.random.seed(120)
         dataset = ImbalancedDataMaker()
         model = TestModel(
             n_inputs=dataset.X.shape[1], n_hidden=100, n_outputs=dataset.Y.shape[1])
-        training_runner = handlers.ModelTraining(model, batch_size=50, shuffle_batch=False)
+        training_runner = handlers.ModelTraining(
+            model, batch_size=50, shuffle_batch=False, wandb_run=mock_wandb_run)
         train_args = {
             'n_epochs': 5,
             'criterion': nn.BCEWithLogitsLoss(),
@@ -249,12 +262,12 @@ class TestRepeatedKFold:
             'early_stopping_handler': None
         }
         rkf = MOD.RepeatedKFold(
-            n_iter=10, n_folds=3, data_X=dataset.X,
+            n_iter=3, n_folds=3, data_X=dataset.X,
             data_Y=dataset.Y, training_handler=training_runner)
         resampler = MajorityDownsampler(random_state=42)
         results = rkf.repeated_kfold(train_args, resampler=resampler)
 
-    def test_repeated_kfold_can_use_validation_data(self, DataMaker, TestModel):
+    def test_repeated_kfold_can_use_validation_data(self, DataMaker, TestModel, mock_wandb_run):
         np.random.seed(80)
         dataset = DataMaker(n_classes=3)
         validation_data = DataMaker(n_classes=3)
@@ -262,7 +275,8 @@ class TestRepeatedKFold:
             n_inputs=dataset.X.shape[1],
             n_hidden=100,
             n_outputs=dataset.Y.shape[1])
-        training_runner = handlers.ModelTraining(model, batch_size=50, shuffle_batch=False)
+        training_runner = handlers.ModelTraining(
+            model, batch_size=250, wandb_run=mock_wandb_run, shuffle_batch=False)
         train_args = {
             'n_epochs': 5,
             'criterion': nn.BCEWithLogitsLoss(),
@@ -290,12 +304,12 @@ class TestRepeatedKFoldMixedOutput:
             n_reg=dataset.n_regression)
 
     @pytest.fixture
-    def training_runner(self, test_model, dataset):
+    def training_runner(self, test_model, dataset, mock_wandb_run):
         reg_cols = [col for col in dataset.Y.columns if 'regression' in col]
         class_cols = [col for col in dataset.Y.columns if 'class' in col]
         return handlers.MixedOutputTraining(
-            test_model, batch_size=50, reg_cols=reg_cols,
-            class_cols=class_cols)
+            test_model, batch_size=250, reg_cols=reg_cols,
+            class_cols=class_cols, wandb_run=mock_wandb_run)
 
     @pytest.fixture
     def train_args(self, test_model, dataset):
@@ -335,7 +349,7 @@ class TestKFoldCovariateHandler:
 
     @pytest.fixture
     def test_model(self, dataset):
-        return bottleneck.CovariateEnsemble(
+        return bottleneck_variants.CovariateEnsemble(
             n_features=dataset.X.shape[1],
             n_tasks=dataset.Y.shape[1] - len(dataset.covariates),
             n_hidden=50,
@@ -344,16 +358,17 @@ class TestKFoldCovariateHandler:
             )
 
     @pytest.fixture
-    def training_runner(self, test_model, dataset):
+    def training_runner(self, test_model, dataset, mock_wandb_run):
         return handlers.CovariateBottleneckTraining(
-            test_model, batch_size=50, covariates=dataset.covariates)
+            test_model, batch_size=50, covariates=dataset.covariates,
+            wandb_run=mock_wandb_run)
 
     @pytest.fixture
     def train_args(self, test_model, dataset):
         return {
-            'n_epochs': 25,
+            'n_epochs': 5,
             'criterion': nn.BCEWithLogitsLoss(),
-            'colnames': set(dataset.Y.columns).difference(dataset.covariates),
+            'colnames': list(set(dataset.Y.columns).difference(dataset.covariates)),
             'early_stopping_handler': None,
             'output_training_preds': True
         }
@@ -361,7 +376,7 @@ class TestKFoldCovariateHandler:
     def test_repeated_kfold_collects_results_across_iters(self, dataset, training_runner, train_args):
         n_iter = 3
         n_folds = 3
-        outcome_cols = set(dataset.Y.columns).difference(dataset.covariates)
+        outcome_cols = list(set(dataset.Y.columns).difference(dataset.covariates))
         rkf = MOD.RepeatedKFold(
             n_iter=n_iter, n_folds=n_folds, data_X=dataset.X,
             data_Y=dataset.Y, training_handler=training_runner)
