@@ -184,8 +184,19 @@ class TestModelTraining:
             n_inputs=dataset.X.shape[1], n_hidden=100, n_outputs=dataset.Y.shape[1])
 
     @pytest.fixture
-    def training_runner(self, test_model, dataset):
-        return MOD.ModelTraining(test_model, batch_size=50)
+    def mock_wandb_run(self):
+        # Avoid external dependency, and requirement to call wandb.init() in tests
+        wandb_run = MagicMock()
+        wandb_run.log = MagicMock()
+        return wandb_run
+
+    @pytest.fixture
+    def training_runner(
+        self,
+        test_model,
+        dataset,
+        mock_wandb_run):
+        return MOD.ModelTraining(test_model, batch_size=50, wandb_run=mock_wandb_run)
 
     @pytest.fixture
     def train_args(self, test_model, dataset):
@@ -302,12 +313,19 @@ class TestMixedOutput:
             n_reg=dataset.n_regression)
 
     @pytest.fixture
-    def training_runner(self, test_model, dataset):
+    def mock_wandb_run(self):
+        # Avoid external dependency, and requirement to call wandb.init() in tests
+        wandb_run = MagicMock()
+        wandb_run.log = MagicMock()
+        return wandb_run
+
+    @pytest.fixture
+    def training_runner(self, test_model, dataset, mock_wandb_run):
         reg_cols = [col for col in dataset.Y.columns if 'regression' in col]
         class_cols = [col for col in dataset.Y.columns if 'class' in col]
         return MOD.MixedOutputTraining(
             test_model, batch_size=50, reg_cols=reg_cols,
-            class_cols=class_cols)
+            class_cols=class_cols, wandb_run=mock_wandb_run)
 
     def test_set_training_data_populates_loader(self, training_runner, dataset):
         training_runner.set_training_data(dataset.X, dataset.Y)

@@ -7,18 +7,18 @@ dependencies:
   - dvc
   - dvc-gs
   - jupyterlab=1.*
-  - pytorch-lightning=1.5.*
+  - pytorch-lightning=1.4.*
   - matplotlib=3.*
   - numpy=1.*
-  - pandas=1.*
-  - pip
+  - pandas=2.1.*
+  - pip=23.*
   - python=3.9.*
-  - scikit-learn=1.0.*
+  - scikit-learn=1.3.*
   - scipy=1.*
   - seaborn=0.13.*
   - pytorch=1.6.*
   - torchvision
-  - wandb
+  - wandb=0.19.*
   - xlsxwriter
   - pip:
     - pytest
