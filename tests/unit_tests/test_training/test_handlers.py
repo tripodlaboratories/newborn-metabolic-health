@@ -125,6 +125,15 @@ def mixed_dataset_fixture():
             self.n_features = len(self.class_X.columns) + len(self.reg_X.columns)
     return MixedDataMaker
 
+
+@pytest.fixture
+def mock_wandb_run():
+    # Avoid external dependency, and requirement to call wandb.init() in tests
+    wandb_run = MagicMock()
+    wandb_run.log = MagicMock()
+    return wandb_run
+
+
 # Test Classes
 class TestEarlyStopping:
     @pytest.fixture
@@ -183,12 +192,6 @@ class TestModelTraining:
         return TestModel(
             n_inputs=dataset.X.shape[1], n_hidden=100, n_outputs=dataset.Y.shape[1])
 
-    @pytest.fixture
-    def mock_wandb_run(self):
-        # Avoid external dependency, and requirement to call wandb.init() in tests
-        wandb_run = MagicMock()
-        wandb_run.log = MagicMock()
-        return wandb_run
 
     @pytest.fixture
     def training_runner(
@@ -276,7 +279,7 @@ class TestModelTraining:
 
     def test_model_training_can_use_class_weights(self, training_runner, dataset, train_args):
         pos_weights = dataset.Y.apply(utils.get_pos_weight)
-        train_args['criterion'] = nn.BCEWithLogitsLoss(pos_weight=Tensor(pos_weights))
+        train_args['criterion'] = nn.BCEWithLogitsLoss(pos_weight=Tensor(pos_weights.values))
         train_args['n_epochs'] = 5
         utils.seed_torch(100)
         X_train, X_test, Y_train, Y_test = train_test_split(
@@ -311,13 +314,6 @@ class TestMixedOutput:
             n_inputs=dataset.X.shape[1], n_hidden=100,
             n_class=dataset.n_classification,
             n_reg=dataset.n_regression)
-
-    @pytest.fixture
-    def mock_wandb_run(self):
-        # Avoid external dependency, and requirement to call wandb.init() in tests
-        wandb_run = MagicMock()
-        wandb_run.log = MagicMock()
-        return wandb_run
 
     @pytest.fixture
     def training_runner(self, test_model, dataset, mock_wandb_run):
@@ -404,8 +400,8 @@ class TestBottleneckHandler:
             n_outputs=dataset.Y.shape[1])
 
     @pytest.fixture
-    def training_runner(self, test_model, dataset):
-        return MOD.BottleneckModelTraining(test_model, batch_size=50)
+    def training_runner(self, test_model, dataset, mock_wandb_run):
+        return MOD.BottleneckModelTraining(test_model, wandb_run=mock_wandb_run, batch_size=50)
 
     @pytest.fixture
     def train_args(self, test_model, dataset):
@@ -464,16 +460,17 @@ class TestCovariateBottleneckHandler:
             )
 
     @pytest.fixture
-    def training_runner(self, test_model, dataset):
+    def training_runner(self, test_model, dataset, mock_wandb_run):
         return MOD.CovariateBottleneckTraining(
-            test_model, batch_size=50, covariates=dataset.covariates)
+            test_model, batch_size=50, covariates=dataset.covariates,
+            wandb_run=mock_wandb_run)
 
     @pytest.fixture
     def train_args(self, test_model, dataset):
         return {
             'n_epochs': 50,
             'criterion': nn.BCEWithLogitsLoss(),
-            'colnames': set(dataset.Y.columns).difference(dataset.covariates),
+            'colnames': list(set(dataset.Y.columns).difference(dataset.covariates)),
             'early_stopping_handler': None,
             'output_training_preds': True
         }

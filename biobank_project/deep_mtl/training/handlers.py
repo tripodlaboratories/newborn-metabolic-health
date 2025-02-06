@@ -172,7 +172,7 @@ class ModelTraining:
 
                 if self.validation_loader is not None:
                     self.iter_model_over_data(
-                        self.validation_loader, epoch_tracker.valid,
+                        self.validation_loader, epoch_tracker.validation,
                         apply_sigmoid=apply_sigmoid, criterion=criterion,
                         take_optimizer_step=False)
 
@@ -212,9 +212,11 @@ class ModelTraining:
                 colnames=colnames)
 
             # weights and biases logging
+            mean_train_loss = np.mean(epoch_tracker.train.losses)
+            mean_test_loss = np.mean(epoch_tracker.test.losses)
             self.wandb_run.log({
-                'mean_train_loss': np.mean(epoch_tracker.train.losses),
-                'mean_test_loss': np.mean(epoch_tracker.test.losses),
+                'mean_train_loss': mean_train_loss,
+                'mean_test_loss': mean_test_loss,
                 'train_scores': train_scores,
                 'test_scores': test_scores,
                 'epoch': epoch
@@ -563,6 +565,7 @@ class BottleneckModelTraining(ModelTraining):
         self,
         model: nn.Module,
         batch_size: int,
+        wandb_run: Run,
         shuffle_batch: bool=False,
         optimizer_class: optim.Optimizer=optim.Adam):
         """
@@ -572,7 +575,7 @@ class BottleneckModelTraining(ModelTraining):
         """
         super().__init__(
             model=model, batch_size=batch_size, shuffle_batch=shuffle_batch,
-            optimizer_class=optimizer_class)
+            optimizer_class=optimizer_class, wandb_run=wandb_run)
 
     def train(self,
         n_epochs: int,
@@ -742,6 +745,7 @@ class CovariateBottleneckTraining(BottleneckModelTraining):
         model: nn.Module,
         batch_size: int,
         covariates: List[str],
+        wandb_run: Run,
         shuffle_batch: bool=False,
         optimizer_class: optim.Optimizer=optim.Adam):
         """
@@ -754,7 +758,7 @@ class CovariateBottleneckTraining(BottleneckModelTraining):
         """
         super().__init__(
             model=model, batch_size=batch_size, shuffle_batch=shuffle_batch,
-            optimizer_class=optimizer_class)
+            optimizer_class=optimizer_class, wandb_run=wandb_run)
         self.covariates = covariates
 
     def set_training_data(
