@@ -48,3 +48,11 @@ addopts = "-ra -q"
 markers = [
 	"integration: mark a test as an integration test with other training frameworks.",
 ]
+filterwarnings = [
+	# Warnings from an older version of torchmetrics, which we need to pin due to
+	# a requirment for PyTorch 1.6 and compatible Pytorch-Lightning
+	"ignore:distutils Version classes are deprecated.*:DeprecationWarning",
+	"ignore: pkg_resources is deprecated as an API.*:DeprecationWarning",
+	"ignore:Deprecated call to `pkg_resources.declare_namespace.*:DeprecationWarning"
+]
+
