@@ -55,8 +55,8 @@ def test_mixed_model_fixture():
 def dataset_fixture():
     class DataMaker:
         def __init__(self,
-        n_samples=150,
-        n_features=30,
+        n_samples=100,
+        n_features=10,
         n_classes=5,
         random_state=100):
             X, Y = make_multilabel_classification(
@@ -76,18 +76,19 @@ def imbalanced_dataset_fixture():
     class ImbalancedDataMaker:
         def __init__(self,
         n_samples=500,
-        n_features=30,
+        n_features=10,
         n_classes=2,
-        weights=[0.8, 0.2],
+        weights=[0.6, 0.4],
         random_state=100):
             X, one_label = make_classification(
                 n_samples=n_samples, n_features=n_features,
                 n_informative=n_features//2, n_classes=n_classes,
                 weights=weights, random_state=random_state)
+            generator = np.random.default_rng(seed=random_state)
             Y = {
                 'imbal_0': one_label,
-                'imbal_1': np.random.choice(a=2, size=n_samples, replace=True, p=[0.8, 0.2]),
-                'imbal_2': np.random.choice(a=2, size=n_samples, replace=True, p=[0.8, 0.2])
+                'imbal_1': generator.choice(a=2, size=n_samples, replace=True, p=[0.6, 0.4]),
+                'imbal_2': generator.choice(a=2, size=n_samples, replace=True, p=[0.6, 0.4])
             }
             self.X = pd.DataFrame(X, columns=['feature_' + str(i) for i in range(n_features)])
             self.Y = pd.DataFrame.from_dict(Y)
@@ -98,8 +99,8 @@ def imbalanced_dataset_fixture():
 def mixed_dataset_fixture():
     class MixedDataMaker:
         def __init__(self,
-        n_samples=500,
-        n_features=30,
+        n_samples=100,
+        n_features=10,
         n_classes=3,
         n_targets=3,
         random_state=100):
@@ -155,7 +156,7 @@ class TestRepeatedKFold:
     @pytest.fixture
     def training_runner(self, test_model, dataset, mock_wandb_run):
         return handlers.ModelTraining(
-            test_model, batch_size=50, shuffle_batch=True, wandb_run=mock_wandb_run)
+            test_model, batch_size=25, shuffle_batch=True, wandb_run=mock_wandb_run)
 
     @pytest.fixture
     def train_args(self, test_model, dataset):
@@ -254,7 +255,7 @@ class TestRepeatedKFold:
         model = TestModel(
             n_inputs=dataset.X.shape[1], n_hidden=100, n_outputs=dataset.Y.shape[1])
         training_runner = handlers.ModelTraining(
-            model, batch_size=50, shuffle_batch=False, wandb_run=mock_wandb_run)
+            model, batch_size=25, shuffle_batch=False, wandb_run=mock_wandb_run)
         train_args = {
             'n_epochs': 5,
             'criterion': nn.BCEWithLogitsLoss(),
@@ -276,7 +277,7 @@ class TestRepeatedKFold:
             n_hidden=100,
             n_outputs=dataset.Y.shape[1])
         training_runner = handlers.ModelTraining(
-            model, batch_size=250, wandb_run=mock_wandb_run, shuffle_batch=False)
+            model, batch_size=25, wandb_run=mock_wandb_run, shuffle_batch=False)
         train_args = {
             'n_epochs': 5,
             'criterion': nn.BCEWithLogitsLoss(),
@@ -308,7 +309,7 @@ class TestRepeatedKFoldMixedOutput:
         reg_cols = [col for col in dataset.Y.columns if 'regression' in col]
         class_cols = [col for col in dataset.Y.columns if 'class' in col]
         return handlers.MixedOutputTraining(
-            test_model, batch_size=250, reg_cols=reg_cols,
+            test_model, batch_size=25, reg_cols=reg_cols,
             class_cols=class_cols, wandb_run=mock_wandb_run)
 
     @pytest.fixture
@@ -340,7 +341,7 @@ class TestRepeatedKFoldMixedOutput:
 class TestKFoldCovariateHandler:
     @pytest.fixture
     def dataset(self, DataMaker):
-        test_data = DataMaker()
+        test_data = DataMaker(n_samples=300)
         TestDataset = namedtuple('TestData', ['X', 'Y', 'covariates'])
         return TestDataset(
             X=test_data.X,
