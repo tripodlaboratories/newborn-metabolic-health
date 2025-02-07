@@ -6,8 +6,9 @@ from pathlib import PurePath
 
 import pandas as pd
 from sklearn.model_selection import train_test_split
-from torch import optim, Tensor
+from torch import optim
 from torch.nn import BCEWithLogitsLoss
+import wandb
 
 from biobank_project.deep_mtl.training import handlers, kfold, utils
 from biobank_project.deep_mtl.models import bottleneck
@@ -39,13 +40,20 @@ def get_argparser():
     parser.add_argument(
         '-v', '--validate', action='store_true',
         help='split data in train/test/validate.')
+    # Optional wandb logging
+    parser.add_argument(
+        '--use_wandb', action='store_true', help="Enable Weights & Biases logging")
+    parser.add_argument(
+        '--experiment_name', type=str, default='bottleneck_models_per_gestage',
+        help='Name for the experiment group in W&B'
+    )
     return parser
 
 
 def read_lines(file) -> list:
     with open(file) as f:
         lines = f.readlines()
-    return [l.strip() for l in lines]
+    return [line.strip() for line in lines]
 
 
 def write_results(results: dict, model_output_dir: PurePath):
@@ -73,6 +81,8 @@ def main(args):
     cases_only = args.cases_only
     single_condition = args.single_condition
     validate = args.validate
+    use_wandb = args.use_wandb
+    wandb_experiment_name = args.experiment_name
 
     # Read in data
     input_data = pd.read_csv(input_file, low_memory=False)
@@ -134,7 +144,6 @@ def main(args):
     early_stopping_handler = handlers.EarlyStopping(
         patience=early_stopping_patience)
     resampler = MajorityDownsampler(random_state=101)
-    results = {k: None for k in all_models.keys()}
 
     os.makedirs(output_dir, exist_ok=True)
     # Train models specific to each gestational age
@@ -166,34 +175,57 @@ def main(args):
         logger.info('Constraining samples to the following gestational age: ' + ga)
 
         for model_name, model in all_models.items():
-                training_handler = handlers.BottleneckModelTraining(
-                    model=model, batch_size=batch_size, shuffle_batch=shuffle_batch,
-                    optimizer_class=optim.Adam)
+            # Weights and biases setup
+            if use_wandb:
+                run = wandb.init(
+                    project='deep-metabolic-health-index',
+                    name=f"{model_name}_{pd.Timestamp.now().strftime('%Y%m%d_%H%M%S')}",
+                    job_type='training',
+                    tags=[model_name],
+                    group=wandb_experiment_name,
+                    config={
+                        "model_type": model_name,
+                        "batch_size": batch_size,
+                        "n_epochs": n_epochs,
+                        "n_features": n_features,
+                        "n_tasks": n_tasks,
+                        "n_iter": n_iter,
+                        "cases_only": cases_only,
+                    },
+                    reinit=True)
+                wandb.watch(model, log="all", log_freq=25)
+            else:
+                run = wandb.init(mode='disabled')
 
-                train_args = {
-                    'n_epochs': n_epochs,
-                    'criterion': BCEWithLogitsLoss(reduction='mean'),
-                    'colnames': data_Y.columns,
-                    'early_stopping_handler': early_stopping_handler
-                    }
-                if validate is True:
-                    kfold_handler = kfold.RepeatedKFold(
-                        n_iter=n_iter, n_folds=5, data_X=data_X, data_Y=data_Y,
-                        training_handler=training_handler, X_valid=X_valid, Y_valid=Y_valid)
-                else:
-                    kfold_handler = kfold.RepeatedKFold(
-                        n_iter=n_iter, n_folds=10, data_X=data_X, data_Y=data_Y,
-                        training_handler=training_handler)
+            training_handler = handlers.BottleneckModelTraining(
+                model=model, batch_size=batch_size, shuffle_batch=shuffle_batch,
+                optimizer_class=optim.Adam, wandb_run=run)
 
-                model_results = kfold_handler.repeated_kfold(
-                    training_args=train_args, resampler=resampler)
-                logger.info('Finished model training for: ' + model_name)
+            train_args = {
+                'n_epochs': n_epochs,
+                'criterion': BCEWithLogitsLoss(reduction='mean'),
+                'colnames': data_Y.columns,
+                'early_stopping_handler': early_stopping_handler
+                }
+            if validate is True:
+                kfold_handler = kfold.RepeatedKFold(
+                    n_iter=n_iter, n_folds=5, data_X=data_X, data_Y=data_Y,
+                    training_handler=training_handler, X_valid=X_valid, Y_valid=Y_valid)
+            else:
+                kfold_handler = kfold.RepeatedKFold(
+                    n_iter=n_iter, n_folds=10, data_X=data_X, data_Y=data_Y,
+                    training_handler=training_handler)
 
-                # Write out results
-                model_output_dir = ga_output_dir.joinpath(model_name + '/')
-                os.makedirs(model_output_dir, exist_ok=True)
-                write_results(model_results, model_output_dir)
-                logger.info('Model results written to: ' + str(model_output_dir) + '/')
+            model_results = kfold_handler.repeated_kfold(
+                training_args=train_args, resampler=resampler)
+            logger.info('Finished model training for: ' + model_name)
+
+            # Write out results
+            model_output_dir = ga_output_dir.joinpath(model_name + '/')
+            os.makedirs(model_output_dir, exist_ok=True)
+            write_results(model_results, model_output_dir)
+            logger.info('Model results written to: ' + str(model_output_dir) + '/')
+            run.finish()
 
 if __name__ == '__main__':
     parser = get_argparser()

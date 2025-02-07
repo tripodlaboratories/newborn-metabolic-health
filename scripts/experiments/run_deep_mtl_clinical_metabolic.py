@@ -9,8 +9,9 @@ import re
 import numpy as np
 import pandas as pd
 from sklearn.model_selection import train_test_split
-from torch import optim, Tensor
+from torch import optim
 from torch.nn import BCEWithLogitsLoss
+import wandb
 
 from biobank_project.deep_mtl.training import handlers, kfold, utils
 from biobank_project.deep_mtl.models import bottleneck
@@ -36,13 +37,20 @@ def get_argparser():
     parser.add_argument(
         '-v', '--validate', action='store_true',
         help='split data in train/test/validate.')
+    # Optional wandb logging
+    parser.add_argument(
+        '--use_wandb', action='store_true', help="Enable Weights & Biases logging")
+    parser.add_argument(
+        '--experiment_name', type=str, default='clinical_metabolic_integration_models',
+        help='Name for the experiment group in W&B'
+    )
     return parser
 
 
 def read_lines(file) -> list:
     with open(file) as f:
         lines = f.readlines()
-    return [l.strip() for l in lines]
+    return [line.strip() for line in lines]
 
 
 def write_results(results: dict, model_output_dir: PurePath):
@@ -68,6 +76,8 @@ def main(args):
     tasks = args.tasks
     n_iter = args.n_iter
     validate = args.validate
+    use_wandb = args.use_wandb
+    wandb_experiment_name = args.wandb_experiment_name
 
     # Read in data
     input_data = pd.read_csv(input_file, low_memory=False)
@@ -91,7 +101,7 @@ def main(args):
         'bwtga': ['gacat', 'bwtcat'],
         'minimal_vars': ['bwtcat', 'gacat', 'infant_sex'],
         'additional_risk_vars': ['gacat', 'bwtcat', 'infant_sex', 'ap1cat', 'ap5cat'],
-        'apgar_only': ['ap1cat', 'ap5cat']
+        'apgar_only': ['ap1cat', 'ap5cat'],
         'clinical_features_only': ['gacat', 'bwtcat', 'infant_sex', 'ap1cat', 'ap5cat']
     }
     # Collect all feature names for subsetting data
@@ -185,9 +195,29 @@ def main(args):
             all_models = dict(all_models, **bottleneck_models)
 
         for model_name, model in all_models.items():
+            # Weights and biases setup
+            if use_wandb:
+                run = wandb.init(
+                    project='deep-metabolic-health-index',
+                    name=f"{model_name}_features:{n_features}_{pd.Timestamp.now().strftime('%Y%m%d_%H%M%S')}",
+                    job_type='training',
+                    tags=[model_name],
+                    group=wandb_experiment_name,
+                    config={
+                        "model_type": model_name,
+                        "batch_size": batch_size,
+                        "n_epochs": n_epochs,
+                        "n_features": n_features,
+                        "n_tasks": n_tasks,
+                        "n_iter": n_iter,
+                    },
+                    reinit=True)
+                wandb.watch(model, log="all", log_freq=25)
+            else:
+                run = wandb.init(mode='disabled')
             training_handler = handlers.BottleneckModelTraining(
                 model=model, batch_size=batch_size, shuffle_batch=shuffle_batch,
-                optimizer_class=optim.Adam)
+                optimizer_class=optim.Adam, wandb_run=run)
 
             train_args = {
                 'n_epochs': n_epochs,
@@ -219,10 +249,10 @@ def main(args):
             os.makedirs(model_output_dir, exist_ok=True)
             write_results(model_results, model_output_dir)
             logger.info(f'Model results written to: {model_output_dir}/')
+            run.finish()
 
 
 if __name__ == '__main__':
     parser = get_argparser()
     args = parser.parse_args()
     main(args)
-
