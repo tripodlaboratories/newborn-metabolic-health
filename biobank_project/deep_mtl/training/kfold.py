@@ -15,9 +15,12 @@ def get_lowest_loss_preds(preds: pd.DataFrame, losses: pd.DataFrame):
     """Filter predictions only to keep predictions from the epoch with the lowest loss.
     This epoch may be different across different folds of repeated KFold.
     """
+    # .transform('min') creates a new series that's the same length as the original
+    # where each value is replaced by the group's minimum
+    # This allows a comparison to losses['test_loss'] to create a boolean mask for indexing.
     lowest_loss_indices = (losses
         .groupby('fold')['test_loss']
-        .transform(min) == losses['test_loss'])
+        .transform('min') == losses['test_loss'])
 
     lowest_losses = losses.loc[lowest_loss_indices, :]
     index_name = preds.index.name
@@ -33,7 +36,7 @@ def get_lowest_loss_preds(preds: pd.DataFrame, losses: pd.DataFrame):
     # To resolve the case of tied losses, take the lowest epoch in each fold
     highest_epoch_indices = (preds
         .groupby('fold')['epoch']
-        .transform(min) == preds['epoch'])
+        .transform('min') == preds['epoch'])
 
     if highest_epoch_indices.tolist().count(True) < preds.shape[0]:
         # There are folds where lowest loss is tied

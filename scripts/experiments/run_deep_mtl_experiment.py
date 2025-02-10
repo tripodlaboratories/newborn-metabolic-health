@@ -6,7 +6,7 @@ from pathlib import PurePath
 
 import pandas as pd
 from sklearn.model_selection import train_test_split
-from torch import optim, Tensor
+from torch import optim
 from torch.nn import BCEWithLogitsLoss
 import wandb
 
@@ -38,14 +38,22 @@ def get_argparser():
         '-v', '--validate', action='store_true',
         help='split data in train/test/validate.')
     parser.add_argument(
-        '-w', '--wandb_login', type=str, help="weights and biases login")
+        '--early_stopping_patience', type=int, default=None,
+        help='Use Early Stopping with specific patience number.')
+    # Optional wandb logging
+    parser.add_argument(
+        '--use_wandb', action='store_true', help="Enable Weights & Biases logging")
+    parser.add_argument(
+        '--experiment_name', type=str, default='deep_mtl_models',
+        help='Name for the experiment group in W&B'
+    )
     return parser
 
 
 def read_lines(file) -> list:
     with open(file) as f:
         lines = f.readlines()
-    return [l.strip() for l in lines]
+    return [line.strip() for line in lines]
 
 
 def write_results(results: dict, model_output_dir: PurePath):
@@ -66,7 +74,8 @@ def main(args):
         )
     logger = logging.getLogger('deep_mtl_experiment')
 
-    wandb_login = args.wandb_login
+    use_wandb = args.use_wandb
+    wandb_experiment_name = args.experiment_name
     input_file = args.input_file
     output_dir = PurePath(args.output_dir)
     tasks = args.tasks
@@ -97,7 +106,7 @@ def main(args):
         data_subset = input_data[input_data['total_conditions'] >= 1].drop(
             columns=['total_conditions'])
         if data_subset.shape[0] >= input_data.shape[0]:
-            logger.warn('--cases_only flag did not reduce rows of data.')
+            logger.warning('--cases_only flag did not reduce rows of data.')
         input_data = data_subset
         assert 'total_conditions' not in input_data
 
@@ -136,32 +145,41 @@ def main(args):
     batch_size = 3000
     shuffle_batch = True
     n_epochs = 75
-    #pos_weight = Tensor(data_Y.apply(utils.get_pos_weight))
-    early_stopping_patience = 5
-    #early_stopping_handler = handlers.EarlyStopping(
-    #    patience=early_stopping_patience)
-    early_stopping_handler = None
-    resampler = MajorityDownsampler(random_state=101)
-    results = {k: None for k in all_models.keys()}
+    if args.early_stopping_patience:
+        early_stopping_handler = handlers.EarlyStopping(
+            patience=args.early_stopping_patience)
+    else:
+        early_stopping_handler = None
 
+    resampler = MajorityDownsampler(random_state=101)
     os.makedirs(output_dir, exist_ok=True)
     for model_name, model in all_models.items():
         # Weights and biases setup
-        if wandb_login is not None:
+        if use_wandb:
             run = wandb.init(
                 project='deep-metabolic-health-index',
-                entity=wandb_login,
-                group='model_predictions',
-                job_type=model_name,
+                name=f"{model_name}_{pd.Timestamp.now().strftime('%Y%m%d_%H%M%S')}",
+                job_type='training',
+                tags=[model_name],
+                group=wandb_experiment_name,
+                config={
+                    "model_type": model_name,
+                    "batch_size": batch_size,
+                    "n_epochs": n_epochs,
+                    "n_features": n_features,
+                    "n_tasks": n_tasks,
+                    "n_iter": n_iter,
+                    "cases_only": cases_only,
+                },
                 reinit=True)
+            wandb.watch(model, log="all", log_freq=25)
         else:
-            wandb.init(mode='disabled')
-        wandb.watch(model, log="all", log_freq=25)
+            run = wandb.init(mode='disabled')
 
         # Begin Training
         training_handler = handlers.ModelTraining(
             model=model, batch_size=batch_size, shuffle_batch=shuffle_batch,
-            optimizer_class=optim.Adam)
+            optimizer_class=optim.Adam, wandb_run=run)
 
         train_args = {
             'n_epochs': n_epochs,

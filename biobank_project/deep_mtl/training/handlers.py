@@ -14,6 +14,7 @@ from torch.autograd import Variable
 import torch.optim as optim
 from torch.utils.data import DataLoader, TensorDataset
 import wandb
+from wandb.sdk.wandb_run import Run
 
 from biobank_project.deep_mtl.training import utils, tracking
 
@@ -68,6 +69,7 @@ class ModelTraining:
         self,
         model: nn.Module,
         batch_size: int,
+        wandb_run: Run,
         shuffle_batch: bool=False,
         optimizer_class: optim.Optimizer=optim.Adam,
         optimizer_args: dict=None):
@@ -78,6 +80,7 @@ class ModelTraining:
         """
         self.model = model
         self.init_model = copy.deepcopy(model)
+        self.wandb_run = wandb_run
 
         self.batch_size = batch_size
         self.shuffle_batch = shuffle_batch
@@ -169,7 +172,7 @@ class ModelTraining:
 
                 if self.validation_loader is not None:
                     self.iter_model_over_data(
-                        self.validation_loader, epoch_tracker.valid,
+                        self.validation_loader, epoch_tracker.validation,
                         apply_sigmoid=apply_sigmoid, criterion=criterion,
                         take_optimizer_step=False)
 
@@ -181,7 +184,7 @@ class ModelTraining:
             epoch_test_preds = epoch_tracker.summarize_preds(
                 epoch_tracker.test, colnames=colnames)
             if epoch % 25 == 0:
-                wandb.log(
+                self.wandb_run.log(
                     {'train_preds': wandb.plot.histogram(
                         wandb.Table(data=epoch_train_preds[colnames]),
                         value='predictions',
@@ -209,9 +212,11 @@ class ModelTraining:
                 colnames=colnames)
 
             # weights and biases logging
-            wandb.log({
-                'mean_train_loss': np.mean(epoch_tracker.train.losses),
-                'mean_test_loss': np.mean(epoch_tracker.test.losses),
+            mean_train_loss = np.mean(epoch_tracker.train.losses)
+            mean_test_loss = np.mean(epoch_tracker.test.losses)
+            self.wandb_run.log({
+                'mean_train_loss': mean_train_loss,
+                'mean_test_loss': mean_test_loss,
                 'train_scores': train_scores,
                 'test_scores': test_scores,
                 'epoch': epoch
@@ -303,6 +308,7 @@ class MixedOutputTraining(ModelTraining):
         reg_cols: list,
         class_cols: list,
         batch_size: int,
+        wandb_run: Run,
         shuffle_batch: bool=False,
         optimizer_class: optim.Optimizer=optim.Adam,
         scaler=StandardScaler()):
@@ -314,7 +320,7 @@ class MixedOutputTraining(ModelTraining):
             optimizer_class: PyTorch optimizer class
         """
         super().__init__(model=model, batch_size=batch_size, shuffle_batch=shuffle_batch,
-            optimizer_class=optimizer_class)
+            optimizer_class=optimizer_class, wandb_run=wandb_run)
         self.reg_cols = reg_cols
         self.class_cols = class_cols
 
@@ -559,6 +565,7 @@ class BottleneckModelTraining(ModelTraining):
         self,
         model: nn.Module,
         batch_size: int,
+        wandb_run: Run,
         shuffle_batch: bool=False,
         optimizer_class: optim.Optimizer=optim.Adam):
         """
@@ -568,7 +575,7 @@ class BottleneckModelTraining(ModelTraining):
         """
         super().__init__(
             model=model, batch_size=batch_size, shuffle_batch=shuffle_batch,
-            optimizer_class=optimizer_class)
+            optimizer_class=optimizer_class, wandb_run=wandb_run)
 
     def train(self,
         n_epochs: int,
@@ -738,6 +745,7 @@ class CovariateBottleneckTraining(BottleneckModelTraining):
         model: nn.Module,
         batch_size: int,
         covariates: List[str],
+        wandb_run: Run,
         shuffle_batch: bool=False,
         optimizer_class: optim.Optimizer=optim.Adam):
         """
@@ -750,7 +758,7 @@ class CovariateBottleneckTraining(BottleneckModelTraining):
         """
         super().__init__(
             model=model, batch_size=batch_size, shuffle_batch=shuffle_batch,
-            optimizer_class=optimizer_class)
+            optimizer_class=optimizer_class, wandb_run=wandb_run)
         self.covariates = covariates
 
     def set_training_data(
