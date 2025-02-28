@@ -1,0 +1,11 @@
+name: auxiliary-stat-analyses
+channels:
+  - conda-forge
+dependencies:
+  - scipy=1.15.1
+  - scikit-learn=1.6.1
+  - numpy=2.2.2
+  - pandas=2.2.3
+  - pip=25.0.1
+  - ipykernel
+  - python=3.13.1
