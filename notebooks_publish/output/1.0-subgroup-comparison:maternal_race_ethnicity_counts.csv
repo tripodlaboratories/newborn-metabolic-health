@@ -1,0 +1,56 @@
+outcome,outcome_label,maternal_race_ethnicity,count
+BPD,0,American Indian/Alaskan Native,46.0
+BPD,0,Asian,894.0
+BPD,0,Hispanic,5037.0
+BPD,0,Non-Hispanic Black,1239.0
+BPD,0,Non-Hispanic White,1922.0
+BPD,0,Other,11.0
+BPD,0,Pacific Islander,60.0
+BPD,1,American Indian/Alaskan Native,20.0
+BPD,1,Asian,433.0
+BPD,1,Hispanic,2168.0
+BPD,1,Non-Hispanic Black,577.0
+BPD,1,Non-Hispanic White,876.0
+BPD,1,Other,
+BPD,1,Pacific Islander,37.0
+IVH,0,American Indian/Alaskan Native,34.0
+IVH,0,Asian,911.0
+IVH,0,Hispanic,4902.0
+IVH,0,Non-Hispanic Black,1247.0
+IVH,0,Non-Hispanic White,1957.0
+IVH,0,Other,9.0
+IVH,0,Pacific Islander,60.0
+IVH,1,American Indian/Alaskan Native,32.0
+IVH,1,Asian,416.0
+IVH,1,Hispanic,2303.0
+IVH,1,Non-Hispanic Black,569.0
+IVH,1,Non-Hispanic White,841.0
+IVH,1,Other,
+IVH,1,Pacific Islander,37.0
+NEC,0,American Indian/Alaskan Native,60.0
+NEC,0,Asian,1196.0
+NEC,0,Hispanic,6378.0
+NEC,0,Non-Hispanic Black,1591.0
+NEC,0,Non-Hispanic White,2571.0
+NEC,0,Other,14.0
+NEC,0,Pacific Islander,89.0
+NEC,1,American Indian/Alaskan Native,6.0
+NEC,1,Asian,131.0
+NEC,1,Hispanic,827.0
+NEC,1,Non-Hispanic Black,225.0
+NEC,1,Non-Hispanic White,227.0
+NEC,1,Pacific Islander,8.0
+ROP,0,American Indian/Alaskan Native,39.0
+ROP,0,Asian,762.0
+ROP,0,Hispanic,4088.0
+ROP,0,Non-Hispanic Black,1064.0
+ROP,0,Non-Hispanic White,1704.0
+ROP,0,Other,7.0
+ROP,0,Pacific Islander,50.0
+ROP,1,American Indian/Alaskan Native,27.0
+ROP,1,Asian,565.0
+ROP,1,Hispanic,3117.0
+ROP,1,Non-Hispanic Black,752.0
+ROP,1,Non-Hispanic White,1094.0
+ROP,1,Other,7.0
+ROP,1,Pacific Islander,47.0

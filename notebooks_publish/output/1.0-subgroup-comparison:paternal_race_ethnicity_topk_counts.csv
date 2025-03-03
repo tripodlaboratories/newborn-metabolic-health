@@ -1,0 +1,106 @@
+outcome,outcome_label,in_top_k_subgroups,paternal_race_ethnicity,count
+BPD,0,False,American Indian/Alaskan Native,35.0
+BPD,0,False,Asian,565.0
+BPD,0,False,Hispanic,3884.0
+BPD,0,False,Non-Hispanic Black,1043.0
+BPD,0,False,Non-Hispanic White,1498.0
+BPD,0,False,Other,8.0
+BPD,0,False,Pacific Islander,49.0
+BPD,0,True,American Indian/Alaskan Native,6.0
+BPD,0,True,Asian,111.0
+BPD,0,True,Hispanic,666.0
+BPD,0,True,Non-Hispanic Black,159.0
+BPD,0,True,Non-Hispanic White,295.0
+BPD,0,True,Other,
+BPD,0,True,Pacific Islander,10.0
+BPD,1,False,American Indian/Alaskan Native,10.0
+BPD,1,False,Asian,263.0
+BPD,1,False,Hispanic,1588.0
+BPD,1,False,Non-Hispanic Black,463.0
+BPD,1,False,Non-Hispanic White,621.0
+BPD,1,False,Other,
+BPD,1,False,Pacific Islander,25.0
+BPD,1,True,American Indian/Alaskan Native,
+BPD,1,True,Asian,75.0
+BPD,1,True,Hispanic,441.0
+BPD,1,True,Non-Hispanic Black,106.0
+BPD,1,True,Non-Hispanic White,178.0
+BPD,1,True,Pacific Islander,
+IVH,0,False,American Indian/Alaskan Native,29.0
+IVH,0,False,Asian,550.0
+IVH,0,False,Hispanic,3588.0
+IVH,0,False,Non-Hispanic Black,998.0
+IVH,0,False,Non-Hispanic White,1431.0
+IVH,0,False,Other,7.0
+IVH,0,False,Pacific Islander,45.0
+IVH,0,True,American Indian/Alaskan Native,7.0
+IVH,0,True,Asian,141.0
+IVH,0,True,Hispanic,862.0
+IVH,0,True,Non-Hispanic Black,212.0
+IVH,0,True,Non-Hispanic White,385.0
+IVH,0,True,Other,
+IVH,0,True,Pacific Islander,12.0
+IVH,1,False,American Indian/Alaskan Native,16.0
+IVH,1,False,Asian,278.0
+IVH,1,False,Hispanic,1884.0
+IVH,1,False,Non-Hispanic Black,508.0
+IVH,1,False,Non-Hispanic White,688.0
+IVH,1,False,Other,
+IVH,1,False,Pacific Islander,29.0
+IVH,1,True,American Indian/Alaskan Native,
+IVH,1,True,Asian,45.0
+IVH,1,True,Hispanic,245.0
+IVH,1,True,Non-Hispanic Black,53.0
+IVH,1,True,Non-Hispanic White,88.0
+IVH,1,True,Pacific Islander,
+NEC,0,False,American Indian/Alaskan Native,38.0
+NEC,0,False,Asian,733.0
+NEC,0,False,Hispanic,4807.0
+NEC,0,False,Non-Hispanic Black,1321.0
+NEC,0,False,Non-Hispanic White,1916.0
+NEC,0,False,Other,10.0
+NEC,0,False,Pacific Islander,66.0
+NEC,0,True,American Indian/Alaskan Native,10.0
+NEC,0,True,Asian,174.0
+NEC,0,True,Hispanic,1034.0
+NEC,0,True,Non-Hispanic Black,240.0
+NEC,0,True,Non-Hispanic White,450.0
+NEC,0,True,Other,
+NEC,0,True,Pacific Islander,13.0
+NEC,1,False,American Indian/Alaskan Native,7.0
+NEC,1,False,Asian,95.0
+NEC,1,False,Hispanic,665.0
+NEC,1,False,Non-Hispanic Black,185.0
+NEC,1,False,Non-Hispanic White,203.0
+NEC,1,False,Pacific Islander,8.0
+NEC,1,True,Asian,12.0
+NEC,1,True,Hispanic,73.0
+NEC,1,True,Non-Hispanic Black,25.0
+NEC,1,True,Non-Hispanic White,23.0
+ROP,0,False,American Indian/Alaskan Native,31.0
+ROP,0,False,Asian,453.0
+ROP,0,False,Hispanic,2993.0
+ROP,0,False,Non-Hispanic Black,850.0
+ROP,0,False,Non-Hispanic White,1249.0
+ROP,0,False,Other,
+ROP,0,False,Pacific Islander,41.0
+ROP,0,True,American Indian/Alaskan Native,8.0
+ROP,0,True,Asian,132.0
+ROP,0,True,Hispanic,716.0
+ROP,0,True,Non-Hispanic Black,175.0
+ROP,0,True,Non-Hispanic White,340.0
+ROP,0,True,Other,
+ROP,0,True,Pacific Islander,10.0
+ROP,1,False,American Indian/Alaskan Native,14.0
+ROP,1,False,Asian,375.0
+ROP,1,False,Hispanic,2479.0
+ROP,1,False,Non-Hispanic Black,656.0
+ROP,1,False,Non-Hispanic White,870.0
+ROP,1,False,Other,7.0
+ROP,1,False,Pacific Islander,33.0
+ROP,1,True,American Indian/Alaskan Native,
+ROP,1,True,Asian,54.0
+ROP,1,True,Hispanic,391.0
+ROP,1,True,Non-Hispanic Black,90.0
+ROP,1,True,Non-Hispanic White,133.0
+ROP,1,True,Pacific Islander,

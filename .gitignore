@@ -196,8 +196,8 @@ data
 # Other tests for sim data that aren't relevant to commit
 tests/mock_data/
 
-# Don't commit dev notebooks. Clean notebooks put in `notebooks-publish`
-notebooks_dev/*.ipynb
+# Don't commit dev notebooks and outputs. Clean notebooks put in `notebooks_publish`
+notebooks_dev/
 
 # Project-specific workflow + tooling aspects not needed to be checked in
 .envrc
