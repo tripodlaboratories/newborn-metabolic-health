@@ -9,6 +9,7 @@ from sklearn.model_selection import train_test_split
 from torch import optim
 from torch.nn import BCEWithLogitsLoss
 import wandb
+import yaml
 
 from biobank_project.deep_mtl.training import handlers, kfold, utils
 from biobank_project.deep_mtl.models import bottleneck
@@ -26,8 +27,11 @@ def get_argparser():
         '-o', '--output', type=str, help='output directory for results',
         required=True, metavar='OUTPUT_DIR', dest='output_dir')
     parser.add_argument(
-        '-t', '--tasks', type=str,
+        '-t', '--tasks', type=str, default=None,
         help='Text file with tasks of interest, one task per line.')
+    parser.add_argument(
+        '--column_specification', type=str, default=None,
+        help="Column specification YML containing keys: 'id', 'features', 'outcomes'")
     parser.add_argument(
         '-n', '--n_iter', type=int, help='number of cross validation iterations to perform',
         default=10)
@@ -43,6 +47,8 @@ def get_argparser():
     parser.add_argument(
         '--bottleneck_sequence', type=str, default='1,2,3,4,5,10,20',
         help='comma-separated sequence of bottleneck units to use.')
+    parser.add_argument(
+        '--drop_sparse', action='store_true', help='Drop sparse columns from input data.')
     # Optional wandb logging
     parser.add_argument(
         '--use_wandb', action='store_true', help="Enable Weights & Biases logging")
@@ -80,32 +86,43 @@ def main(args):
     input_file = args.input_file
     output_dir = PurePath(args.output_dir)
     tasks = args.tasks
+    col_spec_file = args.column_specification
     n_iter = args.n_iter
     cases_only = args.cases_only
     single_condition = args.single_condition
     validate = args.validate
+    drop_sparse = args.drop_sparse
     use_wandb = args.use_wandb
     wandb_experiment_name = args.experiment_name
 
+    # Handle features and outcomes
+    if tasks is not None:
+        features = None
+        outcomes = read_lines(tasks)
+        id_col = 'row_id'
+    elif col_spec_file is not None:
+        with open(col_spec_file, 'r') as f:
+            col_spec  = yaml.safe_load(f)
+        features = col_spec['features']
+        outcomes = col_spec['outcomes']
+        id_col = col_spec['id']
+    else:
+        raise ValueError('Must provide one of the following options: --tasks OR --column_specification')
+
     # Read in data
     input_data = pd.read_csv(input_file, low_memory=False)
-    input_data.set_index('row_id', inplace=True)
+    input_data.set_index(id_col, inplace=True)
     metadata = pd.read_csv('./data/processed/metadata.csv', low_memory=False)
-    metadata.set_index('row_id', inplace=True)
-    outcomes = read_lines(tasks)
+    metadata.set_index(id_col, inplace=True)
 
     # Model-specific args
-    bottleneck_sequence = ','.split(args.bottleneck_sequence)
+    bottleneck_sequence = [int(i) for i in args.bottleneck_sequence.split(',')]
 
     # Subset data based on gestational ages used
     included_ga_range = read_lines('./config/gestational_age_ranges.txt')
     included_metadata = metadata[metadata['gacat'].isin(included_ga_range)]
     input_data = input_data.loc[included_metadata.index, :]
     assert sorted(input_data.index) == sorted(included_metadata.index)
-
-    # Drop sparse columns
-    input_data.dropna(thresh=len(input_data) / 2, axis=1, inplace=True)
-    input_data.dropna(inplace=True)
 
     # Handling for cases only
     if cases_only is True:
@@ -122,13 +139,31 @@ def main(args):
         data_subset = input_data[input_data['total_conditions'] == 1].drop(
             column=['total_conditions'])
         if data_subset.shape[0] >= input_data.shape[0]:
-            logger.warn('--single_condition flag did not reduce rows of data.')
+            logger.warning('--single_condition flag did not reduce rows of data.')
         input_data = data_subset
         assert 'total_conditions' not in input_data
 
+    # Drop sparse columns
+    if drop_sparse:
+        dropped_input = input_data.dropna(thresh=len(input_data) / 2, axis=1).copy()
+        dropped_input.dropna(inplace=True)
+        dropped_cols = set(input_data.columns).difference(dropped_input.columns)
+        logger.info(f'Dropped columns from --drop_sparse option {dropped_cols}')
+        input_data = dropped_input.copy()
+
     # Split data into X and Y
-    data_X = input_data.drop(outcomes, axis=1)
-    data_Y = input_data[outcomes]
+    if features is None:
+        data_X = input_data.drop(outcomes, axis=1)
+        data_Y = input_data[outcomes]
+    else:
+        common_features = [col for col in input_data if col in features]
+        if len(common_features) != len(features):
+            logger.warning((
+                'Number of input features do not match feature specification:'
+                f'Using {len(common_features)} common features.'
+        ))
+        data_X = input_data[common_features]
+        data_Y = input_data[outcomes]
 
     if validate is True:
         logger.info('Setting up experiment to use holdout validation.')
@@ -147,6 +182,12 @@ def main(args):
             'multi_output' + bottle_spec: bottleneck.ThreeLayerBottleneck(
                 n_features=n_features, n_outputs=n_tasks,
                 n_hidden=n_hidden, n_bottleneck=n_bottleneck),
+            'ensemble' + bottle_spec: bottleneck.EnsembleNetwork(
+                n_features=n_features, n_tasks=n_tasks,
+                n_hidden=n_hidden, n_bottleneck=n_bottleneck),
+            'parallel_ensemble' + bottle_spec: bottleneck.ParallelEnsembleNetwork(
+                n_features=n_features, n_tasks=n_tasks,
+                n_hidden=n_hidden, n_bottleneck=n_bottleneck),
             'large_multi_output' + bottle_spec: bottleneck.ThreeLayerBottleneck(
                 n_features=n_features, n_outputs=n_tasks,
                 n_bottleneck=n_bottleneck,
@@ -155,12 +196,6 @@ def main(args):
                     'hidden_2': n_hidden * n_tasks,
                     'hidden_3': n_hidden * n_tasks
                     }),
-            'ensemble' + bottle_spec: bottleneck.EnsembleNetwork(
-                n_features=n_features, n_tasks=n_tasks,
-                n_hidden=n_hidden, n_bottleneck=n_bottleneck),
-            'parallel_ensemble' + bottle_spec: bottleneck.ParallelEnsembleNetwork(
-                n_features=n_features, n_tasks=n_tasks,
-                n_hidden=n_hidden, n_bottleneck=n_bottleneck)
         }
         all_models = dict(all_models, **bottleneck_models)
 
@@ -224,7 +259,15 @@ def main(args):
         os.makedirs(model_output_dir, exist_ok=True)
         write_results(model_results, model_output_dir)
         logger.info('Model results written to: ' + str(model_output_dir) + '/')
-        run.finish()
+
+        # wandb specific cleanup
+        # TODO: I think calling run.finish() in disabled mode is causing the following error:
+        # "terminate called without an active exception"
+        if use_wandb:
+            run.finish()
+        else:
+            # In disabled mode, run.finish() causes "terminate called without active exception"
+            del run
 
 
 if __name__ == '__main__':
