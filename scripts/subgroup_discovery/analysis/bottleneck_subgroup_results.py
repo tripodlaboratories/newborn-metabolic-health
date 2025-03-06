@@ -508,8 +508,6 @@ def main(args):
                     print(f"Skipping subgroup with no matching records: {elem}")
                     continue # move to next subgroup description
 
-                # TODO: Handle condition where there is only one label - return meaningless precision-recall of 0
-
                 precision, recall, thresholds = precision_recall_curve(validation_outcome_true_vals[targ][bool_vec], val_outcome_preds[bool_vec])
                 AUPRC = auc(recall, precision)
                 precision, recall, thresholds = precision_recall_curve(validation_outcome_true_vals[targ][bool_vec_inner], val_outcome_preds[bool_vec_inner])
