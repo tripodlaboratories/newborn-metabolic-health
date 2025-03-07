@@ -4,9 +4,10 @@ import logging
 import os
 from pathlib import PurePath
 
+import numpy as np
 import pandas as pd
 from sklearn.model_selection import train_test_split
-from torch import optim
+import torch
 from torch.nn import BCEWithLogitsLoss
 import wandb
 import yaml
@@ -45,10 +46,16 @@ def get_argparser():
         '-v', '--validate', action='store_true',
         help='split data in train/test/validate.')
     parser.add_argument(
+        '--stratify_validate', action='store_true',
+        help='Stratify validation split using high-level counts of negative labels')
+    parser.add_argument(
         '--bottleneck_sequence', type=str, default='1,2,3,4,5,10,20',
         help='comma-separated sequence of bottleneck units to use.')
     parser.add_argument(
         '--drop_sparse', action='store_true', help='Drop sparse columns from input data.')
+    parser.add_argument(
+        '--imbalance_strategy', type=str, default='majority_downsampler',
+        help='Imbalanced data strategy, one of either "majority_downsampler" or "loss_pos_weight')
     # Optional wandb logging
     parser.add_argument(
         '--use_wandb', action='store_true', help="Enable Weights & Biases logging")
@@ -91,7 +98,9 @@ def main(args):
     cases_only = args.cases_only
     single_condition = args.single_condition
     validate = args.validate
+    stratify_validate = args.stratify_validate
     drop_sparse = args.drop_sparse
+    imbalance_strategy = args.imbalance_strategy
     use_wandb = args.use_wandb
     wandb_experiment_name = args.experiment_name
 
@@ -167,7 +176,15 @@ def main(args):
 
     if validate is True:
         logger.info('Setting up experiment to use holdout validation.')
-        data_X, X_valid, data_Y, Y_valid = train_test_split(data_X, data_Y, random_state=101)
+        # We expect most of the individuals in a given dataset to be all 0 labels and mostly 0 labels
+        if stratify_validate:
+            logger.info('Performing coarse-grained stratification of validation set using presence of negative labels.')
+            mostly_negative = (data_Y.sum(axis=1) <= 1)
+            stratify_vector = mostly_negative.astype(int).values
+        else:
+            stratify_vector = None
+        data_X, X_valid, data_Y, Y_valid = train_test_split(
+            data_X, data_Y, random_state=101, stratify=stratify_vector)
 
     # Train with different models
     utils.seed_torch(101)
@@ -206,7 +223,18 @@ def main(args):
     early_stopping_patience = 5
     early_stopping_handler = handlers.EarlyStopping(
         patience=early_stopping_patience)
-    resampler = MajorityDownsampler(random_state=101)
+
+    # Options for downsampling or positive weight for data imbalance
+    if imbalance_strategy == 'majority_downsampler':
+        resampler = MajorityDownsampler(random_state=101)
+        pos_weight = None
+    elif imbalance_strategy == 'loss_pos_weight':
+        resampler = None
+        pos_weight = data_Y.apply(utils.get_pos_weight).values
+        pos_weight = torch.tensor(pos_weight, dtype=torch.float32)
+    else:
+        resampler = None
+        pos_weight = None
 
     os.makedirs(output_dir, exist_ok=True)
     for model_name, model in all_models.items():
@@ -234,10 +262,10 @@ def main(args):
 
         training_handler = handlers.BottleneckModelTraining(
             model=model, batch_size=batch_size, shuffle_batch=shuffle_batch,
-            optimizer_class=optim.Adam, wandb_run=run)
+            optimizer_class=torch.optim.Adam, wandb_run=run)
         train_args = {
             'n_epochs': n_epochs,
-            'criterion': BCEWithLogitsLoss(reduction='mean'),
+            'criterion': BCEWithLogitsLoss(reduction='mean', pos_weight=pos_weight),
             'colnames': data_Y.columns,
             'early_stopping_handler': early_stopping_handler
             }
@@ -261,12 +289,9 @@ def main(args):
         logger.info('Model results written to: ' + str(model_output_dir) + '/')
 
         # wandb specific cleanup
-        # TODO: I think calling run.finish() in disabled mode is causing the following error:
-        # "terminate called without an active exception"
         if use_wandb:
             run.finish()
         else:
-            # In disabled mode, run.finish() causes "terminate called without active exception"
             del run
 
 
