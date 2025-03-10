@@ -3,6 +3,7 @@
 ##########################################################################
 # general imports
 import argparse
+import os
 import pandas as pd
 import numpy as np
 
@@ -45,8 +46,8 @@ def get_args():
         '-t', '--tasks', type=str, default=None,
         help='Text file with tasks of interest, one task per line. These are the tasks evaluated for subgroup discovery.')
     parser.add_argument(
-        '--column_specification', type=str, default=None,
-        help="Column specification YML containing keys: 'id', 'features', 'outcomes'")
+        '-c', '--config', type=str, default=None,
+        help='YAML config file for subgroup discovery parameters and tasks.')
     parser.add_argument(
         '--sample_frac', type=float, default=1.0,
         help='Fraction of the data to use for debugging purposes (0.0, 1.0]')
@@ -93,27 +94,41 @@ def safe_precision_recall_curve(y_true, y_score, *args, **kwargs):
 ###################################################################################
 ## Read in of preds, true values, and data used for subgroup disc (metadata.csv) ##
 ###################################################################################
+default_config = {
+    'quantile_cuts': [2, 3, 5], # Per previous experiments
+    'depth': 4,
+    'top_k_percent_data': 20,
+    'outcomes': ['bpd_any', 'rop_any', 'ivh_any', 'nec_any'],
+    'evaluation_order': ['AUROC', 'AVG Precision'],
+    'evaluation_parameters': {
+        'AUROC': {
+            'alphas': {"bpd_any":0.0575, "rop_any":0.073, "ivh_any":0.0585, "nec_any":0.085},
+            'sizes': {"bpd_any":200, "rop_any":300, "ivh_any":100, "nec_any":100}
+        },
+        'AVG Precision': {
+            'alphas': {"bpd_any":0.059, "rop_any":0.06, "ivh_any":0.06, "nec_any":0.025},
+            'sizes': {"bpd_any":100, "rop_any":300, "ivh_any":100, "nec_any":100}
+        }
+    }
+}
 
 def main(args):
     results_dir = args.input_directory
     output_dir = args.output_directory
     tasks = args.tasks
-    col_spec_file = args.column_specification
+    config_file = args.config
     sample_frac = args.sample_frac
 
     # Process either tasks or a column specification that includes tasks
     if tasks is not None:
-        features = None
         outcomes = read_lines(tasks)
-        id_col = 'row_id'
-    elif col_spec_file is not None:
-        with open(col_spec_file, 'r') as f:
-            col_spec  = yaml.safe_load(f)
-        features = col_spec['features']
-        outcomes = col_spec['outcomes']
-        id_col = col_spec['id']
+        config = default_config
+    elif config_file is not None:
+        with open(config_file, 'r') as f:
+            config = yaml.safe_load(f)
+        outcomes = config['outcomes']
     else:
-        raise ValueError('Must provide one of the following options: --tasks OR --column_specification')
+        raise ValueError('Must provide one of the following options: --tasks OR --config')
 
     # read in previous outputs from the bottleneck layer
     preds = pd.read_csv(results_dir + "bottleneck.csv")
@@ -208,17 +223,9 @@ def main(args):
     validation_true_vals = 1 - validation_true_vals
 
     outcome_order = outcomes
-    evaluation_order = ["AUROC", "AVG Precision"]
+    evaluation_order = config['evaluation_parameters'].keys()
+    evaluation_functions = {"AVG Precision": safe_average_precision_score, "AUROC":safe_roc_auc_score}
 
-    subgroup_alphas_avg_prec = {"bpd_any":0.059, "rop_any":0.06, "ivh_any":0.06, "nec_any":0.025}
-    subgroup_sizes_avg_prec = {"bpd_any":100, "rop_any":300, "ivh_any":100, "nec_any":100}
-
-    subgroup_alphas_auroc = {"bpd_any":0.0575, "rop_any":0.073, "ivh_any":0.0585, "nec_any":0.085}
-    subgroup_sizes_auroc = {"bpd_any":200, "rop_any":300, "ivh_any":100, "nec_any":100}
-
-    subgroup_alphas_list = {"AVG Precision":subgroup_alphas_avg_prec, "AUROC":subgroup_alphas_auroc}
-    subgroup_sizes_list = {"AVG Precision":subgroup_sizes_avg_prec, "AUROC":subgroup_sizes_auroc}
-    evaluation_lists = {"AVG Precision": safe_average_precision_score, "AUROC":safe_roc_auc_score}
 
     # Create a list of dataframes for the top K predictions from each subgroup discovery setting
     top_k_subgroup_predictions = []
@@ -228,9 +235,10 @@ def main(args):
     for metric in evaluation_order:
         print("starting analysis using - " + metric)
         #
-        subgroup_alphas = subgroup_alphas_list[metric]
-        subgroup_sizes = subgroup_sizes_list[metric]
-        evaluation_metric = evaluation_lists[metric]
+        subgroup_alphas = config['evaluation_parameters'][metric]['alphas']
+        subgroup_sizes = config['evaluation_parameters'][metric]['sizes']
+        evaluation_metric = evaluation_functions[metric]
+
         #
         all_results = {}
         iter_results = {}
@@ -248,6 +256,8 @@ def main(args):
             num_other_outcomes = len(outcome_order) - 1
             keep = (true_vals[np.setdiff1d(outcomes, [targ])].sum(axis=1) == num_other_outcomes) | (true_vals[targ] == 0)
             keep_val = (validation_true_vals[np.setdiff1d(outcomes, [targ])].sum(axis=1) == num_other_outcomes) | (validation_true_vals[targ] == 0)
+
+            # TODO: We should report the difference in keep and keep_val versus the full dataset.
             #
             #k-fold
             outcome_preds = preds.loc[keep]
@@ -275,18 +285,20 @@ def main(args):
             temp_data = outcome_subset_data[outcome_subset_data.columns.values[outcome_subset_data.isna().sum() == 0]].copy()
             #
             #constructing list of demographic and metabolomic features to keep
+            # TODO: This should probably be a config value.
             keep_features = temp_data.columns.to_series().apply(lambda z: True if ("rc" in z) or (z in [targ+pred_type]) else False)
             temp_data = temp_data[temp_data.columns[keep_features]]
             #
             #compile list of features which need to be transformed into quantiles
-            transform = temp_data.apply(lambda z: z.name if (temp_data[z.name].dtype == "float64") or ("rc" in z.name) else None).unique()
+            transform = temp_data.apply(
+                lambda z: z.name if (temp_data[z.name].dtype == "float64") or ("rc" in z.name) else None).unique()
             #
             searchspace_data = {}
             #
-            #transform all data into various quantiles [2,3,5] as per martins experiment
+            #transform all data into various quantiles, default: [2,3,5]
             for c in temp_data.columns:
                 if c in transform:
-                    for q in [2,3,5]:
+                    for q in config['quantile_cuts']:
                         column = f"{c}_q-{q}"
                         searchspace_data[column] = pd.qcut(temp_data[c], q, duplicates="drop").cat.codes
                 else:
@@ -312,10 +324,10 @@ def main(args):
             transform = temp_val_data.apply(lambda z: z.name if (temp_val_data[z.name].dtype == "float64") or ("rc" in z.name) else None).unique()
             #
             searchspace_val_data = {}
-            #transform all data into various quantiles [2,3,5] as per martins experiment
+            #transform all data into various quantiles, default: [2,3,5]
             for c in temp_val_data.columns:
                 if c in transform:
-                    for q in [2,3,5]:
+                    for q in config['quantile_cuts']:
                         column = f"{c}_q-{q}"
                         searchspace_val_data[column] = pd.qcut(temp_val_data[c], q, duplicates="drop").cat.codes
                 else:
@@ -338,7 +350,7 @@ def main(args):
                 target,
                 searchspace,
                 result_set_size=subgroup_sizes[outcome],
-                depth=4,
+                depth=config['depth'],
                 qf=ps.PredictionQFNumeric(a=subgroup_alphas[outcome])
             )
             results= ps.BeamSearch(beam_width=subgroup_sizes[outcome]).execute(task)
@@ -424,6 +436,8 @@ def main(args):
                 #
                 #
                 #
+                # TODO: QUESTION: What is the below condition checking for?
+                # All 1 labels? Wouldn't the below code still fail?
                 if(len(outcome_true_vals[targ][bool_vec_inner]) == outcome_true_vals[targ][bool_vec_inner].sum()):
                     subgroup_AUROC = np.nan
                     subgroup_AUROC_sd = np.nan
@@ -474,9 +488,7 @@ def main(args):
             kfold_AUROC_mean = np.mean(temp_auroc)
             kfold_AUPRC_sd = np.std(temp_auprc, ddof=1)
             kfold_AUPRC_mean = np.mean(temp_auprc)
-            #
-            #
-            #
+
             ################################################################################
             ## Collect AUROC, AUPRC, and other metrics on held out validation predictions ##
             ################################################################################
@@ -513,6 +525,7 @@ def main(args):
                 precision, recall, thresholds = precision_recall_curve(validation_outcome_true_vals[targ][bool_vec_inner], val_outcome_preds[bool_vec_inner])
                 subgroup_AUPRC = auc(recall, precision)
 
+                # TODO: Is there better handling of this condition?
                 if(len(validation_outcome_true_vals[targ][bool_vec]) == validation_outcome_true_vals[targ][bool_vec].sum()):
                     AUROC = np.nan
                     AUROC_sd = np.nan
@@ -579,7 +592,6 @@ def main(args):
                 data.append([total_elem, elem, bool_vec.sum(), bool_vec.sum()/len(searchspace_val_data.iloc[:,0]), bool_vec_inner.sum(), count, AUPRC, subgroup_AUPRC, AUROC, subgroup_AUROC])
 
             # Create a dataframe from the filled results
-            # FIXME: the searchspace_val_data isn't filling the validation dataset!
             subgroup_val_results_df = pd.DataFrame(data, columns=["total group","subgroup","size", "% data", "subgroup size", "num_groups", "AUPRC", "subgroup AUPRC", "AUROC", "subgroup AUROC"])
             print(f"Created validation results dataframe with {len(subgroup_val_results_df)} rows")
 
@@ -616,12 +628,31 @@ def main(args):
             ################################################################################
             ## Calculate AUROC and AUPR at a specified cut-off for the percentile of data ##
             ################################################################################
-            # Usually the top 20 percentile of data
+            # Evaluate the top K percentile of data, usually the top 20% of data created by cumulatively merging top subgroups
+            topk_thresh_percent = config['top_k_percent_data']
             select =  (subgroup_results_df[r"% data"]* 100)
-            select_index = select.index[select == min(select, key=lambda x:abs(x-20))][0]
+
+            # Check for edge case for being unable to reach the topk threshold percent in the data!
+            reached_topk_percent = any(select >= topk_thresh_percent)
+            if not reached_topk_percent:
+                max_percent_reached = max(select)
+                max_index = select.index[select == max_percent_reached][0]
+                print(
+                    f"Warning: Cumulative data percentage never reached top K of {topk_thresh_percent}%. "
+                    f"The maximum percentage reached is {max_percent_reached:.2f}% at index {max_index}. "
+                    f"Selection will still be made based on this closest percentage."
+                )
+                select_index = max_index
+            else:
+                select_index = select.index[select == min(select, key=lambda x:abs(x - topk_thresh_percent))][0]
+
+            # Find the index where we get closest to the top K percentile of data
             bool_vec = np.full((len(searchspace_data.index)), False)
             #
             count = 0
+
+            # TODO: Let's check the logic here:
+            # 1. So the subgroups are NOT reaching the top 20%, that's going to be hard to understand why. Maybe reduce depth?
             for elem in subgroup_desc:
                 count = count + 1
                 bool_vec_inner = np.full((len(searchspace_data.index)), True)
@@ -685,10 +716,23 @@ def main(args):
                     top_subgroups_iters_df['evaluation_metric'] = metric
                     top_subgroups_iters_df['dataset'] = 'kfold_test'
                     top_k_subgroup_preds_iters.append(top_subgroups_iters_df)
+                    break
 
-            # Repeat with the top 20% of data in the validation dataset
+            # Repeat with the top K % of data in the validation dataset
             select =  (subgroup_val_results_df["% data"]* 100)
-            select_index = select.index[select == min(select, key=lambda x:abs(x-20))][0]
+            # Check for edge case for being unable to reach the topk threshold percent in the data!
+            reached_topk_percent = any(select >= topk_thresh_percent)
+            if not reached_topk_percent:
+                max_percent_reached = max(select)
+                max_index = select.index[select == max_percent_reached][0]
+                print(
+                    f"VALIDATION SET: Warning: Cumulative data percentage never reached top K of {topk_thresh_percent}%. "
+                    f"The maximum percentage reached is {max_percent_reached:.2f}% at index {max_index}. "
+                    f"Selection will still be made based on this closest percentage."
+                )
+                select_index = max_index
+            else:
+                select_index = select.index[select == min(select, key=lambda x:abs(x - topk_thresh_percent))][0]
             bool_vec = np.full((len(searchspace_val_data.index)), False)
             #
             count = 0
@@ -756,6 +800,7 @@ def main(args):
                     top_subgroups_iters_df['evaluation_metric'] = metric
                     top_subgroups_iters_df['dataset'] = 'holdout_validation'
                     top_k_subgroup_preds_iters.append(top_subgroups_iters_df)
+                    break
 
             #
             iter_results[targ+pred_type] = [kfold_AUROC_mean, kfold_AUROC_sd, val_AUROC_mean, val_AUROC_sd, kfold_AUROC_20_mean, kfold_AUROC_20_sd, val_AUROC_20_mean, val_AUROC_20_sd,
@@ -765,6 +810,7 @@ def main(args):
         #
         #
         #save to file
+        os.makedirs(output_dir, exist_ok=True)
         with open(output_dir + metric + "_bottleneck_results.pkl", "wb") as f:
             pickle.dump(all_results, f, protocol=pickle.HIGHEST_PROTOCOL)
             f.close()
@@ -790,6 +836,10 @@ def main(args):
     top_k_subgroup_preds_iters = pd.concat(top_k_subgroup_preds_iters)
     top_k_subgroup_preds_iters.to_csv(
         output_dir + 'top_k_subgroup_preds_over_iters.csv')
+
+    # Write out the config that was used, if provided.
+    with open(output_dir + 'config.yml', 'w') as f:
+        yaml.dump(config, f)
 
 
 if __name__ == '__main__':
