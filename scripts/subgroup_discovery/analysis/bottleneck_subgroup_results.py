@@ -83,7 +83,8 @@ def safe_average_precision_score(y_true, y_score, *args, **kwargs):
     else:
         return average_precision_score(y_true, y_score, *args, **kwargs)
 
-def safe_precision_recall_curve(y_true, y_score, *args, **kwargs):
+def safe_auprc(y_true, y_score, *args, **kwargs):
+    """Edge case handling for area under the precision-recall curve."""
     unique_labels = set(y_true)
     if len(unique_labels) <= 1:
         return 0.0
@@ -119,7 +120,7 @@ def main(args):
     config_file = args.config
     sample_frac = args.sample_frac
 
-    # Process either tasks or a column specification that includes tasks
+    # Process either tasks or a config file that includes tasks
     if tasks is not None:
         outcomes = read_lines(tasks)
         config = default_config
@@ -246,19 +247,26 @@ def main(args):
         #start of loop to collect all data
         for outcome in outcome_order:
             print("starting analysis of - " + outcome)
-            #
-            #
             #this will create the target matrix, possible targets include true classification, true positivies, ect (based on a CUTOFF value)
             targ = outcome
             pred_type = metric
-            #
+
             # NOTE: limiting to TRUE healthy controls (removing controls with positive co-outcomes)
+            # This means our evaluation labels need to be of the following:
+            # * CASE: individual has outcome (true_vals[targ] == 0, since the healthy outcome == 1), and this CAN include having other outcome labels present
+            # * CASE: Individual does not have outcome (true_vals[targ] == 1 AND does not have any other outcomes)
+            #     Here, the original logic checks that all other outcomes have a label of 1
+            #     which includes samples where individual DOES have BPD (true_vals[targ] == 0) but does NOT have any other outcomes.
+            #     as well as samples where the individual DOES NOT have BPD (true_vals[targ] == 1) and does NOT have any other outcomes.
+            # TODO: Isn't this more straightforwardly checked as (true_vals[outcomes] == num_outcomes) | (true_vals[targ] == 0)?
             num_other_outcomes = len(outcome_order) - 1
             keep = (true_vals[np.setdiff1d(outcomes, [targ])].sum(axis=1) == num_other_outcomes) | (true_vals[targ] == 0)
             keep_val = (validation_true_vals[np.setdiff1d(outcomes, [targ])].sum(axis=1) == num_other_outcomes) | (validation_true_vals[targ] == 0)
 
-            # TODO: We should report the difference in keep and keep_val versus the full dataset.
-            #
+            # Report the difference in keep and keep_val versus the full dataset.
+            print(f'Original Input Dataset Size: Subgroup Discovery Training: {len(true_vals)}, Subgroup Discovery Holdout: {len(validation_true_vals)}')
+            print(f'After Dropping Controls with other Outcome Labels: Subgroup Discovery Training: {keep.sum()}, Subgroup Discovery Holdout: {keep_val.sum()}')
+            print(f'Dropped {len(true_vals) - keep.sum()} samples from Subgroup Discovery Training and {len(validation_true_vals) - keep_val.sum()} samples from Subgroup Discovery Holdout Validation')
             #k-fold
             outcome_preds = preds.loc[keep]
             outcome_true_vals = true_vals.loc[keep,:]
@@ -399,10 +407,9 @@ def main(args):
 
                 #collect same general data for top 1:index(elem) subgroups
                 # NOTE: This part exists because it's difficult to add custom stats to the dataframe original output
-                precision, recall, thresholds = precision_recall_curve(outcome_true_vals[targ][bool_vec], outcome_preds[bool_vec])
-                AUPRC = auc(recall, precision)
-                precision, recall, thresholds = precision_recall_curve(outcome_true_vals[targ][bool_vec_inner], outcome_preds[bool_vec_inner])
-                subgroup_AUPRC = auc(recall, precision)
+                AUPRC = safe_auprc(outcome_true_vals[targ][bool_vec], outcome_preds[bool_vec])
+                subgroup_AUPRC = safe_auprc(outcome_true_vals[targ][bool_vec_inner], outcome_preds[bool_vec_inner])
+
                 #append all data to array
                 #compile metrics of performancpe
                 if(len(outcome_true_vals[targ][bool_vec]) == outcome_true_vals[targ][bool_vec].sum()):
@@ -413,21 +420,21 @@ def main(args):
                     # Loops like this collect performance of individual model iterations
                     temp_auprc = []
                     for i in range(len(many_preds.columns)):
-                        precision, recall, thresholds = precision_recall_curve(outcome_true_vals[targ][bool_vec], many_outcome_preds.iloc[:,i][bool_vec])
-                        temp_auprc.append(auc(recall, precision))
+                        iter_auprc = safe_auprc(outcome_true_vals[targ][bool_vec], many_outcome_preds.iloc[:,i][bool_vec])
+                        temp_auprc.append(iter_auprc)
                     #
                     AUPRC_sd = np.std(temp_auprc, ddof=1) #used to make std consistent with R
                     AUPRC_mean = np.mean(temp_auprc)
                     #
                 else:
-                    AUROC = roc_auc_score(outcome_true_vals[targ][bool_vec], outcome_preds[bool_vec])
+                    AUROC = safe_roc_auc_score(outcome_true_vals[targ][bool_vec], outcome_preds[bool_vec])
                     #
                     temp_auroc = []
                     temp_auprc = []
                     for i in range(len(many_preds.columns)):
-                        precision, recall, thresholds = precision_recall_curve(outcome_true_vals[targ][bool_vec], many_outcome_preds.iloc[:,i][bool_vec])
-                        temp_auprc.append(auc(recall, precision))
-                        temp_auroc.append(roc_auc_score(outcome_true_vals[targ][bool_vec], many_outcome_preds.iloc[:,i][bool_vec])) #
+                        iter_auprc = safe_auprc(outcome_true_vals[targ][bool_vec], many_outcome_preds.iloc[:,i][bool_vec])
+                        temp_auprc.append(iter_auprc)
+                        temp_auroc.append(safe_roc_auc_score(outcome_true_vals[targ][bool_vec], many_outcome_preds.iloc[:,i][bool_vec])) #
                     #
                     AUROC_sd = np.std(temp_auroc, ddof=1)
                     AUROC_mean = np.mean(temp_auroc)
@@ -435,9 +442,10 @@ def main(args):
                     AUPRC_mean = np.mean(temp_auprc)
                 #
                 #
-                #
-                # TODO: QUESTION: What is the below condition checking for?
-                # All 1 labels? Wouldn't the below code still fail?
+                # NOTE: The code below is the original edge case for all one labels, adding np.nan to the scores.
+                # TODO: However, the inner loops may still fail, and np.nan may still propagate forward, which
+                # we should check if we want that.
+                # And the check should be more robust - it should check for the presence of the presence of only one label, regardless of positive or negative.
                 if(len(outcome_true_vals[targ][bool_vec_inner]) == outcome_true_vals[targ][bool_vec_inner].sum()):
                     subgroup_AUROC = np.nan
                     subgroup_AUROC_sd = np.nan
@@ -445,22 +453,22 @@ def main(args):
                     #
                     temp_auprc = []
                     for i in range(len(many_preds.columns)):
-                        precision, recall, thresholds = precision_recall_curve(outcome_true_vals[targ][bool_vec_inner], many_outcome_preds.iloc[:,i][bool_vec_inner])
-                        temp_auprc.append(auc(recall, precision))
+                        iter_auprc = safe_auprc(outcome_true_vals[targ][bool_vec_inner], many_outcome_preds.iloc[:,i][bool_vec_inner])
+                        temp_auprc.append(iter_auprc)
                     #
                     subgroup_AUPRC_sd = np.std(temp_auprc, ddof=1)
                     subgroup_AUPRC_mean = np.mean(temp_auprc)
                     #
                 else:
-                    subgroup_AUROC = roc_auc_score(outcome_true_vals[targ][bool_vec_inner], outcome_preds[bool_vec_inner])
+                    subgroup_AUROC = safe_roc_auc_score(outcome_true_vals[targ][bool_vec_inner], outcome_preds[bool_vec_inner])
                     #
                     ##
                     temp_auroc = []
                     temp_auprc = []
                     for i in range(len(many_preds.columns)):
-                        precision, recall, thresholds = precision_recall_curve(outcome_true_vals[targ][bool_vec_inner], many_outcome_preds.iloc[:,i][bool_vec_inner])
-                        temp_auprc.append(auc(recall, precision))
-                        temp_auroc.append(roc_auc_score(outcome_true_vals[targ][bool_vec_inner], many_outcome_preds.iloc[:,i][bool_vec_inner]))
+                        iter_auprc = safe_auprc(outcome_true_vals[targ][bool_vec_inner], many_outcome_preds.iloc[:,i][bool_vec_inner])
+                        temp_auprc.append(iter_auprc)
+                        temp_auroc.append(safe_roc_auc_score(outcome_true_vals[targ][bool_vec_inner], many_outcome_preds.iloc[:,i][bool_vec_inner]))
                     #
                     subgroup_AUROC_sd = np.std(temp_auroc, ddof=1)
                     subgroup_AUROC_mean = np.mean(temp_auroc)
@@ -473,16 +481,15 @@ def main(args):
             subgroup_results_df = pd.DataFrame(data, columns=["total group", "subgroup", "size", "% data", "subgroup size", "num_groups", "AUPRC","subgroup AUPRC", "AUROC", "subgroup AUROC"])
             #
             #compile metrics of performancpe
-            kfold_AUROC = roc_auc_score(outcome_true_vals[targ], outcome_preds)
-            precision, recall, thresholds = precision_recall_curve(outcome_true_vals[targ], outcome_preds)
-            kfold_AUPRC = auc(recall, precision)
+            kfold_AUROC = safe_roc_auc_score(outcome_true_vals[targ], outcome_preds)
+            kfold_AUPRC = safe_auprc(outcome_true_vals[targ], outcome_preds)
             #
             temp_auroc = []
             temp_auprc = []
             for i in range(len(many_preds.columns)):
-                precision, recall, thresholds = precision_recall_curve(outcome_true_vals[targ], many_outcome_preds.iloc[:,i])
-                temp_auprc.append(auc(recall, precision))
-                temp_auroc.append(roc_auc_score(outcome_true_vals[targ], many_outcome_preds.iloc[:,i]))
+                iter_auprc = safe_auprc(outcome_true_vals[targ], many_outcome_preds.iloc[:,i])
+                temp_auprc.append(iter_auprc)
+                temp_auroc.append(safe_roc_auc_score(outcome_true_vals[targ], many_outcome_preds.iloc[:,i]))
             #
             kfold_AUROC_sd = np.std(temp_auroc, ddof=1)
             kfold_AUROC_mean = np.mean(temp_auroc)
@@ -520,12 +527,10 @@ def main(args):
                     print(f"Skipping subgroup with no matching records: {elem}")
                     continue # move to next subgroup description
 
-                precision, recall, thresholds = precision_recall_curve(validation_outcome_true_vals[targ][bool_vec], val_outcome_preds[bool_vec])
-                AUPRC = auc(recall, precision)
-                precision, recall, thresholds = precision_recall_curve(validation_outcome_true_vals[targ][bool_vec_inner], val_outcome_preds[bool_vec_inner])
-                subgroup_AUPRC = auc(recall, precision)
+                AUPRC = safe_auprc(validation_outcome_true_vals[targ][bool_vec], val_outcome_preds[bool_vec])
+                subgroup_AUPRC = safe_auprc(validation_outcome_true_vals[targ][bool_vec_inner], val_outcome_preds[bool_vec_inner])
 
-                # TODO: Is there better handling of this condition?
+                # TODO: Is there better handling of this condition? YES, should handle whether or not only one set of values exists in the
                 if(len(validation_outcome_true_vals[targ][bool_vec]) == validation_outcome_true_vals[targ][bool_vec].sum()):
                     AUROC = np.nan
                     AUROC_sd = np.nan
@@ -533,21 +538,21 @@ def main(args):
                     #
                     temp_auprc = []
                     for i in range(len(many_preds.columns)):
-                        precision, recall, thresholds = precision_recall_curve(validation_outcome_true_vals[targ][bool_vec], many_val_outcome_preds.iloc[:,i][bool_vec])
-                        temp_auprc.append(auc(recall, precision))
+                        iter_auprc = safe_auprc(validation_outcome_true_vals[targ][bool_vec], many_val_outcome_preds.iloc[:,i][bool_vec])
+                        temp_auprc.append(iter_auprc)
                     #
                     AUPRC_sd = np.std(temp_auprc, ddof=1)
                     AUPRC_mean = np.mean(temp_auprc)
                     #
                 else:
-                    AUROC = roc_auc_score(validation_outcome_true_vals[targ][bool_vec], val_outcome_preds[bool_vec])
+                    AUROC = safe_roc_auc_score(validation_outcome_true_vals[targ][bool_vec], val_outcome_preds[bool_vec])
                     #
                     temp_auroc = []
                     temp_auprc = []
                     for i in range(len(many_preds.columns)):
-                        precision, recall, thresholds = precision_recall_curve(validation_outcome_true_vals[targ][bool_vec], many_val_outcome_preds.iloc[:,i][bool_vec])
-                        temp_auprc.append(auc(recall, precision))
-                        temp_auroc.append(roc_auc_score(validation_outcome_true_vals[targ][bool_vec], many_val_outcome_preds.iloc[:,i][bool_vec]))
+                        iter_auprc = safe_auprc(validation_outcome_true_vals[targ][bool_vec], many_val_outcome_preds.iloc[:,i][bool_vec])
+                        temp_auprc.append(iter_auprc)
+                        temp_auroc.append(safe_roc_auc_score(validation_outcome_true_vals[targ][bool_vec], many_val_outcome_preds.iloc[:,i][bool_vec]))
                     #
                     AUROC_sd = np.std(temp_auroc, ddof=1)
                     AUROC_mean = np.mean(temp_auroc)
@@ -555,7 +560,7 @@ def main(args):
                     AUPRC_mean = np.mean(temp_auprc)
                 #
                 #
-                #
+                # TODO: NOTE: This checks if _within the subgroup itself_ there's all positive labels, which should also be generalized.
                 if(len(validation_outcome_true_vals[targ][bool_vec_inner]) == validation_outcome_true_vals[targ][bool_vec_inner].sum()):
                     subgroup_AUROC = np.nan
                     subgroup_AUROC_sd = np.nan
@@ -563,8 +568,8 @@ def main(args):
                     #
                     temp_auprc = []
                     for i in range(len(many_preds.columns)):
-                        precision, recall, thresholds = precision_recall_curve(validation_outcome_true_vals[targ][bool_vec_inner], many_val_outcome_preds.iloc[:,i][bool_vec_inner])
-                        temp_auprc.append(auc(recall, precision))
+                        iter_auprc = safe_auprc(validation_outcome_true_vals[targ][bool_vec_inner], many_val_outcome_preds.iloc[:,i][bool_vec_inner])
+                        temp_auprc.append(iter_auprc)
                     #
                     subgroup_AUPRC_sd = np.std(temp_auprc, ddof=1)
                     subgroup_AUPRC_mean = np.mean(temp_auprc)
@@ -576,8 +581,8 @@ def main(args):
                     temp_auroc = []
                     temp_auprc = []
                     for i in range(len(many_preds.columns)):
-                        precision, recall, thresholds = precision_recall_curve(validation_outcome_true_vals[targ][bool_vec_inner], many_val_outcome_preds.iloc[:,i][bool_vec_inner])
-                        temp_auprc.append(auc(recall, precision))
+                        iter_auprc = safe_auprc(validation_outcome_true_vals[targ][bool_vec_inner], many_val_outcome_preds.iloc[:,i][bool_vec_inner])
+                        temp_auprc.append(iter_auprc)
                         temp_auroc.append(safe_roc_auc_score(validation_outcome_true_vals[targ][bool_vec_inner], many_val_outcome_preds.iloc[:,i][bool_vec_inner]))
                     #
                     subgroup_AUROC_sd = np.std(temp_auroc, ddof=1)
@@ -596,16 +601,15 @@ def main(args):
             print(f"Created validation results dataframe with {len(subgroup_val_results_df)} rows")
 
             #
-            val_AUROC = roc_auc_score(validation_outcome_true_vals[targ], val_outcome_preds)
-            precision, recall, thresholds = precision_recall_curve(validation_outcome_true_vals[targ], val_outcome_preds)
-            val_AUPRC = auc(recall, precision)
+            val_AUROC = safe_roc_auc_score(validation_outcome_true_vals[targ], val_outcome_preds)
+            val_AUPRC = safe_auprc(validation_outcome_true_vals[targ], val_outcome_preds)
             #
             temp_auroc = []
             temp_auprc = []
             for i in range(len(many_preds.columns)):
-                precision1, recall1, thresholds = precision_recall_curve(validation_outcome_true_vals[targ], many_val_outcome_preds.iloc[:,i])
-                temp_auprc.append(auc(recall1, precision1))
-                temp_auroc.append(roc_auc_score(validation_outcome_true_vals[targ], many_val_outcome_preds.iloc[:,i]))
+                iter_auprc = safe_auprc(validation_outcome_true_vals[targ], many_val_outcome_preds.iloc[:,i])
+                temp_auprc.append(iter_auprc)
+                temp_auroc.append(safe_roc_auc_score(validation_outcome_true_vals[targ], many_val_outcome_preds.iloc[:,i]))
             #
             val_AUROC_sd = np.std(temp_auroc, ddof=1)
             val_AUROC_mean = np.mean(temp_auroc)
@@ -651,8 +655,6 @@ def main(args):
             #
             count = 0
 
-            # TODO: Let's check the logic here:
-            # 1. So the subgroups are NOT reaching the top 20%, that's going to be hard to understand why. Maybe reduce depth?
             for elem in subgroup_desc:
                 count = count + 1
                 bool_vec_inner = np.full((len(searchspace_data.index)), True)
@@ -682,6 +684,7 @@ def main(args):
                          'dataset': 'kfold_test'}).set_index('row_id')
                     top_k_subgroup_predictions.append(outcome_top_subgroups_df)
 
+                    # Here, the ROC thresholds and PR thresholds are saved separately to be able to re-create the curve
                     ROC_tuple_20 = roc_curve(outcome_true_vals[targ][bool_vec], outcome_preds[bool_vec])
                     kfold_AUROC_20 = auc(ROC_tuple_20[0], ROC_tuple_20[1])
                     PR_tuple_20 = precision_recall_curve(outcome_true_vals[targ][bool_vec], outcome_preds[bool_vec])
@@ -694,9 +697,9 @@ def main(args):
                     temp_auroc = []
                     temp_auprc = []
                     for i in range(len(many_preds.columns)):
-                        precision, recall, thresholds = precision_recall_curve(outcome_true_vals[targ][bool_vec], many_outcome_preds.iloc[:,i][bool_vec])
-                        temp_auprc.append(auc(recall, precision))
-                        temp_auroc.append(roc_auc_score(outcome_true_vals[targ][bool_vec], many_outcome_preds.iloc[:,i][bool_vec]))
+                        iter_auprc = safe_auprc(outcome_true_vals[targ][bool_vec], many_outcome_preds.iloc[:,i][bool_vec])
+                        temp_auprc.append(iter_auprc)
+                        temp_auroc.append(safe_roc_auc_score(outcome_true_vals[targ][bool_vec], many_outcome_preds.iloc[:,i][bool_vec]))
                     #
                     kfold_AUROC_20_sd = np.std(temp_auroc, ddof=1)
                     kfold_AUROC_20_mean = np.mean(temp_auroc)
@@ -765,6 +768,7 @@ def main(args):
                          'dataset': 'holdout_validation'}).set_index('row_id')
                     top_k_subgroup_predictions.append(outcome_top_subgroups_df)
 
+                    # Again, save the actual thresholds for the ROC curve and PR curve to be able to recreate
                     ROC_tuple_20_val = roc_curve(validation_outcome_true_vals[targ][bool_vec], val_outcome_preds[bool_vec])
                     val_AUROC_20 = auc(ROC_tuple_20_val[0], ROC_tuple_20_val[1])
                     PR_tuple_20_val = precision_recall_curve(validation_outcome_true_vals[targ][bool_vec], val_outcome_preds[bool_vec])
@@ -778,9 +782,9 @@ def main(args):
                     temp_auroc = []
                     temp_auprc = []
                     for i in range(len(many_preds.columns)):
-                        precision, recall, thresholds = precision_recall_curve(validation_outcome_true_vals[targ][bool_vec], many_val_outcome_preds.iloc[:,i][bool_vec])
-                        temp_auprc.append(auc(recall, precision))
-                        temp_auroc.append(roc_auc_score(validation_outcome_true_vals[targ][bool_vec], many_val_outcome_preds.iloc[:,i][bool_vec]))
+                        iter_auprc = safe_auprc(validation_outcome_true_vals[targ][bool_vec], many_val_outcome_preds.iloc[:,i][bool_vec])
+                        temp_auprc.append(iter_auprc)
+                        temp_auroc.append(safe_roc_auc_score(validation_outcome_true_vals[targ][bool_vec], many_val_outcome_preds.iloc[:,i][bool_vec]))
                     #
                     val_AUROC_20_sd = np.std(temp_auroc, ddof=1)
                     val_AUROC_20_mean = np.mean(temp_auroc)
