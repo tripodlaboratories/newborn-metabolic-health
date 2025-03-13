@@ -18,15 +18,15 @@ evaluation_parameters:
       rop_any: 300
       nec_any: 200
 
-  "AVG Precision":
-    alphas:
-      bpd_any: 0.059
-      rop_any: 0.06
-      nec_any: 0.025
-    sizes:
-      bpd_any: 100
-      rop_any: 300
-      nec_any: 100
+  # "AVG Precision":
+  #   alphas:
+  #     bpd_any: 0.059
+  #     rop_any: 0.06
+  #     nec_any: 0.025
+  #   sizes:
+  #     bpd_any: 100
+  #     rop_any: 300
+  #     nec_any: 100
 
 # Debug configurations
 debug:

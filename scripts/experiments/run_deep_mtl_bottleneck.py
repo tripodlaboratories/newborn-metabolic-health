@@ -225,7 +225,12 @@ def main(args):
         patience=early_stopping_patience)
 
     # Options for downsampling or positive weight for data imbalance
-    if imbalance_strategy == 'majority_downsampler':
+    known_imbalance_strategies = ['majority_downsampler', 'loss_pos_weight']
+    if imbalance_strategy not in known_imbalance_strategies:
+        logger.warning(f"--imbalance_strategy must be one of {known_imbalance_strategies}, defaulting to None.")
+        resampler = None
+        pos_weight = None
+    elif imbalance_strategy == 'majority_downsampler':
         resampler = MajorityDownsampler(random_state=101)
         pos_weight = None
     elif imbalance_strategy == 'loss_pos_weight':
@@ -233,8 +238,7 @@ def main(args):
         pos_weight = data_Y.apply(utils.get_pos_weight).values
         pos_weight = torch.tensor(pos_weight, dtype=torch.float32)
     else:
-        resampler = None
-        pos_weight = None
+        raise ValueError("Argument --imbalance_strategy unknown and/or not handled correctly.")
 
     os.makedirs(output_dir, exist_ok=True)
     for model_name, model in all_models.items():
