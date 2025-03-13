@@ -183,6 +183,7 @@ dmypy.json
 # Local storage for older files and backups
 archive
 environment.bak
+*.bak
 
 # Data Directories and deep NN predictions which can get large
 checkpoints

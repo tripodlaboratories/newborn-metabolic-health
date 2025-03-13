@@ -4,11 +4,13 @@ import logging
 import os
 from pathlib import PurePath
 
+import numpy as np
 import pandas as pd
 from sklearn.model_selection import train_test_split
-from torch import optim
+import torch
 from torch.nn import BCEWithLogitsLoss
 import wandb
+import yaml
 
 from biobank_project.deep_mtl.training import handlers, kfold, utils
 from biobank_project.deep_mtl.models import bottleneck
@@ -26,8 +28,11 @@ def get_argparser():
         '-o', '--output', type=str, help='output directory for results',
         required=True, metavar='OUTPUT_DIR', dest='output_dir')
     parser.add_argument(
-        '-t', '--tasks', type=str,
+        '-t', '--tasks', type=str, default=None,
         help='Text file with tasks of interest, one task per line.')
+    parser.add_argument(
+        '--column_specification', type=str, default=None,
+        help="Column specification YML containing keys: 'id', 'features', 'outcomes'")
     parser.add_argument(
         '-n', '--n_iter', type=int, help='number of cross validation iterations to perform',
         default=10)
@@ -41,8 +46,16 @@ def get_argparser():
         '-v', '--validate', action='store_true',
         help='split data in train/test/validate.')
     parser.add_argument(
+        '--stratify_validate', action='store_true',
+        help='Stratify validation split using high-level counts of negative labels')
+    parser.add_argument(
         '--bottleneck_sequence', type=str, default='1,2,3,4,5,10,20',
         help='comma-separated sequence of bottleneck units to use.')
+    parser.add_argument(
+        '--drop_sparse', action='store_true', help='Drop sparse columns from input data.')
+    parser.add_argument(
+        '--imbalance_strategy', type=str, default='majority_downsampler',
+        help='Imbalanced data strategy, one of either "majority_downsampler" or "loss_pos_weight')
     # Optional wandb logging
     parser.add_argument(
         '--use_wandb', action='store_true', help="Enable Weights & Biases logging")
@@ -80,32 +93,45 @@ def main(args):
     input_file = args.input_file
     output_dir = PurePath(args.output_dir)
     tasks = args.tasks
+    col_spec_file = args.column_specification
     n_iter = args.n_iter
     cases_only = args.cases_only
     single_condition = args.single_condition
     validate = args.validate
+    stratify_validate = args.stratify_validate
+    drop_sparse = args.drop_sparse
+    imbalance_strategy = args.imbalance_strategy
     use_wandb = args.use_wandb
     wandb_experiment_name = args.experiment_name
 
+    # Handle features and outcomes
+    if tasks is not None:
+        features = None
+        outcomes = read_lines(tasks)
+        id_col = 'row_id'
+    elif col_spec_file is not None:
+        with open(col_spec_file, 'r') as f:
+            col_spec  = yaml.safe_load(f)
+        features = col_spec['features']
+        outcomes = col_spec['outcomes']
+        id_col = col_spec['id']
+    else:
+        raise ValueError('Must provide one of the following options: --tasks OR --column_specification')
+
     # Read in data
     input_data = pd.read_csv(input_file, low_memory=False)
-    input_data.set_index('row_id', inplace=True)
+    input_data.set_index(id_col, inplace=True)
     metadata = pd.read_csv('./data/processed/metadata.csv', low_memory=False)
-    metadata.set_index('row_id', inplace=True)
-    outcomes = read_lines(tasks)
+    metadata.set_index(id_col, inplace=True)
 
     # Model-specific args
-    bottleneck_sequence = ','.split(args.bottleneck_sequence)
+    bottleneck_sequence = [int(i) for i in args.bottleneck_sequence.split(',')]
 
     # Subset data based on gestational ages used
     included_ga_range = read_lines('./config/gestational_age_ranges.txt')
     included_metadata = metadata[metadata['gacat'].isin(included_ga_range)]
     input_data = input_data.loc[included_metadata.index, :]
     assert sorted(input_data.index) == sorted(included_metadata.index)
-
-    # Drop sparse columns
-    input_data.dropna(thresh=len(input_data) / 2, axis=1, inplace=True)
-    input_data.dropna(inplace=True)
 
     # Handling for cases only
     if cases_only is True:
@@ -122,17 +148,43 @@ def main(args):
         data_subset = input_data[input_data['total_conditions'] == 1].drop(
             column=['total_conditions'])
         if data_subset.shape[0] >= input_data.shape[0]:
-            logger.warn('--single_condition flag did not reduce rows of data.')
+            logger.warning('--single_condition flag did not reduce rows of data.')
         input_data = data_subset
         assert 'total_conditions' not in input_data
 
+    # Drop sparse columns
+    if drop_sparse:
+        dropped_input = input_data.dropna(thresh=len(input_data) / 2, axis=1).copy()
+        dropped_input.dropna(inplace=True)
+        dropped_cols = set(input_data.columns).difference(dropped_input.columns)
+        logger.info(f'Dropped columns from --drop_sparse option {dropped_cols}')
+        input_data = dropped_input.copy()
+
     # Split data into X and Y
-    data_X = input_data.drop(outcomes, axis=1)
-    data_Y = input_data[outcomes]
+    if features is None:
+        data_X = input_data.drop(outcomes, axis=1)
+        data_Y = input_data[outcomes]
+    else:
+        common_features = [col for col in input_data if col in features]
+        if len(common_features) != len(features):
+            logger.warning((
+                'Number of input features do not match feature specification:'
+                f'Using {len(common_features)} common features.'
+        ))
+        data_X = input_data[common_features]
+        data_Y = input_data[outcomes]
 
     if validate is True:
         logger.info('Setting up experiment to use holdout validation.')
-        data_X, X_valid, data_Y, Y_valid = train_test_split(data_X, data_Y, random_state=101)
+        # We expect most of the individuals in a given dataset to be all 0 labels and mostly 0 labels
+        if stratify_validate:
+            logger.info('Performing coarse-grained stratification of validation set using presence of negative labels.')
+            mostly_negative = (data_Y.sum(axis=1) <= 1)
+            stratify_vector = mostly_negative.astype(int).values
+        else:
+            stratify_vector = None
+        data_X, X_valid, data_Y, Y_valid = train_test_split(
+            data_X, data_Y, random_state=101, stratify=stratify_vector)
 
     # Train with different models
     utils.seed_torch(101)
@@ -147,6 +199,12 @@ def main(args):
             'multi_output' + bottle_spec: bottleneck.ThreeLayerBottleneck(
                 n_features=n_features, n_outputs=n_tasks,
                 n_hidden=n_hidden, n_bottleneck=n_bottleneck),
+            'ensemble' + bottle_spec: bottleneck.EnsembleNetwork(
+                n_features=n_features, n_tasks=n_tasks,
+                n_hidden=n_hidden, n_bottleneck=n_bottleneck),
+            'parallel_ensemble' + bottle_spec: bottleneck.ParallelEnsembleNetwork(
+                n_features=n_features, n_tasks=n_tasks,
+                n_hidden=n_hidden, n_bottleneck=n_bottleneck),
             'large_multi_output' + bottle_spec: bottleneck.ThreeLayerBottleneck(
                 n_features=n_features, n_outputs=n_tasks,
                 n_bottleneck=n_bottleneck,
@@ -155,12 +213,6 @@ def main(args):
                     'hidden_2': n_hidden * n_tasks,
                     'hidden_3': n_hidden * n_tasks
                     }),
-            'ensemble' + bottle_spec: bottleneck.EnsembleNetwork(
-                n_features=n_features, n_tasks=n_tasks,
-                n_hidden=n_hidden, n_bottleneck=n_bottleneck),
-            'parallel_ensemble' + bottle_spec: bottleneck.ParallelEnsembleNetwork(
-                n_features=n_features, n_tasks=n_tasks,
-                n_hidden=n_hidden, n_bottleneck=n_bottleneck)
         }
         all_models = dict(all_models, **bottleneck_models)
 
@@ -171,7 +223,22 @@ def main(args):
     early_stopping_patience = 5
     early_stopping_handler = handlers.EarlyStopping(
         patience=early_stopping_patience)
-    resampler = MajorityDownsampler(random_state=101)
+
+    # Options for downsampling or positive weight for data imbalance
+    known_imbalance_strategies = ['majority_downsampler', 'loss_pos_weight']
+    if imbalance_strategy not in known_imbalance_strategies:
+        logger.warning(f"--imbalance_strategy must be one of {known_imbalance_strategies}, defaulting to None.")
+        resampler = None
+        pos_weight = None
+    elif imbalance_strategy == 'majority_downsampler':
+        resampler = MajorityDownsampler(random_state=101)
+        pos_weight = None
+    elif imbalance_strategy == 'loss_pos_weight':
+        resampler = None
+        pos_weight = data_Y.apply(utils.get_pos_weight).values
+        pos_weight = torch.tensor(pos_weight, dtype=torch.float32)
+    else:
+        raise ValueError("Argument --imbalance_strategy unknown and/or not handled correctly.")
 
     os.makedirs(output_dir, exist_ok=True)
     for model_name, model in all_models.items():
@@ -199,10 +266,10 @@ def main(args):
 
         training_handler = handlers.BottleneckModelTraining(
             model=model, batch_size=batch_size, shuffle_batch=shuffle_batch,
-            optimizer_class=optim.Adam, wandb_run=run)
+            optimizer_class=torch.optim.Adam, wandb_run=run)
         train_args = {
             'n_epochs': n_epochs,
-            'criterion': BCEWithLogitsLoss(reduction='mean'),
+            'criterion': BCEWithLogitsLoss(reduction='mean', pos_weight=pos_weight),
             'colnames': data_Y.columns,
             'early_stopping_handler': early_stopping_handler
             }
@@ -224,7 +291,12 @@ def main(args):
         os.makedirs(model_output_dir, exist_ok=True)
         write_results(model_results, model_output_dir)
         logger.info('Model results written to: ' + str(model_output_dir) + '/')
-        run.finish()
+
+        # wandb specific cleanup
+        if use_wandb:
+            run.finish()
+        else:
+            del run
 
 
 if __name__ == '__main__':
