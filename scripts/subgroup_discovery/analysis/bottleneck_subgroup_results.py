@@ -23,14 +23,7 @@ import yaml
 #to install use the following command "pip install git+https://github.com/tripodlaboratories/pysubgroup-prediction.git@predictionQF"
 
 import pysubgroup as ps
-
 from biobank_project.subgroup_discovery import output
-
-#setting printing parameters so subgroup descriptions actually display
-pd.set_option('display.max_rows', 500)
-pd.set_option('display.max_columns', 500)
-pd.set_option('display.width', 250)
-pd.set_option('display.max_colwidth', 150)
 
 def get_args():
     parser = argparse.ArgumentParser(
@@ -57,6 +50,50 @@ def read_lines(file) -> list:
     with open(file) as f:
         lines = f.readlines()
     return [line.strip() for line in lines]
+
+
+def get_clean_binary_target(outcomes_df, target_outcome, pos_label=0):
+    """
+    Filter outcomes data and define positive and negative outcomes.
+
+    Returns:
+        Tuple with the following:
+            - filtered outcomes df
+            - clean labels
+            - boolean slice used to filter data
+    """
+    df = outcomes_df.copy()
+    all_outcomes = df.columns
+    nontarget_outcomes = np.setdiff1d(all_outcomes, target_outcome)
+    cases = [
+        # Case 1: All outcomes are negative
+        np.all([df[col] != pos_label for col in all_outcomes], axis=0),
+        # Case 2: Target outcome is positive (regardless of other outcome label)
+        (df[target_outcome] == pos_label),
+        # Case 3: Target outcome is negative but other outcomes are positive
+        np.logical_and(
+            (df[target_outcome] != pos_label),
+            np.any([df[col] == pos_label for col in nontarget_outcomes], axis=0))
+        ]
+    labels = [
+        abs(1 - pos_label), # No outcomes (negative class)
+        pos_label, # Target outcome present (positive class)
+        np.nan # Drop negatives with other outcomes
+    ]
+    outcome_labels = np.select(cases, labels, default=np.nan)
+    include = ~np.isnan(outcome_labels)
+    return df.loc[include, :], outcome_labels[include], include
+
+def min_max_scale(scores):
+    """Scale activations to [0,1] range using min-max scaling"""
+    min_val = np.min(scores)
+    max_val = np.max(scores)
+    if max_val == min_val:  # Handle edge case
+        return np.zeros_like(scores)
+    return (scores - min_val) / (max_val - min_val)
+
+def scale_and_reverse_scores(scores):
+    return 1 - min_max_scale(scores)
 
 def safe_roc_auc_score(y_true, y_score, *args, **kwargs):
     """Defaults to 0.5 when there is only one class"""
@@ -122,12 +159,13 @@ def main(args):
 
     # Process either tasks or a config file that includes tasks
     if tasks is not None:
-        outcomes = read_lines(tasks)
+        outcomes_to_evaluate = read_lines(tasks)
         config = default_config
     elif config_file is not None:
         with open(config_file, 'r') as f:
             config = yaml.safe_load(f)
-        outcomes = config['outcomes']
+        outcomes_to_evaluate = config['evaluation_outcomes']
+        all_outcomes = config['all_outcomes']
     else:
         raise ValueError('Must provide one of the following options: --tasks OR --config')
 
@@ -137,7 +175,7 @@ def main(args):
     true_vals = pd.read_csv(results_dir + "true_vals.csv")
 
     #read in raw data to get actual response for validation data, not currently included in prediction .csv's
-    external_true_vals = pd.read_csv("./data/processed/neonatal_conditions.csv", low_memory=False)
+    external_true_vals = pd.read_csv("./data/processed/neonatal_conditions.csv", low_memory=False).set_index('row_id')
 
     #rename predictions columns to be consistent
     val_preds = val_preds.rename(columns={"Unnamed: 0":"row_id"})
@@ -148,12 +186,13 @@ def main(args):
     many_val_preds = val_preds.copy().pivot_table(index="row_id",columns="iter",values="bottleneck_unit_0")
 
     #average over all iteration runs, previously was only taking one
+    # groupby and mean() by default should set the "row_id" as the index
     preds = preds.groupby(["row_id"])["bottleneck_unit_0"].mean() #smart way (it is, double checked against stupid for loop method)
     val_preds = val_preds.groupby(["row_id"])["bottleneck_unit_0"].mean() #smart way (it is, double checked against stupid for loop method)
-    true_vals = true_vals.groupby(["row_id"])[outcomes].mean() #smart way (it is, double checked against stupid for loop method)
+    true_vals = true_vals.groupby(["row_id"])[outcomes_to_evaluate].mean() #smart way (it is, double checked against stupid for loop method)
 
     #collapse all outcomes to patients x outcomes dataframe
-    external_true_vals = external_true_vals[outcomes]
+    external_true_vals = external_true_vals[all_outcomes]
     metabolite_labels = pd.read_csv("./config/metabolite_labels.csv")
     data = pd.read_csv("./data/processed/metadata.csv", low_memory=False)
 
@@ -162,17 +201,25 @@ def main(args):
     #######################################################
 
     #subset by observations
-    subset_data = data[data["row_id"].isin(pd.unique(preds.index))]
-    subset_data = subset_data.set_index("row_id")
+    subset_data = data.set_index("row_id").loc[preds.index]
     subset_data = subset_data.drop("gdspid", axis=1)
 
+    # Augment the true vals with the external one
+    if set(true_vals.columns) != set(all_outcomes):
+        print('Augmenting true values with the whole set of true values.')
+        outcomes_available_externally = set(all_outcomes).intersection(external_true_vals.columns)
+        augment_outcomes = list(outcomes_available_externally.difference(true_vals.columns))
+        true_vals = pd.merge(
+            true_vals, external_true_vals[augment_outcomes],
+            left_index=True, right_index=True, how='left')
+        print(f'Added the following outcomes externally: {augment_outcomes}')
+
     #subset by observations
-    subset_val_data = data[data["row_id"].isin(pd.unique(val_preds.index))]
-    subset_val_data = subset_val_data.set_index("row_id")
+    subset_val_data = data.set_index("row_id").loc[val_preds.index]
     subset_val_data = subset_val_data.drop("gdspid", axis=1)
 
     #subsetting  holdout predictions
-    validation_true_vals = external_true_vals.loc[subset_val_data.index]
+    validation_true_vals = external_true_vals.loc[subset_val_data.index, true_vals.columns]
 
     # OPTIONAL fraction sampling for debugging:
     if sample_frac < 1.0:
@@ -223,7 +270,7 @@ def main(args):
     true_vals = 1 - true_vals # this along with a change in the 'keep' vector is the only change
     validation_true_vals = 1 - validation_true_vals
 
-    outcome_order = outcomes
+    outcome_order = outcomes_to_evaluate
     evaluation_order = config['evaluation_parameters'].keys()
     evaluation_functions = {"AVG Precision": safe_average_precision_score, "AUROC":safe_roc_auc_score}
 
@@ -258,15 +305,23 @@ def main(args):
             #     Here, the original logic checks that all other outcomes have a label of 1
             #     which includes samples where individual DOES have BPD (true_vals[targ] == 0) but does NOT have any other outcomes.
             #     as well as samples where the individual DOES NOT have BPD (true_vals[targ] == 1) and does NOT have any other outcomes.
-            # TODO: Isn't this more straightforwardly checked as (true_vals[outcomes] == num_outcomes) | (true_vals[targ] == 0)?
-            num_other_outcomes = len(outcome_order) - 1
-            keep = (true_vals[np.setdiff1d(outcomes, [targ])].sum(axis=1) == num_other_outcomes) | (true_vals[targ] == 0)
-            keep_val = (validation_true_vals[np.setdiff1d(outcomes, [targ])].sum(axis=1) == num_other_outcomes) | (validation_true_vals[targ] == 0)
+            # TODO: Isn't this more straightforwardly checked as (true_vals[outcomes].sum(axis=1) == num_outcomes) | (true_vals[targ] == 0)?
+            # num_other_outcomes = len(outcome_order) - 1
+            # keep = (true_vals[np.setdiff1d(outcomes, [targ])].sum(axis=1) == num_other_outcomes) | (true_vals[targ] == 0)
+            # keep_val = (validation_true_vals[np.setdiff1d(outcomes, [targ])].sum(axis=1) == num_other_outcomes) | (validation_true_vals[targ] == 0)
+
+            # TODO: **account for the presence of the non-included label from the set of all outcomes**
+            # TODO: Replace this with the more straightfoward function that drops cases where outcome label is negative but co-occurrent outcomes are positive.
+            # TODO: In this case the provided outcomes_df MUST include the set of all outcomes to be considered for true positive and true negatives to include for the analysis.
+            _, _, keep = get_clean_binary_target(outcomes_df=true_vals, target_outcome=targ, pos_label=0)
+            _, _, keep_val = get_clean_binary_target(outcomes_df=validation_true_vals, target_outcome=targ, pos_label=0)
 
             # Report the difference in keep and keep_val versus the full dataset.
             print(f'Original Input Dataset Size: Subgroup Discovery Training: {len(true_vals)}, Subgroup Discovery Holdout: {len(validation_true_vals)}')
             print(f'After Dropping Controls with other Outcome Labels: Subgroup Discovery Training: {keep.sum()}, Subgroup Discovery Holdout: {keep_val.sum()}')
             print(f'Dropped {len(true_vals) - keep.sum()} samples from Subgroup Discovery Training and {len(validation_true_vals) - keep_val.sum()} samples from Subgroup Discovery Holdout Validation')
+
+            # TODO: Then drop the non-evaluation outcome from the true_val label? (Maybe we don't need to do this since we only evaluate the target anyway)
             #k-fold
             outcome_preds = preds.loc[keep]
             outcome_true_vals = true_vals.loc[keep,:]
@@ -351,6 +406,13 @@ def main(args):
             ## initial subgroup analysis using sklearn evaluations as target ##
             ###################################################################
             #
+            # TODO: Test the directionality to evaluate the bottleneck score
+            if safe_roc_auc_score(outcome_true_vals[targ].to_numpy(), outcome_preds.to_numpy()) < 0.5:
+                outcome_preds = scale_and_reverse_scores(outcome_preds)
+                many_outcome_preds = many_outcome_preds.apply(lambda x: scale_and_reverse_scores(x))
+                val_outcome_preds = scale_and_reverse_scores(val_outcome_preds)
+                many_val_outcome_preds = many_val_outcome_preds.apply(lambda x: scale_and_reverse_scores(x))
+
             target = ps.PredictionTarget(outcome_true_vals[targ].to_numpy(), outcome_preds.to_numpy(), evaluation_metric)
             searchspace = ps.create_selectors(searchspace_data[searchspace_data.columns[is_metabolite]])
             task = ps.SubgroupDiscoveryTask(
@@ -385,9 +447,7 @@ def main(args):
 
             # NOTE: bool_vec represents the continuously growing merge of all discovered subgroups
             bool_vec = np.full((len(searchspace_data.index)), False)
-            count = 0
-            for elem in subgroup_desc:
-                count = count + 1
+            for count, elem in enumerate(subgroup_desc):
 
                 # NOTE: bool_vec_inner is the number of individuals matching the current subgroup.
                 bool_vec_inner = np.full((len(searchspace_data.index)), True)
@@ -505,9 +565,7 @@ def main(args):
 
             # NOTE: bool_vec represents the continuously growing merge of all discovered subgroups
             bool_vec = np.full((len(searchspace_val_data.index)), False)
-            count = 0
-            for elem in subgroup_desc:
-                count = count + 1
+            for count, elem in enumerate(subgroup_desc):
                 bool_vec_inner = np.full((len(searchspace_val_data.index)), True)
                 for cond in elem.split(" AND "):
                     if("==" in cond):
@@ -634,7 +692,7 @@ def main(args):
             ################################################################################
             # Evaluate the top K percentile of data, usually the top 20% of data created by cumulatively merging top subgroups
             topk_thresh_percent = config['top_k_percent_data']
-            select =  (subgroup_results_df[r"% data"]* 100)
+            select = (subgroup_results_df[r"% data"]* 100)
 
             # Check for edge case for being unable to reach the topk threshold percent in the data!
             reached_topk_percent = any(select >= topk_thresh_percent)
@@ -652,11 +710,8 @@ def main(args):
 
             # Find the index where we get closest to the top K percentile of data
             bool_vec = np.full((len(searchspace_data.index)), False)
-            #
-            count = 0
 
-            for elem in subgroup_desc:
-                count = count + 1
+            for count, elem in enumerate(subgroup_desc):
                 bool_vec_inner = np.full((len(searchspace_data.index)), True)
                 for cond in elem.split(" AND "):
                     if("==" in cond):
@@ -738,9 +793,7 @@ def main(args):
                 select_index = select.index[select == min(select, key=lambda x:abs(x - topk_thresh_percent))][0]
             bool_vec = np.full((len(searchspace_val_data.index)), False)
             #
-            count = 0
-            for elem in subgroup_desc:
-                count = count + 1
+            for count, elem in enumerate(subgroup_desc):
                 bool_vec_inner = np.full((len(searchspace_val_data.index)), True)
                 for cond in elem.split(" AND "):
                     if("==" in cond):

@@ -1,9 +1,19 @@
+all_outcomes:
+- rop_any
+- nec_any
+- ivh_any
+- bpd_any
 debug:
   depth: 2
   quantile_cuts:
   - 3
   top_k_percent_data: 10
 depth: 4
+evaluation_outcomes:
+- rop_any
+- nec_any
+- ivh_any
+- bpd_any
 evaluation_parameters:
   AUROC:
     alphas:
@@ -16,11 +26,6 @@ evaluation_parameters:
       ivh_any: 100
       nec_any: 100
       rop_any: 300
-outcomes:
-- rop_any
-- nec_any
-- ivh_any
-- bpd_any
 quantile_cuts:
 - 2
 - 3

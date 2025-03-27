@@ -6,13 +6,14 @@ depth: 4
 top_k_percent_data: 20
 
 # Parameters by evaluation metric
-outcomes: ["rop_any", "nec_any", "bpd_any"]
+all_outcomes: ["ivh_any", "rop_any", "nec_any", "bpd_any"]
+evaluation_outcomes: ["rop_any", "nec_any", "bpd_any"]
 evaluation_parameters:
   AUROC:
     alphas:
-      bpd_any: 0.0575
-      rop_any: 0.073
-      nec_any: 0.085
+      bpd_any: 0.060
+      rop_any: 0.060
+      nec_any: 0.080
     sizes:
       bpd_any: 200
       rop_any: 300

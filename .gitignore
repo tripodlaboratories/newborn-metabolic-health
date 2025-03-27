@@ -185,6 +185,9 @@ archive
 environment.bak
 *.bak
 
+# Date-annotated filenames for intermediate experiments
+*[0-9][0-9][0-9][0-9][0-9][0-9][0-9][0-9]*
+
 # Data Directories and deep NN predictions which can get large
 checkpoints
 data

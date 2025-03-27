@@ -1,8 +1,7 @@
 """Module for training deep MTL models."""
 import copy
-import os
-import random
-from typing import List
+from types import MethodType
+from typing import Callable, List, Optional, Type
 
 import numpy as np
 import pandas as pd
@@ -10,9 +9,7 @@ from sklearn.preprocessing import StandardScaler
 from sklearn import metrics
 import torch
 from torch import nn, optim, as_tensor
-from torch.autograd import Variable
-import torch.optim as optim
-from torch.utils.data import DataLoader, TensorDataset
+from torch.optim.lr_scheduler import _LRScheduler # For Typing
 import wandb
 from wandb.sdk.wandb_run import Run
 
@@ -71,12 +68,18 @@ class ModelTraining:
         batch_size: int,
         wandb_run: Run,
         shuffle_batch: bool=False,
-        optimizer_class: optim.Optimizer=optim.Adam,
-        optimizer_args: dict=None):
+        optimizer_class: Optional[Type[optim.Optimizer]]=optim.Adam,
+        optimizer_args: Optional[dict]=None,
+        scheduler_creator: Optional[Callable[[optim.Optimizer], _LRScheduler]]=None):
         """
         args:
             model: PyTorch model
+            wandb_run: Weights & Biases Run Object
             optimizer_class: PyTorch optimizer class
+            optimizer_args: Dictionary of arguments for hte optimizer
+            scheduler_creator: A function that takes an otpimizer and returns a scheduler.
+                If provided, the otpimizer_class and optimizer_args are used to create the *initial*
+                optimizer. If None, only optimizer_class and optimizer_args are used.
         """
         self.model = model
         self.init_model = copy.deepcopy(model)
@@ -88,17 +91,55 @@ class ModelTraining:
         self.test_loader = None
         self.validation_loader = None
 
-        self.optimizer_class = optimizer_class
-        if optimizer_args is not None:
-            self.optimizer = self.optimizer_class(
-                self.model.parameters(), **optimizer_args)
-        else:
-            self.optimizer = self.optimizer_class(self.model.parameters())
+        # --- Optimizer and Scheduler Setup ---
+        if scheduler_creator is None:
+            # Only the optimizer is provided
+            if optimizer_class is None:
+                raise ValueError('Must provide optimizer_class or scheduler_creator')
+            if optimizer_args is None:
+                optimizer_args = {}
 
+            self.optimizer_class = optimizer_class
+            self.optimizer_args = optimizer_args
+            self.optimizer = optimizer_class(self.model.parameters(), **self.optimizer_args)
+            self.scheduler = None
+            self.step_scheduler = MethodType(ModelTraining._no_op_step, self) # Backwards compatibility wiht existing optimizer-only code
+        else:
+            # The scheduler creator is provided
+            if optimizer_class is None:
+                optimizer_class = optim.Adam
+            if optimizer_args is None:
+                optimizer_args = {}
+            self.optimizer_class = optimizer_class
+            self.optimizer_args = optimizer_args
+            self.optimizer = optimizer_class(self.model.parameters(), **self.optimizer_args)
+
+            self.scheduler_creator = scheduler_creator
+            self.scheduler = self.scheduler_creator(self.optimizer)
+            self.step_scheduler = MethodType(ModelTraining._step_with_scheduler, self)
+
+    def _no_op_step(self, val_loss: Optional[float] = None):
+        """Used when no scheduler is provided."""
+        pass # Do nothing
+
+    def _step_with_scheduler(self, val_loss: Optional[float]=None):
+        """Steps the learning rate scheduler. Handles ReduceLROnPlateau separately."""
+        if self.scheduler is None:
+            return # No scheduler to stop
+
+        if isinstance(self.scheduler, optim.lr_scheduler.ReduceLROnPlateau):
+            if val_loss is None:
+                raise ValueError('val_loss must be provided for ReduceLROnPlateau')
+            self.scheduler.step(val_loss)
+        else:
+            self.scheduler.step()
 
     def reset_model(self):
         self.model = copy.deepcopy(self.init_model)
-        self.optimizer = self.optimizer_class(self.model.parameters())
+        self.optimizer = self.optimizer_class(self.model.parameters(), **self.optimizer_args)
+
+        if self.scheduler is not None:
+            self.scheduler = self.scheduler_creator(self.optimizer)
 
     def set_training_data(self, X_train: pd.DataFrame, Y_train: pd.DataFrame):
         assert sorted(X_train.index) == sorted(Y_train.index)
@@ -161,20 +202,21 @@ class ModelTraining:
             self.iter_model_over_data(
                 self.train_loader, epoch_tracker.train,
                 apply_sigmoid=apply_sigmoid, criterion=criterion,
-                take_optimizer_step=True, optimizer=self.optimizer)
+                take_optimizer_step=True, optimizer=self.optimizer,
+                take_scheduler_step=False)
 
             self.model.eval()
             with torch.no_grad():
                 self.iter_model_over_data(
                     self.test_loader, epoch_tracker.test,
                     apply_sigmoid=apply_sigmoid, criterion=criterion,
-                    take_optimizer_step=False)
+                    take_optimizer_step=False, take_scheduler_step=True)
 
                 if self.validation_loader is not None:
                     self.iter_model_over_data(
                         self.validation_loader, epoch_tracker.validation,
                         apply_sigmoid=apply_sigmoid, criterion=criterion,
-                        take_optimizer_step=False)
+                        take_optimizer_step=False, take_scheduler_step=True)
 
             # Mean training and test losses across batches
             epoch_losses_df = epoch_tracker.summarize_losses()
@@ -255,6 +297,7 @@ class ModelTraining:
         apply_sigmoid,
         criterion,
         take_optimizer_step=False,
+        take_scheduler_step=False,
         optimizer=None):
         for ix, (xb, yb) in data_loader:
             if torch.is_tensor(ix):
@@ -270,10 +313,13 @@ class ModelTraining:
                 epoch_tracker_attribute.preds.append(model_output)
 
             loss = criterion(model_output, yb)
-            if take_optimizer_step is True:
+            if take_optimizer_step:
                 optimizer.zero_grad()
                 loss.backward()
                 optimizer.step()
+
+            if take_scheduler_step:
+                self.step_scheduler(val_loss=loss)
 
             epoch_tracker_attribute.losses.append(loss.data)
 
@@ -311,7 +357,8 @@ class MixedOutputTraining(ModelTraining):
         wandb_run: Run,
         shuffle_batch: bool=False,
         optimizer_class: optim.Optimizer=optim.Adam,
-        scaler=StandardScaler()):
+        scheduler_creator=None,
+        scaler=None):
         """
         args:
             model: PyTorch model
@@ -320,7 +367,7 @@ class MixedOutputTraining(ModelTraining):
             optimizer_class: PyTorch optimizer class
         """
         super().__init__(model=model, batch_size=batch_size, shuffle_batch=shuffle_batch,
-            optimizer_class=optimizer_class, wandb_run=wandb_run)
+            optimizer_class=optimizer_class, scheduler_creator=scheduler_creator, wandb_run=wandb_run)
         self.reg_cols = reg_cols
         self.class_cols = class_cols
 
@@ -334,7 +381,8 @@ class MixedOutputTraining(ModelTraining):
             self.training_mode = 'mixed'
 
         # Scaler to work with transformed regression outputs
-        self.scaler = scaler
+        if scaler is None:
+            self.scaler = StandardScaler()
 
     def set_training_data(self, X_train: pd.DataFrame, Y_train: pd.DataFrame):
         if len(self.reg_cols) != 0:
@@ -567,7 +615,8 @@ class BottleneckModelTraining(ModelTraining):
         batch_size: int,
         wandb_run: Run,
         shuffle_batch: bool=False,
-        optimizer_class: optim.Optimizer=optim.Adam):
+        optimizer_class: optim.Optimizer=optim.Adam,
+        scheduler_creator=None):
         """
         args:
             model: PyTorch model
@@ -575,7 +624,7 @@ class BottleneckModelTraining(ModelTraining):
         """
         super().__init__(
             model=model, batch_size=batch_size, shuffle_batch=shuffle_batch,
-            optimizer_class=optimizer_class, wandb_run=wandb_run)
+            optimizer_class=optimizer_class, scheduler_creator=scheduler_creator, wandb_run=wandb_run)
 
     def train(self,
         n_epochs: int,
@@ -630,12 +679,12 @@ class BottleneckModelTraining(ModelTraining):
                 train_index.append(ix)
                 model_output = self.model(xb)
                 train_preds.append(torch.sigmoid(model_output))
-                loss = criterion(model_output, yb)
+                train_loss = criterion(model_output, yb)
 
                 self.optimizer.zero_grad()
-                loss.backward()
+                train_loss.backward()
                 self.optimizer.step()
-                train_losses.append(loss.data)
+                train_losses.append(train_loss.data)
 
             self.model.eval()
             with torch.no_grad():
@@ -644,8 +693,8 @@ class BottleneckModelTraining(ModelTraining):
                         ix = ix.data.numpy()
                     test_index.append(ix)
                     model_output, bottleneck_output = self.model(xb, return_bottleneck=True)
-                    loss = criterion(model_output, yb)
-                    test_losses.append(loss.data)
+                    test_loss = criterion(model_output, yb)
+                    test_losses.append(test_loss.data)
                     test_set_preds.append(torch.sigmoid(model_output))
                     test_bottleneck.append(bottleneck_output)
 
@@ -656,10 +705,13 @@ class BottleneckModelTraining(ModelTraining):
                         valid_index.append(ix)
                         model_output, bottleneck_output = self.model(
                             xb, return_bottleneck=True)
-                        loss = criterion(model_output, yb)
-                        valid_losses.append(loss.data)
+                        valid_loss = criterion(model_output, yb)
+                        valid_losses.append(valid_loss.data)
                         valid_preds.append(torch.sigmoid(model_output))
                         valid_bottleneck.append(bottleneck_output)
+
+            # Scheduler Step After Epoch
+            self.step_scheduler(val_loss=valid_loss)
 
             # Mean training and test losses across batches
             mean_train_loss = np.mean(train_losses)

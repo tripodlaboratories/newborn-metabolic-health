@@ -13,6 +13,7 @@ import wandb
 import yaml
 
 from biobank_project.deep_mtl.training import handlers, kfold, utils
+from biobank_project.deep_mtl.training.schedulers import get_scheduler_creator
 from biobank_project.deep_mtl.models import bottleneck
 from biobank_project.deep_mtl.sampling import MajorityDownsampler
 
@@ -56,6 +57,13 @@ def get_argparser():
     parser.add_argument(
         '--imbalance_strategy', type=str, default='majority_downsampler',
         help='Imbalanced data strategy, one of either "majority_downsampler" or "loss_pos_weight')
+    parser.add_argument(
+        '--pos_weight_attenuation', type=float, default=None,
+        help="Attenuation factor for pos_weight imbalance strategy: e.g., pos_weight = pos_weight / attenuation_factor only when greater than 1.0"
+    )
+    parser.add_argument(''
+        '--lr_scheduler', type=str, default=None,
+        help='Specify a LR Scheduler class.')
     # Optional wandb logging
     parser.add_argument(
         '--use_wandb', action='store_true', help="Enable Weights & Biases logging")
@@ -81,6 +89,30 @@ def write_results(results: dict, model_output_dir: PurePath):
             filename = model_output_dir.joinpath(result_name + '.csv')
             results_df.to_csv(filename)
 
+# Default config for original full model training
+default_config = {
+    'seed': 101,
+    'architecture': {
+        'n_hidden': 100,
+        'bottleneck_sequence': [1,2,3,4,5,6,7,8,9,10]
+    },
+    'data': {
+        'drop_sparse': True,
+        'stratify_validate': False,
+    },
+    'training': {
+        'batch_size': 3000,
+        'shuffle_batch': True,
+        'n_epochs': 50,
+        'early_stoppping': True,
+        'early_stopping_patience': 5,
+        'n_iter': 10,
+        'n_fold': 10,
+        'imbalance_strategy': 'majority_downsampler',
+        'lr_scheduler': None,
+    },
+}
+
 
 def main(args):
     logging.basicConfig(
@@ -101,6 +133,8 @@ def main(args):
     stratify_validate = args.stratify_validate
     drop_sparse = args.drop_sparse
     imbalance_strategy = args.imbalance_strategy
+    pos_weight_attenuation = args.pos_weight_attenuation
+    scheduler_name = args.lr_scheduler
     use_wandb = args.use_wandb
     wandb_experiment_name = args.experiment_name
 
@@ -117,6 +151,9 @@ def main(args):
         id_col = col_spec['id']
     else:
         raise ValueError('Must provide one of the following options: --tasks OR --column_specification')
+
+    if scheduler_name is not None:
+        scheduler_creator_fn = get_scheduler_creator(scheduler_name)
 
     # Read in data
     input_data = pd.read_csv(input_file, low_memory=False)
@@ -237,6 +274,17 @@ def main(args):
         resampler = None
         pos_weight = data_Y.apply(utils.get_pos_weight).values
         pos_weight = torch.tensor(pos_weight, dtype=torch.float32)
+
+        if pos_weight_attenuation is not None:
+            if pos_weight_attenuation < 1.0:
+                raise ValueError('pos_weight_attenutation must be greater than 1.0, since used as pos_weight / pos_weight_attenuation')
+            pos_weight = torch.where(
+                pos_weight / pos_weight_attenuation > 1.0,
+                pos_weight / pos_weight_attenuation,
+                torch.tensor([1.0], dtype=torch.float32)
+            )
+
+        logger.info(f'pos_weight for loss: {pos_weight} across {data_Y.columns}')
     else:
         raise ValueError("Argument --imbalance_strategy unknown and/or not handled correctly.")
 
@@ -266,7 +314,9 @@ def main(args):
 
         training_handler = handlers.BottleneckModelTraining(
             model=model, batch_size=batch_size, shuffle_batch=shuffle_batch,
-            optimizer_class=torch.optim.Adam, wandb_run=run)
+            optimizer_class=torch.optim.Adam,
+            scheduler_creator=lambda optimizer: scheduler_creator_fn(optimizer, config={}),
+            wandb_run=run)
         train_args = {
             'n_epochs': n_epochs,
             'criterion': BCEWithLogitsLoss(reduction='mean', pos_weight=pos_weight),
@@ -282,6 +332,7 @@ def main(args):
                 n_iter=n_iter, n_folds=10, data_X=data_X, data_Y=data_Y,
                 training_handler=training_handler)
 
+        logger.info('Starting model training for: ' + model_name)
         model_results = kfold_handler.repeated_kfold(
             training_args=train_args, resampler=resampler, class_tasks=outcomes)
         logger.info('Finished model training for: ' + model_name)
