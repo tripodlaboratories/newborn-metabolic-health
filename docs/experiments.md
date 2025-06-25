@@ -25,7 +25,15 @@ python scripts/subgroup_discovery/analysis/bottleneck_subgroup_results.py \
   --tasks config/neonatal_covariates.txt
 ```
 
-# Model Variants in Supplementary Analyses
+# Model Variants in Supplementary Analyses: Adding Covariates
+First, we created a input CSV variant with additional metadata features:
+```bash
+python scripts/data_processing/create_metadata_features.py \
+  --input data/processed/neonatal_conditions.csv \
+  --metadata data/processed/metadata.csv \
+  --output data/processed/variants/neonatal_conditions_meta.csv
+```
+
 ## Model Variants: Adding Infant Sex as Feature
 ```bash
 python scripts/experiments/run_deep_mtl_bottleneck.py \
@@ -44,6 +52,43 @@ python scripts/subgroup_discovery/analysis/bottleneck_subgroup_results.py \
   --config config/with_infant_sex/subgroup_discovery.yml
 ```
 
+### Feature Importance Analysis
+Create a checkpointed model for downstream feature importance analysis.
+```bash
+python scripts/experiments/interpretability/train_bottleneck_model_checkpoint.py \
+  --input data/processed/variants/neonatal_conditions_meta.csv \
+  --output results/interpretability/with_infant_sex/ \
+  --column_specification config/with_infant_sex/colspec.yml \
+  --drop_sparse \
+  --bottleneck 1
+```
+Run feature analysis script.
+```bash
+python scripts/experiments/interpretability/calculate_feature_importance.py \
+  -i results/interpretability/with_infant_sex/model_outputs/ \
+  -o results/interpretability/with_infant_sex/scores/
+```
+Then analyze within notebooks.
+
+## Model Variants: Gestational Age, Birthweight, and Infant Sex as Features
+```bash
+python scripts/experiments/run_deep_mtl_bottleneck.py \
+  --input data/processed/variants/neonatal_conditions_meta.csv \
+  --output results/deep_mtl/supplementary_variants/with_infant_sex/modeling/ \
+  --column_specification config/with_infant_sex/colspec.yml \
+  --drop_sparse \
+  --bottleneck_sequence 1 \
+  --validate
+```
+
+Subsequent Subgroup Discovery
+```bash
+# Fill in with script command.
+```
+
+## Model Variants: Minimal MLP with Gestational Age and Birthweight
+
+# Model Variants in Supplementary Analyses: Ablation Studies
 ## Model Variants: Ablation By Removing One of the Outcomes
 ### Model Without IVH
 ```bash
