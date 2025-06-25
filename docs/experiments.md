@@ -29,13 +29,12 @@ python scripts/subgroup_discovery/analysis/bottleneck_subgroup_results.py \
 ## Model Variants: Adding Infant Sex as Feature
 ```bash
 python scripts/experiments/run_deep_mtl_bottleneck.py \
-  --input data/processed/neonatal_conditions.csv \
+  --input data/processed/variants/neonatal_conditions_meta.csv \
   --output results/deep_mtl/supplementary_variants/with_infant_sex/modeling/ \
   --column_specification config/with_infant_sex/colspec.yml \
   --drop_sparse \
   --bottleneck_sequence 1 \
-  --validate \
-  --lr_scheduler "ReduceLROnPlateau"
+  --validate
 ```
 Subsequent subgroup discovery
 ```bash

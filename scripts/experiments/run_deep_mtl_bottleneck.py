@@ -149,6 +149,7 @@ def main(args):
         features = col_spec['features']
         outcomes = col_spec['outcomes']
         id_col = col_spec['id']
+        categorical_features = col_spec.get('categorical_features', None)
     else:
         raise ValueError('Must provide one of the following options: --tasks OR --column_specification')
 
@@ -312,11 +313,18 @@ def main(args):
         else:
             run = wandb.init(mode='disabled')
 
-        training_handler = handlers.BottleneckModelTraining(
-            model=model, batch_size=batch_size, shuffle_batch=shuffle_batch,
-            optimizer_class=torch.optim.Adam,
-            scheduler_creator=lambda optimizer: scheduler_creator_fn(optimizer, config={}),
-            wandb_run=run)
+        if scheduler_name is not None:
+            training_handler = handlers.BottleneckModelTraining(
+                model=model, batch_size=batch_size, shuffle_batch=shuffle_batch,
+                optimizer_class=torch.optim.Adam,
+                scheduler_creator=lambda optimizer: scheduler_creator_fn(optimizer, config={}),
+                wandb_run=run)
+        else:
+            training_handler = handlers.BottleneckModelTraining(
+                model=model, batch_size=batch_size, shuffle_batch=shuffle_batch,
+                optimizer_class=torch.optim.Adam,
+                wandb_run=run)
+
         train_args = {
             'n_epochs': n_epochs,
             'criterion': BCEWithLogitsLoss(reduction='mean', pos_weight=pos_weight),
@@ -334,7 +342,8 @@ def main(args):
 
         logger.info('Starting model training for: ' + model_name)
         model_results = kfold_handler.repeated_kfold(
-            training_args=train_args, resampler=resampler, class_tasks=outcomes)
+            training_args=train_args, resampler=resampler, class_tasks=outcomes,
+            categorical_features=categorical_features)
         logger.info('Finished model training for: ' + model_name)
 
         # Write out results
