@@ -709,6 +709,8 @@ class BottleneckModelTraining(ModelTraining):
                         valid_losses.append(valid_loss.data)
                         valid_preds.append(torch.sigmoid(model_output))
                         valid_bottleneck.append(bottleneck_output)
+                else:
+                    valid_loss = None
 
             # Scheduler Step After Epoch
             self.step_scheduler(val_loss=valid_loss)
