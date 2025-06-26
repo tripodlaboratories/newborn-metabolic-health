@@ -57,7 +57,7 @@ Create a checkpointed model for downstream feature importance analysis.
 ```bash
 python scripts/experiments/interpretability/train_bottleneck_model_checkpoint.py \
   --input data/processed/variants/neonatal_conditions_meta.csv \
-  --output results/interpretability/with_infant_sex/ \
+  --output results/interpretability/with_infant_sex/model_outputs/ \
   --column_specification config/with_infant_sex/colspec.yml \
   --drop_sparse \
   --bottleneck 1
@@ -93,10 +93,16 @@ python scripts/subgroup_discovery/analysis/bottleneck_subgroup_results.py \
 ```bash
 python scripts/experiments/interpretability/train_bottleneck_model_checkpoint.py \
   --input data/processed/variants/neonatal_conditions_meta.csv \
-  --output results/interpretability/with_ga_bwt_sex/ \
+  --output results/interpretability/with_ga_bwt_sex/model_outputs/ \
   --column_specification config/with_ga_bwt_sex/colspec.yml \
   --drop_sparse \
   --bottleneck 1
+```
+Followed by feature analysis script:
+```bash
+python scripts/experiments/interpretability/calculate_feature_importance.py \
+  -i results/interpretability/with_ga_bwt_sex/model_outputs/ \
+  -o results/interpretability/with_ga_bwt_sex/scores/
 ```
 
 ## Model Variants: Minimal MLP with Gestational Age and Birthweight
