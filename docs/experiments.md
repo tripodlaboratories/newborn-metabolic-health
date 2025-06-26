@@ -74,8 +74,8 @@ Then analyze within notebooks.
 ```bash
 python scripts/experiments/run_deep_mtl_bottleneck.py \
   --input data/processed/variants/neonatal_conditions_meta.csv \
-  --output results/deep_mtl/supplementary_variants/with_infant_sex/modeling/ \
-  --column_specification config/with_infant_sex/colspec.yml \
+  --output results/deep_mtl/supplementary_variants/with_ga_bwt_sex/modeling/ \
+  --column_specification config/with_ga_bwt_sex/colspec.yml \
   --drop_sparse \
   --bottleneck_sequence 1 \
   --validate
@@ -83,7 +83,20 @@ python scripts/experiments/run_deep_mtl_bottleneck.py \
 
 Subsequent Subgroup Discovery
 ```bash
-# Fill in with script command.
+python scripts/subgroup_discovery/analysis/bottleneck_subgroup_results.py \
+  --input results/deep_mtl/supplementary_variants/with_ga_bwt_sex/modeling/ensemble_bottle_1/ \
+  --output results/deep_mtl/supplementary_variants/with_ga_bwt_sex/subgroup_discovery/ \
+  --config config/with_ga_bwt_sex/subgroup_discovery.yml
+```
+
+### Feature Importance
+```bash
+python scripts/experiments/interpretability/train_bottleneck_model_checkpoint.py \
+  --input data/processed/variants/neonatal_conditions_meta.csv \
+  --output results/interpretability/with_ga_bwt_sex/ \
+  --column_specification config/with_ga_bwt_sex/colspec.yml \
+  --drop_sparse \
+  --bottleneck 1
 ```
 
 ## Model Variants: Minimal MLP with Gestational Age and Birthweight
