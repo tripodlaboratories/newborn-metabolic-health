@@ -50,8 +50,11 @@ def get_argparser():
         '--stratify_validate', action='store_true',
         help='Stratify validation split using high-level counts of negative labels')
     parser.add_argument(
+        '--n_hidden', type=int, default=100, 
+        help='Number of hidden units in each layer (default: 100, used in all main experiments)')
+    parser.add_argument(
         '--bottleneck_sequence', type=str, default='1,2,3,4,5,10,20',
-        help='comma-separated sequence of bottleneck units to use.')
+        help='comma-separated sequence of bottleneck units to use (value: 1, used in all main experiments, default: 1,2,3,4,5,10,20 used in initial architecture exploration).')
     parser.add_argument(
         '--drop_sparse', action='store_true', help='Drop sparse columns from input data.')
     parser.add_argument(
@@ -162,9 +165,6 @@ def main(args):
     metadata = pd.read_csv('./data/processed/metadata.csv', low_memory=False)
     metadata.set_index(id_col, inplace=True)
 
-    # Model-specific args
-    bottleneck_sequence = [int(i) for i in args.bottleneck_sequence.split(',')]
-
     # Subset data based on gestational ages used
     included_ga_range = read_lines('./config/gestational_age_ranges.txt')
     included_metadata = metadata[metadata['gacat'].isin(included_ga_range)]
@@ -228,7 +228,8 @@ def main(args):
     utils.seed_torch(101)
     n_features = len(data_X.columns)
     n_tasks = len(outcomes)
-    n_hidden = 100
+    n_hidden = args.n_hidden
+    bottleneck_sequence = [int(i) for i in args.bottleneck_sequence.split(',')]
 
     all_models = {}
     for n_bottleneck in bottleneck_sequence:

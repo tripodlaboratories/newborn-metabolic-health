@@ -105,7 +105,24 @@ python scripts/experiments/interpretability/calculate_feature_importance.py \
   -o results/interpretability/with_ga_bwt_sex/scores/
 ```
 
-## Model Variants: Minimal MLP with Gestational Age and Birthweight
+## Model Variants: Minimal MLP Baseline with Gestational Age, Birthweight, Infant Sex
+```bash
+python scripts/experiments/run_deep_mtl_bottleneck.py \
+  --input data/processed/variants/neonatal_conditions_meta.csv \
+  --output results/deep_mtl/supplementary_variants/ga_bwt_sex_baseline/modeling/ \
+  --column_specification config/ga_bwt_sex_baseline/colspec.yml \
+  --n_hidden 5 \
+  --bottleneck_sequence 1 \
+  --validate
+```
+
+Subsequent Subgroup Discovery
+```bash
+python scripts/subgroup_discovery/analysis/bottleneck_subgroup_results.py \
+  --input results/deep_mtl/supplementary_variants/ga_bwt_sex_baseline/modeling/ensemble_bottle_1/ \
+  --output results/deep_mtl/supplementary_variants/ga_bwt_sex_baseline/subgroup_discovery/ \
+  --config config/ga_bwt_sex_baseline/subgroup_discovery.yml
+```
 
 # Model Variants in Supplementary Analyses: Ablation Studies
 ## Model Variants: Ablation By Removing One of the Outcomes

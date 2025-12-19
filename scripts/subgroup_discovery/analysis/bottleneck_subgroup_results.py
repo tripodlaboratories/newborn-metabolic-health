@@ -136,7 +136,8 @@ default_config = {
     'quantile_cuts': [2, 3, 5], # Per previous experiments
     'depth': 4,
     'top_k_percent_data': 20,
-    'outcomes': ['bpd_any', 'rop_any', 'ivh_any', 'nec_any'],
+    'all_outcomes': ['bpd_any', 'rop_any', 'ivh_any', 'nec_any'],
+    'evaluation_outcomes': ['bpd_any', 'rop_any', 'ivh_any', 'nec_any'], 
     'evaluation_order': ['AUROC', 'AVG Precision'],
     'evaluation_parameters': {
         'AUROC': {
@@ -161,6 +162,8 @@ def main(args):
     if tasks is not None:
         outcomes_to_evaluate = read_lines(tasks)
         config = default_config
+        outcomes_to_evaluate = config['evaluation_outcomes']
+        all_outcomes = config['all_outcomes']
     elif config_file is not None:
         with open(config_file, 'r') as f:
             config = yaml.safe_load(f)
