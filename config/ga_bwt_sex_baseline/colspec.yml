@@ -1,0 +1,11 @@
+id: row_id
+features:
+  - gacat_numeric
+  - bwtcat_numeric
+  - male_infant_sex
+continuous_features:
+  - gacat_numeric
+  - bwtcat_numeric
+categorical_features:
+  - male_infant_sex
+outcomes: [bpd_any, nec_any, rop_any, ivh_any]
