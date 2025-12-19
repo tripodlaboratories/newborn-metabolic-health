@@ -1,0 +1,58 @@
+[build-system]
+requires = ["setuptools>=45", "wheel", "setuptools_scm[toml]>=6.2"]
+build-backend = "setuptools.build_meta"
+
+[project]
+name = "biobank_project"
+dynamic = ["version"] # Mark version as dynamic
+description = "Development of a metabolic health index using newborn screening data."
+readme = "README.md"
+requires-python = ">=3.8"
+license = { file = "LICENSE" }
+
+dependencies = [
+	"torch == 1.6.0",
+	"numpy >= 1.0, < 2",
+	"scikit-learn >= 1.0, < 2"
+]
+
+[project.optional-dependencies]
+dev = [
+	"pytest",
+	"ruff",
+	"nbstripout"
+]
+
+data = [
+	"dvc",
+	"dvc-gs"
+]
+
+all = [
+	"biobank_project[dev]",
+	"biobank_project[data]"
+]
+
+[tool.setuptools]
+packages = ["biobank_project"]
+
+[tool.ruff]
+select = ["E", "F", "B"]
+ignore = ["E501"]
+target-version = "py38"
+
+[tool.pytest.ini_options]
+testpaths = ["tests"]
+python_files = ["test_*.py"]
+addopts = "-ra -q"
+markers = [
+	"integration: mark a test as an integration test with other training frameworks.",
+]
+filterwarnings = [
+	# Warnings from an older version of torchmetrics, which we need to pin due to
+	# a requirment for PyTorch 1.6 and compatible Pytorch-Lightning
+	"ignore:distutils Version classes are deprecated.*:DeprecationWarning",
+	"ignore: pkg_resources is deprecated as an API.*:DeprecationWarning",
+	"ignore:Deprecated call to `pkg_resources.declare_namespace.*:DeprecationWarning"
+]
+

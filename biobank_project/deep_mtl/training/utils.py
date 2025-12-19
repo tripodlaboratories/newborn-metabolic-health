@@ -1,6 +1,7 @@
 """Utility functions for training."""
 import os
 import random
+from typing import Tuple, Union
 import warnings
 
 import numpy as np
@@ -124,16 +125,22 @@ def score_regression(
 
 def get_pos_weight(data_column: pd.Series,
     pos_label: int=1,
-    return_all_weights: bool=False) -> float:
+    return_all_weights: bool=False) -> Union[float, Tuple[float]]:
     """Expects to operate on pandas columns.
     """
-    n_classes = len(data_column.unique())
     class_counts = data_column.value_counts()
     n_samples = len(data_column)
 
     if return_all_weights is True:
-        weights = [n_samples / (class_counts[label] + 1e-3)
-            for label in class_counts.index.sort_values()]
+        weights = []
+        for label in class_counts.index.sort_values():
+            if class_counts[label] == 0:
+                weights.append(1.0)
+            else:
+                weights.append(n_samples / class_counts[label])
         return tuple(weights)
     else:
-        return n_samples / (class_counts[pos_label] + 1e-3)
+        if class_counts[pos_label] == 0:
+            return 1.0
+        else:
+            return n_samples / (class_counts[pos_label])

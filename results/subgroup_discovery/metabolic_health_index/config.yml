@@ -1,0 +1,42 @@
+all_outcomes:
+- bpd_any
+- rop_any
+- ivh_any
+- nec_any
+depth: 4
+evaluation_order:
+- AUROC
+- AVG Precision
+evaluation_outcomes:
+- bpd_any
+- rop_any
+- ivh_any
+- nec_any
+evaluation_parameters:
+  AUROC:
+    alphas:
+      bpd_any: 0.0575
+      ivh_any: 0.0585
+      nec_any: 0.085
+      rop_any: 0.073
+    sizes:
+      bpd_any: 200
+      ivh_any: 100
+      nec_any: 100
+      rop_any: 300
+  AVG Precision:
+    alphas:
+      bpd_any: 0.059
+      ivh_any: 0.06
+      nec_any: 0.025
+      rop_any: 0.06
+    sizes:
+      bpd_any: 100
+      ivh_any: 100
+      nec_any: 100
+      rop_any: 300
+quantile_cuts:
+- 2
+- 3
+- 5
+top_k_percent_data: 20

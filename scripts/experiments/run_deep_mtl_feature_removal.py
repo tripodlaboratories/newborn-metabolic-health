@@ -7,11 +7,11 @@ from pathlib import PurePath
 import pandas as pd
 from torch import optim, Tensor
 from torch.nn import BCEWithLogitsLoss
+import wandb
 
 from biobank_project.deep_mtl.training import handlers, kfold, utils
-from biobank_project.deep_mtl.models import base, ensemble
+from biobank_project.deep_mtl.models import ensemble
 from biobank_project.deep_mtl.models import bottleneck
-from biobank_project.deep_mtl.sampling import MajorityDownsampler
 
 
 def get_argparser():
@@ -36,13 +36,20 @@ def get_argparser():
     parser.add_argument(
         '--random_feature_order', action='store_true',
         help='Instead of using feature ranks, randomize the feature order')
+    # Optional wandb logging
+    parser.add_argument(
+        '--use_wandb', action='store_true', help="Enable Weights & Biases logging")
+    parser.add_argument(
+        '--experiment_name', type=str, default='iterative_feature_removal',
+        help='Name for the experiment group in W&B'
+    )
     return parser
 
 
 def read_lines(file) -> list:
     with open(file) as f:
         lines = f.readlines()
-    return [l.strip() for l in lines]
+    return [line.strip() for line in lines]
 
 
 def write_lines(list_to_write: list, filename: str) -> None:
@@ -73,6 +80,8 @@ def main(args):
     cases_only = args.cases_only
     total_aupr_ranks = args.total_aupr_ranks
     random_feature_order = args.random_feature_order
+    use_wandb = args.use_wandb
+    wandb_experiment_name = args.experiment_name
 
     # Read in data
     input_data = pd.read_csv(input_file, low_memory=False)
@@ -124,7 +133,7 @@ def main(args):
         data_subset = input_data[input_data['total_conditions'] >= 1].drop(
             columns=['total_conditions'])
         if data_subset.shape[0] >= input_data.shape[0]:
-            logger.warn('--cases_only flag did not reduce rows of data.')
+            logger.warning('--cases_only flag did not reduce rows of data.')
         input_data = data_subset
         assert 'total_conditions' not in input_data
 
@@ -170,9 +179,31 @@ def main(args):
             }
 
             for model_name, model in all_models.items():
+                # Weights and biases setup
+                if use_wandb:
+                    run = wandb.init(
+                        project='deep-metabolic-health-index',
+                        name=f"{model_name}_features:{n_features}_{pd.Timestamp.now().strftime('%Y%m%d_%H%M%S')}",
+                        job_type='training',
+                        tags=[model_name],
+                        group=wandb_experiment_name,
+                        config={
+                            "model_type": model_name,
+                            "batch_size": batch_size,
+                            "n_epochs": n_epochs,
+                            "n_features": n_features,
+                            "n_tasks": n_tasks,
+                            "n_iter": n_iter,
+                            "cases_only": cases_only,
+                        },
+                        reinit=True)
+                    wandb.watch(model, log="all", log_freq=25)
+                else:
+                    run = wandb.init(mode='disabled')
+
                 training_handler = handlers.ModelTraining(
                     model=model, batch_size=batch_size,
-                    shuffle_batch=shuffle_batch, optimizer_class=optim.Adam)
+                    shuffle_batch=shuffle_batch, optimizer_class=optim.Adam, wandb_run=run)
                 logger.info(' '.join((
                     'Training', model_name, 'with', str(n_features),
                     'features.')))
@@ -206,6 +237,7 @@ def main(args):
                 write_results(model_results, model_output_dir)
                 write_lines(ranked_features, model_output_dir.joinpath('features.txt'))
                 logger.info('Model results written to: ' + str(model_output_dir) + '/')
+                run.finish()
 
             # Remove least informative feature and continue training iterations
             ranked_features.pop()

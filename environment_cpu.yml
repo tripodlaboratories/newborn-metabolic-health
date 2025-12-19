@@ -1,0 +1,29 @@
+name: newborn-metabolic-health-cpu
+channels:
+  - conda-forge
+dependencies:
+  - python=3.8.*
+  - pandas=2.0.*
+  - jupyterlab
+  - matplotlib
+  - numpy
+  - pip=23.*
+  - scikit-learn
+  - scipy
+  - seaborn
+  - wandb
+  - xlsxwriter
+  - dvc
+  - dvc-gs
+  - pip:
+    - --find-links https://download.pytorch.org/whl/torch_stable.html
+    - torch==1.6.0+cpu
+    - pytorch-lightning==1.4.*
+    - torchmetrics==0.4.0
+    - captum==0.7.0
+    - pytest
+    - xgboost==1.4.*
+    - pysubgroup==0.7.*
+    - pyyaml
+    - combat
+    - yellowbrick==1.5

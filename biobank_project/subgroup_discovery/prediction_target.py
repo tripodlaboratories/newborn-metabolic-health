@@ -24,16 +24,14 @@ class PredictionTarget:
         self.target_variable = target_variable
         self.target_estimate = target_estimate
         self.eval_dict = eval_dict
-        if not eval_dict is None:
+        if eval_dict is not None:
             PredictionTarget.statistic_types = ('size_sg', 'size_dataset', 'pos_sg', 'pos_dataset', 'neg_sg', 'neg_dataset', "metric_sg", "metric_dataset") + tuple([x +"_sg" for x in eval_dict.keys()]) + tuple([x +"_dataset" for x in eval_dict.keys()])
         else:
             PredictionTarget.statistic_types = ('size_sg', 'size_dataset', 'pos_sg', 'pos_dataset', 'neg_sg', 'neg_dataset', "metric_sg", "metric_dataset")
         if eval_func is None:
             self.evaluation_metric = default_evaluation_metric
-        elif not hasattr(metrics, eval_func.__name__):
-            raise ValueError("eval_func passed must be from sklearn.metrics")
         else:
-            # TODO: move evaluation metric to qualit function
+            # TODO: move evaluation metric to quality function
             self.evaluation_metric = eval_func
         self.training_mask = training_mask
 

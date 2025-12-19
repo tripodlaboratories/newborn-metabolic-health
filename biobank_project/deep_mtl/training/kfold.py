@@ -15,9 +15,12 @@ def get_lowest_loss_preds(preds: pd.DataFrame, losses: pd.DataFrame):
     """Filter predictions only to keep predictions from the epoch with the lowest loss.
     This epoch may be different across different folds of repeated KFold.
     """
+    # .transform('min') creates a new series that's the same length as the original
+    # where each value is replaced by the group's minimum
+    # This allows a comparison to losses['test_loss'] to create a boolean mask for indexing.
     lowest_loss_indices = (losses
         .groupby('fold')['test_loss']
-        .transform(min) == losses['test_loss'])
+        .transform('min') == losses['test_loss'])
 
     lowest_losses = losses.loc[lowest_loss_indices, :]
     index_name = preds.index.name
@@ -33,7 +36,7 @@ def get_lowest_loss_preds(preds: pd.DataFrame, losses: pd.DataFrame):
     # To resolve the case of tied losses, take the lowest epoch in each fold
     highest_epoch_indices = (preds
         .groupby('fold')['epoch']
-        .transform(min) == preds['epoch'])
+        .transform('min') == preds['epoch'])
 
     if highest_epoch_indices.tolist().count(True) < preds.shape[0]:
         # There are folds where lowest loss is tied
@@ -78,7 +81,8 @@ class RepeatedKFold:
     class_tasks: list=[],
     reg_tasks: list=[],
     splitting_cols: list=None,
-    columns_to_score: list=None):
+    columns_to_score: list=None,
+    categorical_features: list = None):
         """args:
             training_args: dict of args for self.training_handler.train()
             resampler: Resampler object (e.g., for imbalanced data)
@@ -86,6 +90,7 @@ class RepeatedKFold:
                 if True, specify classification and regression tasks
             splitting_cols: columns to use in defining KFold splits
             columns_to_score: columns in Y used to evaluate predictions
+            categorical_features: columns in data_X that should NOT be scaled.
         """
         if columns_to_score is None:
             columns_to_score = self.data_Y.columns
@@ -100,7 +105,8 @@ class RepeatedKFold:
             self.training_handler.reset_model()
             kfold_results = self.kfold(
                 training_args=training_args, resampler=resampler,
-                mixed_output=mixed_output, splitting_cols=splitting_cols)
+                mixed_output=mixed_output, splitting_cols=splitting_cols,
+                categorical_features=categorical_features)
             kfold_keys = kfold_results.keys()
 
             # Append keys from results to overall results
@@ -155,7 +161,8 @@ class RepeatedKFold:
     training_args: dict,
     resampler=None,
     mixed_output: bool=None,
-    splitting_cols: list=None):
+    splitting_cols: list=None,
+    categorical_features: list=None):
         """args:
             training_args: dict of args for self.training_handler.train()
             resampler: Resampler object (e.g., for imbalanced data)
@@ -195,18 +202,34 @@ class RepeatedKFold:
 
             # Data preparation
             scaler = StandardScaler()
-            X_train_scaled = pd.DataFrame(
-                scaler.fit_transform(X_train),
-                index=X_train.index, columns=X_train.columns)
-            X_test_scaled = pd.DataFrame(
-                scaler.transform(X_test),
-                index=X_test.index, columns=X_test.columns)
+            if categorical_features is not None:
+                features_to_scale = X_train.columns.difference(categorical_features)
+                X_train_scaled = X_train.copy()
+                X_train_scaled[features_to_scale] = scaler.fit_transform(
+                    X_train_scaled[features_to_scale])
+                X_test_scaled = X_test.copy()
+                X_test_scaled[features_to_scale] = scaler.transform(
+                    X_test_scaled[features_to_scale])
+            else:
+                X_train_scaled = pd.DataFrame(
+                    scaler.fit_transform(X_train),
+                    index=X_train.index, columns=X_train.columns)
+                X_test_scaled = pd.DataFrame(
+                    scaler.transform(X_test),
+                    index=X_test.index, columns=X_test.columns)
+
             self.training_handler.set_training_data(X_train_scaled, Y_train)
             self.training_handler.set_test_data(X_test_scaled, Y_test)
             if self.X_valid is not None and self.Y_valid is not None:
-                X_valid_scaled = pd.DataFrame(
-                    scaler.transform(self.X_valid),
-                    index=self.X_valid.index, columns=self.X_valid.columns)
+                if categorical_features is not None:
+                    X_valid_scaled = self.X_valid.copy()
+                    X_valid_scaled[features_to_scale] = scaler.transform(
+                        X_valid_scaled[features_to_scale])
+                else:
+                    X_valid_scaled = pd.DataFrame(
+                        scaler.transform(self.X_valid),
+                        index=self.X_valid.index, columns=self.X_valid.columns)
+
                 self.training_handler.set_validation_data(X_valid_scaled, self.Y_valid)
 
             fold_results = self.training_handler.train(**training_args)

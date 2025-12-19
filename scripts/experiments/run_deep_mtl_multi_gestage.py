@@ -1,6 +1,5 @@
 """Script for running deep multi-task experiments."""
 import argparse
-import logging
 import os
 from pathlib import PurePath
 
@@ -10,13 +9,11 @@ from pytorch_lightning.callbacks.early_stopping import EarlyStopping
 import pytorch_lightning.loggers as pl_loggers
 from sklearn.model_selection import train_test_split
 from sklearn.preprocessing import StandardScaler
-from torch import optim, Tensor
+from torch import Tensor
 from torch.utils.data import DataLoader
-from torch.nn import BCEWithLogitsLoss
 
-from biobank_project.deep_mtl.training import handlers, kfold, utils
+from biobank_project.deep_mtl.training import utils
 from biobank_project.deep_mtl.models import ensemble, multicategory
-from biobank_project.deep_mtl.sampling import MajorityDownsampler
 
 
 def get_argparser():
@@ -33,21 +30,25 @@ def get_argparser():
         '-t', '--tasks', type=str,
         help='Text file with tasks of interest, one task per line.')
     parser.add_argument(
-        '-n', '--n_iter', type=int, help='number of cross validation iterations to perform',
-        default=10)
-    parser.add_argument(
         '-v', '--validate', action='store_true',
         help='split data in train/test/validate.')
     parser.add_argument(
         '--num_workers', type=int, help='explicitly specified number of workers',
         default=10)
+    # Optional wandb logging
+    parser.add_argument(
+        '--use_wandb', action='store_true', help="Enable Weights & Biases logging")
+    parser.add_argument(
+        '--experiment_name', type=str, default='multi_gestage',
+        help='Name for the experiment group in W&B'
+    )
     return parser
 
 
 def read_lines(file) -> list:
     with open(file) as f:
         lines = f.readlines()
-    return [l.strip() for l in lines]
+    return [line.strip() for line in lines]
 
 
 def write_results(results: dict, model_output_dir: PurePath):
@@ -64,9 +65,10 @@ def main(args):
     input_file = args.input_file
     output_dir = PurePath(args.output_dir)
     tasks = args.tasks
-    n_iter = args.n_iter
     validate = args.validate
     num_workers = args.num_workers
+    use_wandb = args.use_wandb
+    wandb_experiment_name = args.experiment_name
 
     # Read in data
     input_data = pd.read_csv(input_file, low_memory=False)
@@ -96,23 +98,33 @@ def main(args):
     X_train, X_test, Y_train, Y_test, ga_train, ga_test = train_test_split(
         data_X, data_Y, gestage, random_state=101)
 
-    # Train with different models
-    # seed_everything(101)
+    # Training parameters
+    max_epochs = 500
+    batch_size = 3000
+    seed = 101
+
+    # Model parameters
     n_features = len(data_X.columns)
     n_tasks = len(outcomes)
+    base_model = ensemble.EnsembleNetwork
     base_model_args = dict(n_features=n_features, n_hidden=100, n_tasks=n_tasks)
+    simple_average_combine = True
+    learn_model_weights = False
+    model_categories = sorted(gestage['gacat'].unique().tolist())
+
+    # Train with different models
+    seed_everything(seed)
     pos_weight = Tensor(Y_train.apply(utils.get_pos_weight))
     model = multicategory.MultiCategoryEnsemble(
-        categories=sorted(gestage['gacat'].unique()),
-        base_model=ensemble.EnsembleNetwork,
+        categories=model_categories,
+        base_model=base_model,
         base_model_args=base_model_args,
-        simple_average_combine=True,
-        learn_model_weights=False,
+        simple_average_combine=simple_average_combine,
+        learn_model_weights=learn_model_weights,
         pos_weight_for_loss=pos_weight
     )
 
     # Set up data loaders
-    batch_size = 3000
     scaler = StandardScaler()
     train_index = X_train.index.tolist()
     assert sorted(train_index) == sorted(Y_train.index.tolist()) == sorted(ga_train.index.tolist())
@@ -136,19 +148,49 @@ def main(args):
                 (Tensor(scaler.transform(X_valid.values)), Tensor(Y_valid.values), ga_valid.values.ravel()),
                 reference_index=valid_index), batch_size=batch_size, shuffle=False, num_workers=num_workers)
 
-    # Set up logging/tensorboard
+
+
+    # Set up logging
     os.makedirs(output_dir, exist_ok=True)
-    tb_logger = pl_loggers.TensorBoardLogger(
-        name='gestage_ensemble',
-        save_dir=output_dir.joinpath('logs/')
-    )
+    config = {
+        "model_type": "multicategory",
+        "n_features": n_features,
+        "n_tasks": n_tasks,
+        "max_epochs": max_epochs,
+        "batch_size": batch_size,
+        "num_workers": num_workers,
+        "base_model": {
+            "class_name": base_model.__name__,
+            "module_path": f"{base_model.__module__}.{base_model.__name__}",
+        },
+        "base_model_args": base_model_args,
+        "simple_average": simple_average_combine,
+        "learn_model_weights": learn_model_weights,
+        "categories": model_categories,
+        "seed": seed
+    }
+    run_name = f"gestage_multicat_ensemble_{pd.Timestamp.now().strftime('%Y%m%d_%H%M%S')}"
+    if use_wandb:
+        pl_loggers.WandbLogger(
+            project='deep-metabolic-health-index',
+            name=run_name,
+            group=wandb_experiment_name,
+            config=config,
+            reinit=True,
+        )
+    else:
+        logger = pl_loggers.TensorBoardLogger(
+            name=run_name,
+            save_dir=output_dir.joinpath('logs/')
+        )
+        logger.log_hyperparams(config)
 
     # Set up model training
     early_stop_callback = EarlyStopping(monitor='val_loss', patience=5)
     trainer = Trainer(
-        max_epochs=500,
+        max_epochs=max_epochs,
         callbacks=[early_stop_callback],
-        logger=tb_logger,
+        logger=logger,
         log_every_n_steps=10
     )
     trainer.fit(model, train_dataloader, val_dataloader)

@@ -1,0 +1,38 @@
+# Quantile parameters for feature transformation (list-like)
+quantile_cuts: [2, 3, 5]
+# Subgroup discovery parameters
+depth: 4
+# Percent of the entire dataset to consider top K
+top_k_percent_data: 20
+
+# Parameters by evaluation metric
+all_outcomes: ["rop_any", "nec_any", "ivh_any", "bpd_any"]
+evaluation_outcomes: ["rop_any", "nec_any", "ivh_any", "bpd_any"]
+evaluation_parameters:
+  AUROC:
+    alphas:
+      bpd_any: 0.0575
+      rop_any: 0.073
+      ivh_any: 0.0585
+      nec_any: 0.085
+    sizes:
+      bpd_any: 200
+      rop_any: 300
+      ivh_any: 100
+      nec_any: 100
+
+  # "AVG Precision":
+  #   alphas:
+  #     bpd_any: 0.059
+  #     rop_any: 0.06
+  #     nec_any: 0.025
+  #   sizes:
+  #     bpd_any: 100
+  #     rop_any: 300
+  #     nec_any: 100
+
+# Debug configurations
+debug:
+  quantile_cuts: [3]
+  depth: 2
+  top_k_percent_data: 10

@@ -1,0 +1,17 @@
+outcome,outcome_label,infant_sex,count
+BPD,0,Female,4419
+BPD,0,Male,4928
+BPD,1,Female,1870
+BPD,1,Male,2319
+IVH,0,Female,4390
+IVH,0,Male,4886
+IVH,1,Female,1899
+IVH,1,Male,2361
+NEC,0,Female,5656
+NEC,0,Male,6441
+NEC,1,Female,633
+NEC,1,Male,806
+ROP,0,Female,3498
+ROP,0,Male,4320
+ROP,1,Female,2791
+ROP,1,Male,2927

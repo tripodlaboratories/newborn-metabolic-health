@@ -19,16 +19,18 @@ from torch.utils.data import DataLoader, TensorDataset
 class ModelTraining:
     """Class for running model training.
     """
-    def __init__(self, model, pos_label=1):
+    def __init__(self, model, model_type='classificatin', pos_label=1):
         """
         args:
             model: scikit-learn model
             pos_label: expected encoding of the positive label in y
-                (usually 1 in {0, 1} encoded data)
+                (usually 1 in {0, 1} encoded data),
+            model_type
         """
         self.model = model
         self.init_model = clone(model)
         self.pos_label = pos_label
+        self.model_type = model_type
 
     def reset_model(self):
         self.model = clone(self.init_model)
@@ -48,21 +50,7 @@ class ModelTraining:
         self.validation = True
 
     def predict(self, input_data, colnames, index):
-        preds = self.model.predict_proba(input_data)
-
-        # Extract prediction probabilities corresponding to the positive label
-        # MultiOutputClassifier helper returns predictions as a list, one
-        # element per class
-        if isinstance(preds, list):
-            pred_probs = []
-            for p in preds:
-                pred_probs.append(p[:, self.pos_label])
-            pred_probs = np.column_stack(pred_probs)
-            return pd.DataFrame(pred_probs, columns=colnames, index=index)
-        else:
-            # Single array of prediction probabilities expected
-            pred_probs = preds[:, self.pos_label]
-            return pd.DataFrame(pred_probs, columns=colnames, index=index)
+        raise NotImplementedError('Implement prediction logic in sub-class')
 
     def train(self,
         colnames: list=None,
@@ -108,3 +96,41 @@ class ModelTraining:
             training_output['valid_preds'] = valid_preds
         return training_output
 
+
+class ClassificationTraining(ModelTraining):
+    def __init__(self, *args, **kwargs):
+        super().__init__(*args, **kwargs)
+
+    def predict(self, input_data, colnames, index):
+        preds = self.model.predict_proba(input_data)
+
+        # Extract prediction probabilities corresponding to the positive label
+        # MultiOutputClassifier helper returns predictions as a list, one
+        # element per class
+        if isinstance(preds, list):
+            pred_probs = []
+            for p in preds:
+                pred_probs.append(p[:, self.pos_label])
+            pred_probs = np.column_stack(pred_probs)
+            return pd.DataFrame(pred_probs, columns=colnames, index=index)
+        else:
+            # Single array of prediction probabilities expected
+            pred_probs = preds[:, self.pos_label]
+            return pd.DataFrame(pred_probs, columns=colnames, index=index)
+
+
+class RegressionTraining(ModelTraining):
+    def __init__(self, *args, **kwargs):
+        super().__init__(*args, **kwargs)
+
+    def predict(self, input_data, colnames, index):
+        preds = self.model.predict(input_data)
+
+        if isinstance(preds, list):
+            all_preds = []
+            for p in preds:
+                all_preds.append(p[:, ])
+            all_preds = np.column_stack(all_preds)
+            return pd.DataFrame(all_preds, columns=colnames, index=index)
+        else:
+            return pd.DataFrame(preds, columns=colnames, index=index)
