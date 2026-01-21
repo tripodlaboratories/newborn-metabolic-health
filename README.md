@@ -1,3 +1,4 @@
+[![DOI](https://zenodo.org/badge/DOI/10.5281/zenodo.17984155.svg)](https://doi.org/10.5281/zenodo.17984155)
 # Deep learning-based risk stratification in preterm infants using NBS metabolites
 This repository contains code related to the manuscript entitled _Quantitative
 assessment of neonatal health using dried blood spot metabolite profiles and
